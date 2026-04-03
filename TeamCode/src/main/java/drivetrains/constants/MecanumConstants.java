@@ -1,13 +1,12 @@
-package Drivetrains.Constants;
+package drivetrains.constants;
 
 import com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DcMotorSimple.Direction;
+
 import motors.MotorMetaData;
 
 /**
- * Mecanum Constants class
+ * Mecanum drivetrain constants class
  * @author Xander Haemel - 31616 404 Not Found
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
@@ -27,25 +26,10 @@ public class MecanumConstants {
     public boolean useFeedForward = true; // Whether to use feedforward in the velocity controller TODO: USE THIS
     public boolean robotCentric = true; // Whether to use robot-centric controls (true) or field-centric controls (false) in TeleOp
 
-    public boolean UseBrakeMode = true;
     /**
      * Constructor for the MecanumConstants class
      */
     public MecanumConstants() {}
-    public MecanumConstants setFrontLeftMotorDirection(DcMotorSimple.Direction d){
-        flData.setDirection(d);
-        return this;
-    }public MecanumConstants setBackLeftMotorDirection(DcMotorSimple.Direction d){
-        blData.setDirection(d);
-        return this;
-    }public MecanumConstants setFrontRightMotorDirection(DcMotorSimple.Direction d){
-        frData.setDirection(d);
-        return this;
-    }
-    public MecanumConstants setBackRightMotorDirection(DcMotorSimple.Direction d){
-        brData.setDirection(d);
-        return this;
-    }
 
     /**
      * Sets the left front motor name. Default: "front_left_drive"
@@ -56,7 +40,6 @@ public class MecanumConstants {
         this.flData.setName(name);
         return this;
     }
-
     /**
      * Sets the left rear motor name. Default: "back_left_drive"
      * @param name the name of the left rear motor
@@ -66,7 +49,6 @@ public class MecanumConstants {
         this.blData.setName(name);
         return this;
     }
-
     /**
      * Sets the right front motor name. Default: "front_right_drive"
      * @param name the name of the right front motor
@@ -76,7 +58,6 @@ public class MecanumConstants {
         this.frData.setName(name);
         return this;
     }
-
     /**
      * Sets the right rear motor name. Default: "back_right_drive"
      * @param name the name of the right rear motor
@@ -96,7 +77,6 @@ public class MecanumConstants {
         this.flData.setDirection(reversed ? Direction.REVERSE : Direction.FORWARD);
         return this;
     }
-
     /**
      * Default direction is FORWARD.
      * @param reversed whether the back left motor is reversed
@@ -106,7 +86,6 @@ public class MecanumConstants {
         this.blData.setDirection(reversed ? Direction.REVERSE : Direction.FORWARD);
         return this;
     }
-
     /**
      * Default direction is FORWARD.
      * @param reversed whether the front right motor is reversed
@@ -116,7 +95,6 @@ public class MecanumConstants {
         this.frData.setDirection(reversed ? Direction.REVERSE : Direction.FORWARD);
         return this;
     }
-
     /**
      * Default direction is FORWARD.
      * @param reversed whether the back right motor is reversed
@@ -136,7 +114,6 @@ public class MecanumConstants {
         this.xVelocity = xVelocity;
         return this;
     }
-
     /**
      * Sets the Y velocity value from tuning.
      * @param yVelocity the Y velocity in inches per second
@@ -162,7 +139,7 @@ public class MecanumConstants {
      * @param brakeMode true for brake mode, false for float mode
      * @return this instance for chaining
      */
-    public MecanumConstants setUseBrakeMode(boolean brakeMode) {
+    public MecanumConstants setBrakeMode(boolean brakeMode) {
         this.flData.setBrakeMode(brakeMode ? ZeroPowerBehavior.BRAKE : ZeroPowerBehavior.FLOAT);
         this.blData.setBrakeMode(brakeMode ? ZeroPowerBehavior.BRAKE : ZeroPowerBehavior.FLOAT);
         this.frData.setBrakeMode(brakeMode ? ZeroPowerBehavior.BRAKE : ZeroPowerBehavior.FLOAT);
@@ -189,65 +166,4 @@ public class MecanumConstants {
         this.robotCentric = robotCentric;
         return this;
     }
-    //getters
-
-    /**
-     * gets the front left motor name
-     * @return the name as a string
-     */
-    public String getFrontLeftMotorName() { return this.flData.getName(); }
-    /**
-     * gets the front right motor name
-     * @return the name as a string
-     */
-    public String getFrontRightMotorName() { return this.frData.getName(); }
-    /**
-     * gets the back left motor name
-     * @return the name as a string
-     */
-
-    public String getBackLeftMotorName() { return this.blData.getName(); }
-
-    /**
-     * gets the back right motor name
-     * @return the name as a string wtf, rear = pedro stuff
-     */
-    public String getBackRightMotorName() { return this.brData.getName(); }
-
-    /**
-     * get the front left motor direction
-     * @return DcMotorSimple.Direction as the motors direction
-     */
-    public Direction getFrontLeftMotorDirection() { return this.flData.getDirection(); }
-
-    /**
-     * get the front right motor direction
-     * @return DcMotorSimple.Direction as the motors direction
-     */
-    public Direction getFrontRightMotorDirection() { return this.frData.getDirection(); }
-
-    /**
-     * get the back left motor direction
-     * @return DcMotorSimple.Direction as the motors direction
-     */
-    public Direction getBackLeftMotorDirection() { return this.blData.getDirection(); }
-
-    /**
-     * get the back right motor direction
-     * @return DcMotorSimple.Direction as the motors direction
-     */
-    public Direction getBackRightMotorDirection() { return this.brData.getDirection(); }
-
-    /**
-     * get the brake mode
-     * @return A boolean whether brake mode is being used or not
-     */
-    public boolean getUseBrakeMode() { return (this.flData.getBrakeMode() == ZeroPowerBehavior.BRAKE); }
-
-    public MecanumConstants setUseBrakingMode(boolean b) {
-        this.UseBrakeMode = b;
-        return this;
-    }
-
-    //
 }
