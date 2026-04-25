@@ -12,18 +12,28 @@ import java.util.concurrent.TimeUnit;
 
 import controllers.PDFLController;
 import drivetrains.Drivetrain;
+import followers.constants.P2PFollowerConstants;
 import localizers.Localizer;
 import util.Pose;
 
-@TeleOp(name = "Auto Heading Tuner")
-public class AutoHeadingTuner extends LinearOpMode {
+@TeleOp(name = "Auto Axial Tuner")
+public class AutoAxialTuner extends LinearOpMode {
     private Drivetrain drivetrain;
     private Localizer localizer;
-    private PDFLController controller;
+
+    // Controllers
+    private PDFLController axialController; // Axial controller
+    private PDFLController headingController; // Heading lock controller
+
     private ElapsedTime timer;
+
+    // Axial Tuning Variables
     public static double minPower;
     public static double proportionalGain;
     public static double derivativeGain;
+
+    // The target distance to travel during Phase 1 and Phase 3 (48 inches = 2 FTC tiles)
+    private final double TEST_DISTANCE = 48.0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -32,14 +42,26 @@ public class AutoHeadingTuner extends LinearOpMode {
         // Initialize hardware and controllers
         while (opModeInInit()) {
             Constants constants = new Constants();
+            P2PFollowerConstants followerConstants = (P2PFollowerConstants) constants.setFollowerConstants();
             drivetrain = constants.buildOnlyDrivetrain(hardwareMap);
             localizer = constants.buildOnlyLocalizer(hardwareMap, Pose.zero());
-            controller = new PDFLController(proportionalGain, derivativeGain, 0.0, minPower);
-            controller.useAsAngularController();
+
+            // Initialize Axial Controller
+            axialController = new PDFLController(proportionalGain, derivativeGain, 0.0, minPower);
+
+            // Initialize Heading Controller to maintain a straight line
+            headingController = new PDFLController(
+                    followerConstants.headingCoeffs.kP,
+                    followerConstants.headingCoeffs.kD,
+                    0.0,
+                    0.0
+            );
+            headingController.useAsAngularController();
+
             timer = new ElapsedTime();
             telemetry = PanelsTelemetry.INSTANCE.getFtcTelemetry();
 
-            telemetry.addLine("WARNING ENSURE ROBOT IS IN CLEAR AREA BEFORE BEGINNING TUNING");
+            telemetry.addLine("WARNING: ENSURE ROBOT HAS AT LEAST 2 TILES OF CLEAR SPACE FORWARD AND BACKWARD");
             telemetry.update();
         }
 
@@ -58,37 +80,37 @@ public class AutoHeadingTuner extends LinearOpMode {
 
         double guess = initialGuess;
         double lastGuess = -1.0;
-        double maxDetectedAngularVelocity = 9999;
+        double maxDetectedAxialVelocity = 9999;
         boolean hasMoved;
-        final double HAS_MOVED_THRESHOLD = 0.01; // TODO: Verify that this threshold is good
+        final double HAS_MOVED_THRESHOLD = 0.1;
 
         // Phase 1: Binary search to find the minimum power required to overcome static friction (kS)
-        while (opModeIsActive() && Math.abs(lastGuess - guess) > 0.01 && maxDetectedAngularVelocity > HAS_MOVED_THRESHOLD) {
+        while (opModeIsActive() && Math.abs(lastGuess - guess) > 0.01 && maxDetectedAxialVelocity > HAS_MOVED_THRESHOLD) {
             update();
 
             telemetry.addData("Phase", "1/3: Tuning Min Power (kS)");
             telemetry.addData("Current Power Guess", guess);
             telemetry.update();
 
-            controller.setPDFLCoefficients(0, 0, 0, guess);
+            axialController.setPDFLCoefficients(0, 0, 0, guess);
 
-            // Calculate the shortest-path distance to both targets
-            double distToZero = Math.abs(AngleUnit.normalizeRadians(localizer.getPose().getHeading() - 0));
-            double distToPi = Math.abs(AngleUnit.normalizeRadians(localizer.getPose().getHeading() - Math.PI));
+            // Calculate the distance to both ends of the test track
+            double distToZero = Math.abs(localizer.getPose().getX() - 0);
+            double distToTarget = Math.abs(localizer.getPose().getX() - TEST_DISTANCE);
 
             // Choose whichever target is further away to avoid deadzone issues
-            double target = (distToPi > distToZero) ? Math.PI : 0;
+            double target = (distToTarget > distToZero) ? TEST_DISTANCE : 0;
 
-            maxDetectedAngularVelocity = 0.0;
+            maxDetectedAxialVelocity = 0.0;
 
             timer.reset();
-            while (opModeIsActive() && timer.time(TimeUnit.MILLISECONDS) < 500) { // TODO: Try shrinking this threshold for faster tuning
+            while (opModeIsActive() && timer.time(TimeUnit.MILLISECONDS) < 500) {
                 update();
-                maxDetectedAngularVelocity = Math.abs(Math.max(Math.abs(localizer.getVelocity().getHeading()), maxDetectedAngularVelocity));
-                turnTo(target - localizer.getPose().getHeading());
+                maxDetectedAxialVelocity = Math.abs(Math.max(Math.abs(localizer.getVelocity().getX()), maxDetectedAxialVelocity));
+                driveTo(target - localizer.getPose().getX());
             }
 
-            hasMoved = maxDetectedAngularVelocity > HAS_MOVED_THRESHOLD;
+            hasMoved = maxDetectedAxialVelocity > HAS_MOVED_THRESHOLD;
             lastGuess = guess;
 
             // Adjust binary bounds based on whether the chassis moved
@@ -123,7 +145,7 @@ public class AutoHeadingTuner extends LinearOpMode {
         double velAtTimeStamp = 0;
 
         // Phase 2: Apply max power step input to calculate inflection point and system delays
-        while (opModeIsActive() && timer.time(TimeUnit.MILLISECONDS) < 2500) {
+        while (opModeIsActive() && timer.time(TimeUnit.MILLISECONDS) < 2000) {
             update();
 
             telemetry.addData("Phase", "2/3: Z-N Step Response");
@@ -131,7 +153,7 @@ public class AutoHeadingTuner extends LinearOpMode {
             telemetry.addData("Max Accel Detected", maxAccel);
             telemetry.update();
 
-            double curVel = localizer.getVelocity().getHeading();
+            double curVel = localizer.getVelocity().getX();
 
             dt = (System.nanoTime() - lastTime) / 1.0e9;
             dv = (curVel - lastVel);
@@ -153,7 +175,9 @@ public class AutoHeadingTuner extends LinearOpMode {
             lastVel = curVel;
             lastTime = System.nanoTime();
 
-            drivetrain.moveWithVectors(0, 0, 1.0); // Full rotational power
+            // Full forward power, but applying heading correction to keep it straight
+            double headingError = AngleUnit.normalizeRadians(0 - localizer.getPose().getHeading());
+            drivetrain.moveWithVectors(1.0, 0, -headingController.calculate(headingError));
         }
 
         // Calculate Delay Time (L) based on the tangent line of the inflection point
@@ -163,17 +187,17 @@ public class AutoHeadingTuner extends LinearOpMode {
         double kP = 1.2 / (L * maxAccel);
         double kD = 0.6 / maxAccel;
 
-        controller.setPDFLCoefficients(kP, kD, 0.0, kS);
+        axialController.setPDFLCoefficients(kP, kD, 0.0, kS);
 
         // endregion
         // region final verification
 
-        // Calculate the shortest-path distance to both targets
-        double distToZero = Math.abs(AngleUnit.normalizeRadians(localizer.getPose().getHeading() - 0));
-        double distToPi = Math.abs(AngleUnit.normalizeRadians(localizer.getPose().getHeading() - Math.PI));
+        // Calculate the distance to both ends of the test track
+        double distToZeroVerify = Math.abs(localizer.getPose().getX() - 0);
+        double distToTargetVerify = Math.abs(localizer.getPose().getX() - TEST_DISTANCE);
 
         // Choose whichever target is further away for the initial verification swing
-        double verificationTarget = (distToPi > distToZero) ? Math.PI : 0;
+        double verificationTarget = (distToTargetVerify > distToZeroVerify) ? TEST_DISTANCE : 0;
 
         timer.reset();
 
@@ -183,12 +207,12 @@ public class AutoHeadingTuner extends LinearOpMode {
 
             // Toggle target every 3 seconds
             if (timer.time(TimeUnit.MILLISECONDS) > 3000) {
-                verificationTarget = (verificationTarget == Math.PI) ? 0 : Math.PI;
+                verificationTarget = (verificationTarget == TEST_DISTANCE) ? 0 : TEST_DISTANCE;
                 timer.reset();
             }
 
-            double error = AngleUnit.normalizeRadians(verificationTarget - localizer.getPose().getHeading());
-            turnTo(error);
+            double error = verificationTarget - localizer.getPose().getX();
+            driveTo(error);
 
             telemetry.addData("Phase", "3/3: Final Verification");
             telemetry.addData("Status", "Tuning Complete. Observe behavior.");
@@ -198,7 +222,7 @@ public class AutoHeadingTuner extends LinearOpMode {
             telemetry.addData("Calculated kS", kS);
             telemetry.addLine();
             telemetry.addData("Target", verificationTarget);
-            telemetry.addData("Current Heading", localizer.getPose().getHeading());
+            telemetry.addData("Current X", localizer.getPose().getX());
             telemetry.addData("Error", error);
             telemetry.update();
         }
@@ -206,8 +230,11 @@ public class AutoHeadingTuner extends LinearOpMode {
         // endregion
     }
 
-    private void turnTo(double error) {
-        drivetrain.moveWithVectors(0, 0, -controller.calculate(error));
+    private void driveTo(double axialError) {
+        double headingError = AngleUnit.normalizeRadians(0 - localizer.getPose().getHeading());
+        double turnCorrection = -headingController.calculate(headingError);
+
+        drivetrain.moveWithVectors(axialController.calculate(axialError), 0, turnCorrection);
     }
 
     private void update() {
