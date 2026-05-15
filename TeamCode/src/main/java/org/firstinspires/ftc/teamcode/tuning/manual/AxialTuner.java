@@ -16,8 +16,8 @@ import localizers.Localizer;
 import util.Pose;
 
 /**
- * OpMode for tuning the axial (drive) controller with Panels. Hold X to turn the robot 180 degrees,
- * hold B to rotate to -45 degrees, and hold A to rotate back to the start position. Adjust the
+ * OpMode for tuning the axial (drive) controller with Panels. Hold X to move the robot 24 inches forward,,
+ * hold B to move 6 inches backwards, and hold A to move it back to the start position. Adjust the
  * proportional gain, derivative gain, minimum power, and deadzone in Panels.
  *
  * @author Joel - 7842 Browncoats Alumni
@@ -59,7 +59,7 @@ public class AxialTuner extends OpMode {
         deadzone = controller.getDeadzone();
 
         fullTelem.addLine(
-                "Hold X to move forward 24 inches, B to move backward 6 inches, and A to rotate back to start position."
+                "Hold X to move forward 24 inches, B to move backward 6 inches, and A to drive back to the start position."
         );
         fullTelem.update();
     }

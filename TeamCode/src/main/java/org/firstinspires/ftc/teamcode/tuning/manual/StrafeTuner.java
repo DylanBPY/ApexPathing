@@ -59,7 +59,7 @@ public class StrafeTuner extends OpMode {
         deadzone = controller.getDeadzone();
 
         fullTelem.addLine(
-                "Hold X to move left 24 inches, B to move right 6 inches, and A to move back to start position."
+                "Hold X to move left 24 inches, B to move right 6 inches, and A to move back to the start position."
         );
         fullTelem.update();
     }

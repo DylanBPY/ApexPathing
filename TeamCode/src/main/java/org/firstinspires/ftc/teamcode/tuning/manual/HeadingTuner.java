@@ -57,7 +57,7 @@ public class HeadingTuner extends OpMode {
         deadzone = controller.getDeadzone();
 
         fullTelem.addLine(
-                "Hold X to rotate 180 degrees, B to rotate to -45 degrees. and A to move back to start position."
+                "Hold X to rotate 180 degrees, B to rotate to -45 degrees. and A to move back to the start position."
         );
         fullTelem.update();
     }
