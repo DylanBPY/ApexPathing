@@ -10,19 +10,20 @@ import org.firstinspires.ftc.teamcode.Constants;
 
 import java.util.concurrent.TimeUnit;
 
+import controllers.PDFLController.PDFLCoefficients;
 import controllers.PDFLController;
 import drivetrains.Drivetrain;
 import localizers.Localizer;
 import util.Pose;
 
-// TODO: Reduce redundant boilerplate code by make base class for auto tuners
-@TeleOp(name = "Auto Heading Tuner")
+@TeleOp(name = "Auto Heading Tuner", group = "Apex Pathing Tuning")
 public class AutoHeadingTuner extends LinearOpMode {
     private Drivetrain drivetrain;
     private Localizer localizer;
     private PDFLController controller;
     private ElapsedTime timer;
     public static double minPower;
+    public static double deadzone;
     public static double proportionalGain;
     public static double derivativeGain;
 
@@ -35,8 +36,11 @@ public class AutoHeadingTuner extends LinearOpMode {
             Constants constants = new Constants();
             drivetrain = constants.buildOnlyDrivetrain(hardwareMap);
             localizer = constants.buildOnlyLocalizer(hardwareMap, Pose.zero());
-            controller = new PDFLController(proportionalGain, derivativeGain, 0.0, minPower);
+
+            controller = new PDFLController(new PDFLCoefficients(proportionalGain, derivativeGain, minPower));
+            controller.setDeadzone(deadzone);
             controller.useAsAngularController();
+
             timer = new ElapsedTime();
             telemetry = PanelsTelemetry.INSTANCE.getFtcTelemetry();
 
@@ -53,25 +57,24 @@ public class AutoHeadingTuner extends LinearOpMode {
         // endregion
         // region binary guess min-power tuner
 
-        double maxGuess = 0.2;
-        double minGuess = 0.0;
-        final double initialGuess = (maxGuess + minGuess) / 2.0;
-
         double guess = initialGuess;
+        double lastGuess = -1.0;
+
+        double guess = (maxGuess + minGuess) / 2.0; // Set an initial guess
         double lastGuess = -1.0;
         double maxDetectedAngularVelocity = 9999;
         boolean hasMoved;
         final double HAS_MOVED_THRESHOLD = 0.01; // TODO: Verify that this threshold is good
 
         // Phase 1: Binary search to find the minimum power required to overcome static friction (kS)
-        while (opModeIsActive() && Math.abs(lastGuess - guess) > 0.01 && maxDetectedAngularVelocity > HAS_MOVED_THRESHOLD) {
+        while (opModeIsActive() && Math.abs(lastGuess - guess) > 0.05 && maxDetectedAngularVelocity > HAS_MOVED_THRESHOLD) {
             update();
 
             telemetry.addData("Phase", "1/3: Tuning Min Power (kS)");
             telemetry.addData("Current Power Guess", guess);
             telemetry.update();
 
-            controller.setPDFLCoefficients(0, 0, 0, guess);
+            controller.setCoefficients(new PDFLCoefficients(0, 0, guess));
 
             // Calculate the shortest-path distance to both targets
             double distToZero = Math.abs(AngleUnit.normalizeRadians(localizer.getPose().getHeading() - 0));
@@ -94,15 +97,12 @@ public class AutoHeadingTuner extends LinearOpMode {
 
             // Adjust binary bounds based on whether the chassis moved
             if (hasMoved) {
-                maxGuess = guess;
-                guess = (guess + minGuess) / 2.0;
+                minGuess = guess;
+                guess = (guess + maxGuess) / 2.0;
             } else {
                 minGuess = guess;
                 guess = (guess + maxGuess) / 2.0;
             }
-
-            drivetrain.moveWithVectors(0,0,0);
-            sleep(200);
         }
 
         final double kS = guess;
@@ -164,7 +164,7 @@ public class AutoHeadingTuner extends LinearOpMode {
         double kP = 1.2 / (L * maxAccel);
         double kD = 0.6 / maxAccel;
 
-        controller.setPDFLCoefficients(kP, kD, 0.0, kS);
+        controller.setCoefficients(new PDFLCoefficients(kP, kD, kS));
 
         // endregion
         // region final verification
@@ -208,10 +208,8 @@ public class AutoHeadingTuner extends LinearOpMode {
     }
 
     private void turnTo(double error) {
-        drivetrain.moveWithVectors(0, 0, -controller.calculate(error));
+        drivetrain.moveWithVectors(0, 0, -controller.calculateFromError(error));
     }
 
-    private void update() {
-        localizer.update();
-    }
+    private void update() { localizer.update(); }
 }

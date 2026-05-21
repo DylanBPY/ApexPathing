@@ -6,6 +6,7 @@ import util.Angle;
 import util.Distance;
 
 public abstract class Controller {
+    protected double goal = 0.0;
     protected double lastError = 0.0;
     protected double motorDeadzone = 0.05;
     protected boolean timeAnomalyDetected = false;
@@ -14,9 +15,14 @@ public abstract class Controller {
     private boolean angularController = false;
     private boolean isAtTarget = false;
     private double tolerance;
+    private double maxPower = 1.0;
 
     public Controller() {
         this.lastTimestamp = System.nanoTime();
+    }
+
+    public void setGoal(double newGoal) {
+        this.goal = newGoal;
     }
 
     public void setDeadzone(double deadzone) {
@@ -45,6 +51,10 @@ public abstract class Controller {
         this.tolerance = tolerance.getIn();
     }
 
+    public void setMaxPower(double maxPower) { this.maxPower = maxPower; }
+
+    public double getDeadzone() { return motorDeadzone; }
+
     public boolean isAtTarget() {
         return isAtTarget;
     }
@@ -59,7 +69,7 @@ public abstract class Controller {
         this.lastTimestamp = System.nanoTime();
     }
 
-    public double calculate(double error) {
+    public synchronized double calculateFromError(double error) {
         long currentNano = System.nanoTime();
         // Convert nanoseconds to seconds for standard unit gains
         double deltaTime = (currentNano - lastTimestamp) / 1_000_000_000.0;
@@ -92,8 +102,19 @@ public abstract class Controller {
             return 0;
         }
 
-        // Constrain output to standard motor range [-1.0, 1.0]
-        return Math.max(-1.0, Math.min(1.0, rawPower));
+        // Constrain output to range [-maxPower, maxPower]
+        return Math.max(-this.maxPower, Math.min(this.maxPower, rawPower));
+    }
+
+    public synchronized double calculate(double target, double currentPosition) {
+        long currentNano = System.nanoTime();
+        // Convert nanoseconds to seconds for standard unit gains
+        double deltaTime = (currentNano - lastTimestamp) / 1_000_000_000.0;
+
+        // Detect if loop is too fast (div by zero risk) or too slow (integral/derivative spike)
+        timeAnomalyDetected = deltaTime < 1E-6 || deltaTime > 0.15;
+
+        return calculateFromError(target - currentPosition);
     }
 
     /**

@@ -1,8 +1,6 @@
 package followers;
 
-import com.qualcomm.robotcore.util.Range;
-
-import controllers.PDLController;
+import controllers.PDFLController;
 import drivetrains.Drivetrain;
 import localizers.Localizer;
 import followers.constants.P2PFollowerConstants;
@@ -18,9 +16,9 @@ import util.Vector;
 public class P2PFollower extends Follower {
     private final P2PFollowerConstants constants;
 
-    private final PDLController axialController;
-    private final PDLController strafeController;
-    private final PDLController headingController;
+    private final PDFLController axialController;
+    private final PDFLController strafeController;
+    private final PDFLController headingController;
 
     /**
      * Constructor for the P2PFollower
@@ -53,7 +51,7 @@ public class P2PFollower extends Follower {
     public boolean headingAtTarget() { return constants.headingController.isAtTarget(); }
 
     @Override
-    public void update() {;
+    public void update() {
         localizer.update();
 
         if (!isBusy) {
@@ -70,14 +68,13 @@ public class P2PFollower extends Follower {
             return;
         }
 
-        double axial = axialController.calculate(translationError.getY());
-        double strafe = strafeController.calculate(translationError.getX());
-        double turn = -headingController.calculate(headingError);
+        // Note: powers are clipped to max powers defined in constants
+        Vector translational = new Vector(
+                axialController.calculateFromError(translationError.getX()),
+                strafeController.calculateFromError(translationError.getY())
+        ).rotated(-pose.getHeading()); // Rotate to the robot's frame of reference
+        double turn = -headingController.calculateFromError(headingError);
 
-        axial = Range.clip(axial, -constants.maxTranslationalPower, constants.maxTranslationalPower);
-        strafe = Range.clip(strafe, -constants.maxTranslationalPower, constants.maxTranslationalPower);
-        turn = Range.clip(turn, -constants.maxRotationalPower, constants.maxRotationalPower);
-
-        drivetrain.drive(axial, strafe, turn);
+        drivetrain.drive(translational.getX(), translational.getY(), turn);
     }
 }

@@ -1,6 +1,7 @@
 package followers.constants;
 
-import controllers.PDLController;
+import controllers.PDFLController.PDFLCoefficients;
+import controllers.PDFLController;
 import drivetrains.Drivetrain;
 import followers.P2PFollower;
 import localizers.Localizer;
@@ -13,65 +14,61 @@ import util.Distance;
  */
 public class P2PFollowerConstants extends FollowerConstants {
     // Tunable constants
-    public PDLController.Coefficients axialCoeffs = new PDLController.Coefficients();
-    public PDLController.Coefficients strafeCoeffs = new PDLController.Coefficients();
-    public PDLController.Coefficients headingCoeffs = new PDLController.Coefficients();
+    public PDFLCoefficients axialCoeffs = new PDFLCoefficients();
+    public PDFLCoefficients strafeCoeffs = new PDFLCoefficients();
+    public PDFLCoefficients headingCoeffs = new PDFLCoefficients();
 
     // Controllers
-    public PDLController axialController;
-    public PDLController strafeController;
-    public PDLController headingController;
-
-    // Power limits
-    public double maxTranslationalPower = 1.0;
-    public double maxRotationalPower = 1.0;
+    public PDFLController axialController;
+    public PDFLController strafeController;
+    public PDFLController headingController;
 
     /**
      * Constructor for the P2PFollowerConstants class
      */
     public P2PFollowerConstants() {
-        this.axialController = new PDLController(axialCoeffs);
-        this.strafeController = new PDLController(strafeCoeffs);
-        this.headingController = new PDLController(headingCoeffs);
+        this.axialController = new PDFLController(axialCoeffs);
+        this.strafeController = new PDFLController(strafeCoeffs);
+        this.headingController = new PDFLController(headingCoeffs);
         this.headingController.useAsAngularController();
     }
 
     @Override
     public P2PFollower build(Drivetrain drivetrain, Localizer localizer) {
-        this.axialController.setPDLCoefficients(axialCoeffs);
-        this.strafeController.setPDLCoefficients(strafeCoeffs);
-        this.headingController.setPDLCoefficients(headingCoeffs);
         return new P2PFollower(this, drivetrain, localizer);
     }
 
     // region Setters
     /**
-     * Sets the PDL coefficients for the axial controller.
-     * @param coeffs the new axial {@link PDLController.Coefficients}
+     * Sets the PDFL coefficients for the axial controller.
+     * @param coeffs the new axial {@link PDFLCoefficients}
      * @return this instance for chaining
      */
-    public P2PFollowerConstants setAxialCoeffs(PDLController.Coefficients coeffs) {
+    public P2PFollowerConstants setAxialCoeffs(PDFLCoefficients coeffs) {
         this.axialCoeffs = coeffs;
+        this.axialController.setCoefficients(coeffs);
         return this;
     }
 
     /**
-     * Sets the PDL coefficients for the strafe controller.
-     * @param coeffs the new strafe {@link PDLController.Coefficients}
+     * Sets the PDFL coefficients for the strafe controller.
+     * @param coeffs the new strafe {@link PDFLCoefficients}
      * @return this instance for chaining
      */
-    public P2PFollowerConstants setStrafeCoeffs(PDLController.Coefficients coeffs) {
+    public P2PFollowerConstants setStrafeCoeffs(PDFLCoefficients coeffs) {
         this.strafeCoeffs = coeffs;
+        this.strafeController.setCoefficients(coeffs);
         return this;
     }
 
     /**
-     * Sets the PDL coefficients for the heading controller.
-     * @param coeffs the new heading {@link PDLController.Coefficients}
+     * Sets the PDFL coefficients for the heading controller.
+     * @param coeffs the new heading {@link PDFLCoefficients}
      * @return this instance for chaining
      */
-    public P2PFollowerConstants setHeadingCoeffs(PDLController.Coefficients coeffs) {
+    public P2PFollowerConstants setHeadingCoeffs(PDFLCoefficients coeffs) {
         this.headingCoeffs = coeffs;
+        this.headingController.setCoefficients(coeffs);
         return this;
     }
 
@@ -103,18 +100,46 @@ public class P2PFollowerConstants extends FollowerConstants {
      * @return this instance for chaining
      */
     public P2PFollowerConstants setMaxTranslationalPower(double maxTranslationalPower) {
-        this.maxTranslationalPower = maxTranslationalPower;
+        this.axialController.setMaxPower(maxTranslationalPower);
+        this.strafeController.setMaxPower(maxTranslationalPower);
         return this;
     }
 
     /**
      * Sets the maximum rotational power that the follower can output.
      * Note that drivetrain power limits take precedence over this and this only affects following
-     * @param maxRotationalPower the maximum rotational power (0 to 1)
+     * @param maxTurnPower the maximum rotational power (0 to 1)
      * @return this instance for chaining
      */
-    public P2PFollowerConstants setMaxRotationalPower(double maxRotationalPower) {
-        this.maxRotationalPower = maxRotationalPower;
+    public P2PFollowerConstants setMaxTurnPower(double maxTurnPower) {
+        this.headingController.setMaxPower(maxTurnPower);
+        return this;
+    }
+
+    /**
+     * Sets the deadzone for the axial controller. The controller will output 0 if the error is
+     * within the range of [-deadzone, deadzone].
+     */
+    public P2PFollowerConstants setAxialDeadzone(double axialDeadzone) {
+        this.axialController.setDeadzone(axialDeadzone);
+        return this;
+    }
+
+    /**
+     * Sets the deadzone for the strafe controller. The controller will output 0 if the error is
+     * within the range of [-deadzone, deadzone].
+     */
+    public P2PFollowerConstants setStrafeDeadzone(double strafeDeadzone) {
+        this.strafeController.setDeadzone(strafeDeadzone);
+        return this;
+    }
+
+    /**
+     * Sets the deadzone for the heading controller. The controller will output 0 if the error is
+     * within the range of [-deadzone, deadzone].
+     */
+    public P2PFollowerConstants setHeadingDeadzone(double headingDeadzone) {
+        this.headingController.setDeadzone(headingDeadzone);
         return this;
     }
     // endregion
