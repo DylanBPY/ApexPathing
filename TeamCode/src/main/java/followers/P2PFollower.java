@@ -38,10 +38,14 @@ public class P2PFollower extends Follower {
      * @param targetPose the new target pose
      */
     public void setTargetPose(Pose targetPose) {
+        // Use the unexposed method from the Follower class (converts target pose to inches and radians)
+        super.setTargetPose(targetPose);
         this.axialController.reset();
+        this.axialController.setTarget(targetPose.getX());
         this.strafeController.reset();
+        this.strafeController.setTarget(targetPose.getY());
         this.headingController.reset();
-        super.setTargetPose(targetPose); // Use the unexposed method from the Follower class
+        this.headingController.setTarget(targetPose.getHeading());
     }
 
     public boolean axialAtTarget() { return constants.axialController.isAtTarget(); }
@@ -54,6 +58,9 @@ public class P2PFollower extends Follower {
     public void update() {
         localizer.update();
         Pose pose = localizer.getPose();
+        double currentX = pose.getXComponent().getIn();
+        double currentY = pose.getYComponent().getIn();
+        double currentHeading = pose.getHeadingComponent().getRad();
 
         if (!isBusy) {
             return; // No need to calculate anything if we're not busy
@@ -70,10 +77,10 @@ public class P2PFollower extends Follower {
 
         // Note: powers are clipped to max powers defined in constants
         Vector translational = new Vector(
-                axialController.calculate(this.targetPose.getXComponent().getIn(), pose.getX()),
-                -strafeController.calculate(this.targetPose.getYComponent().getIn(), pose.getY())
-        ).rotated(-pose.getHeadingComponent().getRad()); // Rotate to the robot's frame of reference
-        double turn = -headingController.calculate(this.targetPose.getHeadingComponent().getRad(), pose.getHeading());
+                axialController.calculate(currentX),
+                -strafeController.calculate(currentY)
+        ).rotated(-currentHeading); // Rotate to the robot's frame of reference
+        double turn = -headingController.calculate(currentHeading);
 
         drivetrain.drive(-translational.getX(), translational.getY(), turn);
     }

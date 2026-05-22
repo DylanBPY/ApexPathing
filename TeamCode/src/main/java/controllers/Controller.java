@@ -5,37 +5,30 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import util.Angle;
 import util.Distance;
 
+/**
+ * Base class for all controllers. Handles common logic like tolerance checking, deadzone, and time anomaly detection.
+ * Subclasses implement the specific control algorithm in computeOutput().
+ *
+ * @author Joel - 7842 Browncoats Alumni
+ * @author Dylan B. 18597 RoboClovers - Delta
+ */
 public abstract class Controller {
-    protected double goal = 0.0;
-    protected double lastError = 0.0;
-    protected double motorDeadzone = 0;
-    protected boolean timeAnomalyDetected = false;
-    private long lastTimestamp;
-    private boolean hasRun = false;
     private boolean angularController = false;
+    private double tolerance; // Radians for angular controllers, inches for linear controllers
+    private double maxOutput = 1.0;
+    private double deadzone = 0; // No output when abs(error) < deadzone
+
+    protected double target = 0.0;
+    protected double lastError = 0.0;
+    protected boolean timeAnomalyDetected = false;
+    private boolean firstRun = true;
     private boolean isAtTarget = false;
-    private double tolerance;
-    private double maxPower = 1.0;
+    private long lastTimestamp;
 
-    public Controller() {
-        this.lastTimestamp = System.nanoTime();
-    }
+    public Controller() { this.lastTimestamp = System.nanoTime(); }
 
-    public void setGoal(double newGoal) {
-        this.goal = newGoal;
-    }
-
-    public void setDeadzone(double deadzone) {
-        this.motorDeadzone = deadzone;
-    }
-
-    public void useAsAngularController() {
-        this.angularController = true;
-    }
-
-    public void useAsDefaultController() {
-        this.angularController = false;
-    }
+    public void setAngularController() { this.angularController = true; }
+    public boolean isAngularController() { return angularController; }
 
     public void setTolerance(Angle tolerance) {
         if (!angularController) {
@@ -43,21 +36,24 @@ public abstract class Controller {
         }
         this.tolerance = tolerance.getRad();
     }
-
     public void setTolerance(Distance tolerance) {
         if (angularController) {
             throw new IllegalStateException("Cannot set linear tolerance on an angular controller");
         }
         this.tolerance = tolerance.getIn();
     }
+    public double getTolerance() { return tolerance; }
 
-    public void setMaxPower(double maxPower) { this.maxPower = maxPower; }
+    public void setMaxOutput(double maxOutput) { this.maxOutput = maxOutput; }
+    public double getMaxOutput() { return maxOutput; }
 
-    public double getDeadzone() { return motorDeadzone; }
+    public void setDeadzone(double deadzone) { this.deadzone = deadzone; }
+    public double getDeadzone() { return deadzone; }
 
-    public boolean isAtTarget() {
-        return isAtTarget;
-    }
+    public void setTarget(double target) { this.target = target; }
+    public double getTarget() { return target; }
+
+    public boolean isAtTarget() { return isAtTarget; }
 
     /**
      * Resets the controller state. Call this right before starting a new movement
@@ -65,56 +61,37 @@ public abstract class Controller {
      */
     public void reset() {
         this.isAtTarget = false;
-        this.hasRun = false;
+        this.firstRun = true;
         this.lastTimestamp = System.nanoTime();
     }
 
-    public synchronized double calculateFromError(double error) {
+    public synchronized double calculate(double current) {
         long currentNano = System.nanoTime();
+        double error = target - current;
+
         // Convert nanoseconds to seconds for standard unit gains
         double deltaTime = (currentNano - lastTimestamp) / 1_000_000_000.0;
 
         // Detect if loop is too fast (div by zero risk) or too slow (integral/derivative spike)
         timeAnomalyDetected = deltaTime < 1E-6 || deltaTime > 0.15;
 
-        double actualError = angularController ?
-                AngleUnit.normalizeRadians(error) :
-                error;
-
+        double actualError = angularController ? AngleUnit.normalizeRadians(error) : error;
         isAtTarget = Math.abs(actualError) < tolerance;
 
         // Initialize lastError on first run to prevent derivative kick from 0
-        if (!hasRun) {
-            deltaTime = 0.0;
-            lastError = actualError;
-            hasRun = true;
+        if (firstRun) { deltaTime = 0.0; firstRun = false; }
+
+        // Subclass-specific calculation
+        double rawOutput = computeOutput(actualError, lastError, deltaTime);
+        if (Math.abs(rawOutput) < deadzone) {
+            return 0;
         }
+        rawOutput = Math.max(-this.maxOutput, Math.min(this.maxOutput, rawOutput));
 
-        // Subclass-specific calculation (P, I, D, F, etc.)
-        double rawPower = computeOutput(actualError, lastError, deltaTime);
-
-        // Update state for next iteration
         lastTimestamp = currentNano;
         lastError = actualError;
 
-        // Apply deadzone to prevent jitters and humming close to target
-        if (Math.abs(rawPower) < motorDeadzone) {
-            return 0;
-        }
-
-        // Constrain output to range [-maxPower, maxPower]
-        return Math.max(-this.maxPower, Math.min(this.maxPower, rawPower));
-    }
-
-    public synchronized double calculate(double target, double currentPosition) {
-        long currentNano = System.nanoTime();
-        // Convert nanoseconds to seconds for standard unit gains
-        double deltaTime = (currentNano - lastTimestamp) / 1_000_000_000.0;
-
-        // Detect if loop is too fast (div by zero risk) or too slow (integral/derivative spike)
-        timeAnomalyDetected = deltaTime < 1E-6 || deltaTime > 0.15;
-
-        return calculateFromError(target - currentPosition);
+        return rawOutput;
     }
 
     public double getError() { return lastError; }

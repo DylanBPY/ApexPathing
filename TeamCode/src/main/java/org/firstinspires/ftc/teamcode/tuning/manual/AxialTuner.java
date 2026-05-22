@@ -40,7 +40,6 @@ public class AxialTuner extends OpMode {
     public static double derivativeGain; // kD
     public static double minPower; // kL
     private boolean wasAtTarget = false;
-    private boolean atTarget = false;
     private double rawOutput;
 
     @Override
@@ -56,6 +55,7 @@ public class AxialTuner extends OpMode {
 
         // Extract the controllers, coefficients, and deadzone from the constants class
         headingController = followerConstants.headingController;
+        headingController.setTarget(0);
         controller = followerConstants.axialController;
         proportionalGain = controller.getCoefficients().kP;
         derivativeGain = controller.getCoefficients().kD;
@@ -70,15 +70,16 @@ public class AxialTuner extends OpMode {
 
     private void moveToTarget(double target) {
         this.target = target;
+        controller.setTarget(target);
 
         double turn = 0;
         if (maintainHeading) {
-            turn = -headingController.calculate(0, this.localizer.getPose().getHeading());
+            turn = -headingController.calculate(this.localizer.getPose().getHeading());
         } else {
             headingController.reset(); // Prevent derivative kick when not maintaining heading
         }
 
-        this.rawOutput = controller.calculate(target, this.localizer.getPose().getX());
+        this.rawOutput = controller.calculate( this.localizer.getPose().getX());
         this.drivetrain.moveWithVectors(rawOutput, 0, turn);
     }
 
@@ -102,7 +103,7 @@ public class AxialTuner extends OpMode {
             drivetrain.stop();
         }
 
-        atTarget = controller.isAtTarget();
+        boolean atTarget = controller.isAtTarget();
         if (atTarget && !wasAtTarget) { // Gamepad rumble and Led green when at target
             gamepad1.rumble(0.5, 0.5, 100);
             gamepad1.setLedColor(0, 1, 0, 300);

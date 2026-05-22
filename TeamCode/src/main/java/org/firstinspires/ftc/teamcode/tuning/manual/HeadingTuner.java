@@ -39,7 +39,6 @@ public class HeadingTuner extends OpMode {
     public static double derivativeGain; // kD
     public static double minPower; // kL
     private boolean wasAtTarget = false;
-    private boolean atTarget = false;
 
     private double rawOutput;
 
@@ -70,7 +69,8 @@ public class HeadingTuner extends OpMode {
 
     private void moveToTarget(double target) {
         this.target = target;
-        this.rawOutput = -this.controller.calculate(target, this.localizer.getPose().getHeading());
+        controller.setTarget(target);
+        this.rawOutput = -this.controller.calculate(this.localizer.getPose().getHeading());
         this.drivetrain.moveWithVectors(0, 0, rawOutput);
     }
 
@@ -92,7 +92,7 @@ public class HeadingTuner extends OpMode {
             drivetrain.stop();
         }
 
-        atTarget = controller.isAtTarget();
+        boolean atTarget = controller.isAtTarget();
         if (atTarget && !wasAtTarget) { //Gamepad rumble and Led green when at target
             gamepad1.rumble(0.5, 0.5, 100);
             gamepad1.setLedColor(0, 1, 0, 300);
