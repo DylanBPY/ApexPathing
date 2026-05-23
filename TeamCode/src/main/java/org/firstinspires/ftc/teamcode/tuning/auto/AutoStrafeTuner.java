@@ -52,14 +52,15 @@ public class AutoStrafeTuner extends LinearOpMode {
             localizer = constants.buildOnlyLocalizer(hardwareMap, Pose.zero());
 
             // Initialize Strafe Controller
-            controller = new PDFLController(proportionalGain, derivativeGain, 0.0, minPower);
+            controller = new PDFLController(new PDFLController.PDFLCoefficients(proportionalGain, derivativeGain, 0.0, minPower));
 
             // Initialize Heading Controller to maintain a straight line
-            headingController = new PDFLController(
+            headingController = new PDFLController(new PDFLController.PDFLCoefficients(
                     followerConstants.headingCoeffs.kP,
                     followerConstants.headingCoeffs.kD,
                     0.0,
                     0.0
+                )
             );
             headingController.useAsAngularController();
 
@@ -97,7 +98,7 @@ public class AutoStrafeTuner extends LinearOpMode {
             telemetry.addData("Current Power Guess", guess);
             telemetry.update();
 
-            controller.setPDFLCoefficients(0, 0, 0, guess);
+            controller.setCoefficients(new PDFLController.PDFLCoefficients(0, 0, 0, guess));
 
             // Calculate the distance to both ends of the test track (using Y axis for strafe)
             double distToZero = Math.abs(localizer.getPose().getY() - 0);
@@ -183,7 +184,7 @@ public class AutoStrafeTuner extends LinearOpMode {
 
             // Full strafe power (second parameter), applying heading correction to keep it straight
             double headingError = AngleUnit.normalizeRadians(0 - localizer.getPose().getHeading());
-            drivetrain.moveWithVectors(0, 1.0, -headingController.calculate(headingError));
+            drivetrain.moveWithVectors(0, 1.0, -headingController.calculateFromError(headingError));
         }
 
         // Calculate Delay Time (L) based on the tangent line of the inflection point
@@ -193,7 +194,7 @@ public class AutoStrafeTuner extends LinearOpMode {
         double kP = 1.2 / (L * maxAccel);
         double kD = 0.6 / maxAccel;
 
-        controller.setPDFLCoefficients(kP, kD, 0.0, kS);
+        controller.setCoefficients(new PDFLController.PDFLCoefficients(kP, kD, 0.0, kS));
 
         // endregion
         // region final verification
@@ -239,10 +240,10 @@ public class AutoStrafeTuner extends LinearOpMode {
     private void strafeTo(double strafeError) {
         // Automatically correct heading while strafing point-to-point
         double headingError = AngleUnit.normalizeRadians(0 - localizer.getPose().getHeading());
-        double turnCorrection = -headingController.calculate(headingError);
+        double turnCorrection = -headingController.calculateFromError(headingError);
 
         // Mapped to the second parameter (strafe) instead of the first (axial)
-        drivetrain.moveWithVectors(0, controller.calculate(strafeError), turnCorrection);
+        drivetrain.moveWithVectors(0, controller.calculateFromError(strafeError), turnCorrection);
     }
 
     private void update() {

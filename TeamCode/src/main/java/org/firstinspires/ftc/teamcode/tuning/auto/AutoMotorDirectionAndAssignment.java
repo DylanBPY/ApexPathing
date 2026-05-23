@@ -75,7 +75,6 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            // FIX: Changed < to >= so it only skips the state machine AFTER all motors are tested
             if (currentMotorIndex >= motorArray.length) {
                 telemetry.addLine("--- Tuning Complete ---");
                 for (String result : telemetrySummary) {

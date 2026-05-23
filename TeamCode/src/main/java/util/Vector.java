@@ -2,6 +2,8 @@ package util;
 
 import androidx.annotation.NonNull;
 
+import paths.geometry.BSpline;
+
 public class Vector {
     Distance x;
     Distance y;
@@ -247,6 +249,15 @@ public class Vector {
     // endregion
 
     // region Utility methods
+
+    /**
+     * @param across The vector which the current vector will be reflected across
+     * @return The reflected vector
+     * @see BSpline
+     */
+    public Vector reflect(Vector across) {
+        return across.add(this.subtract(across).multiply(-1.0));
+    }
     
     /**
      * Converts the vector to a Pose object.

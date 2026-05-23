@@ -48,14 +48,16 @@ public class AutoAxialTuner extends LinearOpMode {
             localizer = constants.buildOnlyLocalizer(hardwareMap, Pose.zero());
 
             // Initialize Axial Controller
-            axialController = new PDFLController(proportionalGain, derivativeGain, 0.0, minPower);
+            axialController = new PDFLController(new PDFLController.PDFLCoefficients(proportionalGain, derivativeGain, 0.0, minPower));
 
             // Initialize Heading Controller to maintain a straight line
             headingController = new PDFLController(
-                    followerConstants.headingCoeffs.kP,
-                    followerConstants.headingCoeffs.kD,
-                    0.0,
-                    0.0
+                        new PDFLController.PDFLCoefficients(
+                        followerConstants.headingCoeffs.kP,
+                        followerConstants.headingCoeffs.kD,
+                        0.0,
+                        0.0
+                    )
             );
             headingController.useAsAngularController();
 
@@ -93,7 +95,7 @@ public class AutoAxialTuner extends LinearOpMode {
             telemetry.addData("Current Power Guess", guess);
             telemetry.update();
 
-            axialController.setPDFLCoefficients(0, 0, 0, guess);
+            axialController.setCoefficients(new PDFLController.PDFLCoefficients(0, 0, 0, guess));
 
             // Calculate the distance to both ends of the test track
             double distToZero = Math.abs(localizer.getPose().getX() - 0);
@@ -178,7 +180,7 @@ public class AutoAxialTuner extends LinearOpMode {
 
             // Full forward power, but applying heading correction to keep it straight
             double headingError = AngleUnit.normalizeRadians(0 - localizer.getPose().getHeading());
-            drivetrain.moveWithVectors(1.0, 0, -headingController.calculate(headingError));
+            drivetrain.moveWithVectors(1.0, 0, -headingController.calculateFromError(headingError));
         }
 
         // Calculate Delay Time (L) based on the tangent line of the inflection point
@@ -188,7 +190,7 @@ public class AutoAxialTuner extends LinearOpMode {
         double kP = 1.2 / (L * maxAccel);
         double kD = 0.6 / maxAccel;
 
-        axialController.setPDFLCoefficients(kP, kD, 0.0, kS);
+        axialController.setCoefficients(new PDFLController.PDFLCoefficients(kP, kD, 0.0, kS));
 
         // endregion
         // region final verification
@@ -233,9 +235,9 @@ public class AutoAxialTuner extends LinearOpMode {
 
     private void driveTo(double axialError) {
         double headingError = AngleUnit.normalizeRadians(0 - localizer.getPose().getHeading());
-        double turnCorrection = -headingController.calculate(headingError);
+        double turnCorrection = -headingController.calculateFromError(headingError);
 
-        drivetrain.moveWithVectors(axialController.calculate(axialError), 0, turnCorrection);
+        drivetrain.moveWithVectors(axialController.calculateFromError(axialError), 0, turnCorrection);
     }
 
     private void update() {
