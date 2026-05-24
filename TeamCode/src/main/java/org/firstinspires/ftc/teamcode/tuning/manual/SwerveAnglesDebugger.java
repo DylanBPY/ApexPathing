@@ -27,7 +27,7 @@ public class SwerveAnglesDebugger extends LinearOpMode {
             telemetry.addData("these angles are the actual pod angles", "0 degrees is straight forward.");
             telemetry.addData("fix your offsets until all wheels are pointed forward", "");
             swerve.debug(telemetry);
+            telemetry.update();
         }
-        telemetry.update();
     }
 }
