@@ -59,7 +59,7 @@ public class AutoAxialTuner extends LinearOpMode {
                         0.0
                     )
             );
-            headingController.useAsAngularController();
+            headingController.setAngularController();
 
             timer = new ElapsedTime();
             telemetry = PanelsTelemetry.INSTANCE.getFtcTelemetry();

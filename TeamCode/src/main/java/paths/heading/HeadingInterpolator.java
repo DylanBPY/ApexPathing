@@ -86,8 +86,8 @@ public class HeadingInterpolator {
             throw new IllegalArgumentException("Invalid 2-angle constructor for style: " + style.name());
         }
         this.style = style;
-        this.startHeading = startHeading;
-        this.endHeading = endHeading;
+        this.startHeading = startHeading.copy();
+        this.endHeading = endHeading.copy();
     }
 
     /**
@@ -137,7 +137,7 @@ public class HeadingInterpolator {
                 return customFunction.apply(s);
 
             default:
-                throw new IllegalArgumentException("Unhandled style for: " + style.name());
+                throw new IllegalStateException("Unhandled heading interpolation style: " + style.name());
         }
     }
 
@@ -171,16 +171,21 @@ public class HeadingInterpolator {
     }
 
     /**
-     * Interpolates linearly between startHeading and endHeading via the shortest rotational path.
+     * Interpolates between startHeading and endHeading via the shortest rotational path,
+     * applying a cubic ease-in-out profile so rotational acceleration does not instantly spike.
      *
      * @param s The distance percentage along the segment [0.0, 1.0].
-     * @return The interpolated Angle.
+     * @return The profiled, interpolated Angle.
      */
     private Angle calculateShortestPathLerp(double s) {
         s = Math.max(0.0, Math.min(1.0, s));
 
+        // Apply a Cubic Smoothstep (Ease-In-Out) profile to 's'
+        // Equation: f(s) = 3s^2 - 2s^3
+        double profiledS = (3.0 * s * s) - (2.0 * s * s * s);
+
         double diffRad = getShortestAngularDifference(startHeading, endHeading);
-        double targetRad = startHeading.getRad() + (diffRad * s);
+        double targetRad = startHeading.getRad() + (diffRad * profiledS);
 
         return new Angle(targetRad);
     }

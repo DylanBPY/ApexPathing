@@ -1,7 +1,6 @@
 package paths;
 
 import paths.geometry.ParametricSegment;
-import paths.heading.HeadingInterpolator;
 import util.Vector;
 
 /**
@@ -69,8 +68,7 @@ public class PathSegment {
 
         // Coarse search via LUT
         for (PathPoint point : LUTpoints) {
-            Vector delta = point.getLocation().subtract(location);
-            double distSq = delta.dotProduct(delta);
+            double distSq = point.getLocation().subtract(location).getMagnitudeSquared();
 
             if (distSq < minDistSq) {
                 minDistSq = distSq;
@@ -149,7 +147,7 @@ public class PathSegment {
      * using a blisteringly fast O(1) LUT index calculation.
      *
      * @param closestPointOnCurve The calculated physical position on the curve closest to the robot.
-     * @param t The parametric 't' value that yielded closestPointOnCurve.
+     * @param t                   The parametric 't' value that yielded closestPointOnCurve.
      * @return The remaining distance in inches.
      */
     public double getDistanceToEnd_in(Vector closestPointOnCurve, double t) {
@@ -173,6 +171,7 @@ public class PathSegment {
     }
 
     // VERY approximate length calculation for Coarse Polyline Approximation
+
     /**
      * A highly optimized approximation of the segment's length used exclusively
      * to determine how many LUT points to allocate.

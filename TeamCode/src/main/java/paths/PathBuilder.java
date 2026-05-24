@@ -14,16 +14,18 @@ import util.Vector;
  * This class keeps track of the robot's state (its last known pose) to automatically
  * link segments together, ensuring continuous paths without needing to manually
  * pass the start point for every new curve.
- * NOTE: NOTICE TANGENCY IS NOT GUARANTEED IN THIS BUILDER. I think this is OK for now as almost any
+ * NOTE: NOTICE C1 (tangent) CONTINUITY IS NOT GUARANTEED IN THIS BUILDER. This is because almost any
  * path can be created with B-Splines, and anytime a user wants to add a line, they most likely want
- * to stop before continuing. THIS SHOULD BE CLEARLY COMMUNICATED IN THE DOCS, and MIGHT BE CHANGED IN
- * FUTURE UPDATES.
+ * to stop before continuing. THIS SHOULD BE CLEARLY COMMUNICATED IN THE DOCS, and WILL LIKELY
+ * BE CHANGED IN NEAR-FUTURE UPDATES TO FORCE C1 CONTINUITY.
  * <p>
  * Author: DrPixelCat
  */
 public class PathBuilder {
     private final Path path;
     private Pose lastPose;
+    private final InterpolationStyle DEFAULT_INTERPOLATION = InterpolationStyle.SMOOTH_START_TO_END;
+    private InterpolationStyle currentStyle = DEFAULT_INTERPOLATION;
 
     /**
      * Initializes the PathBuilder with the starting location and heading of the robot.
@@ -45,32 +47,33 @@ public class PathBuilder {
      * @return The current PathBuilder instance for method chaining.
      * @throws IllegalArgumentException If too few points are provided to construct a valid B-Spline.
      */
-    public PathBuilder bSplineTo(Pose... poses) throws Exception {
-        if (poses.length == 0) throw new IllegalArgumentException("A B-Spline must be created with > 1 points!");
-        Vector[] vectors = new Vector[poses.length + 1];
+    public PathBuilder bSplineTo(Pose... poses) {
+        if (poses.length == 0)
+            throw new IllegalArgumentException("A B-Spline must be created with > 1 points!");
 
+        Vector[] vectors = new Vector[poses.length + 1];
         vectors[0] = lastPose.toVec();
+
+        boolean intermediateWarningSent = false;
 
         for (int i = 0; i < poses.length; i++) {
             vectors[i + 1] = poses[i].toVec();
+
+            // If an intermediate pose (not the last one) has a defined heading, throw a warning
+            if (i < poses.length - 1 && !intermediateWarningSent && Double.isFinite(poses[i].getHeading())) {
+                // TODO: Decide what "TBD" is
+                path.addWarning("APEX WARNING: Intermediate B-Spline headings are ignored! Only the " +
+                        "final pose heading controls the end heading. (Disable this warning in TBD)");
+                intermediateWarningSent = true;
+            }
         }
 
+        Pose endPose = poses[poses.length - 1];
         PathSegment curve = new PathSegment(new BSpline(vectors));
 
-        // NOTE: This is a very crude solution to make paths a bit more optimal. The user most
-        // likely doesn't want the robot to go to the turning effort of following a path tangent if
-        // the end is < 36 inches away. It's faster to just do a linear interpolation.
-        // THIS IS a) CONFUSING AND b) NOT REALLY WELL OPTIMIZED. THEREFORE: PROBABLY NEEDS TO BE
-        // CHANGED IN A BETTER WAY TO BE MORE OPTIMAL AND OR LESS CONFUSING
-        path.addSegment(curve, new HeadingInterpolator(
-                curve.getLength_in() >= 36 ?
-                        InterpolationStyle.TANGENT_OPTIMAL
-                        : InterpolationStyle.SMOOTH_START_TO_END,
-                lastPose.getHeadingComponent(),
-                poses[poses.length - 1].getHeadingComponent())
-        );
+        path.addSegment(curve, buildSafeInterpolator(lastPose, endPose));
 
-        lastPose = poses[poses.length - 1];
+        lastPose = endPose;
         return this;
     }
 
@@ -81,7 +84,7 @@ public class PathBuilder {
      * @param interpolator The custom HeadingInterpolator to apply to the preceding segment.
      * @return The current PathBuilder instance for method chaining.
      */
-    public PathBuilder interpolateWith(HeadingInterpolator interpolator) {
+    public PathBuilder interpolatePreviousSegment(HeadingInterpolator interpolator) {
         path.overrideLastInterpolator(interpolator);
         return this;
     }
@@ -97,18 +100,7 @@ public class PathBuilder {
     public PathBuilder lineTo(Pose pose) {
         PathSegment line = new PathSegment(new Line(lastPose.toVec(), pose.toVec()));
 
-        // NOTE: This is a very crude solution to make paths a bit more optimal. The user most
-        // likely doesn't want the robot to go to the turning effort of following a path tangent if
-        // the end is < 36 inches away. It's faster to just do a linear interpolation.
-        // THIS IS a) CONFUSING AND b) NOT REALLY WELL OPTIMIZED. THEREFORE: PROBABLY NEEDS TO BE
-        // CHANGED IN A BETTER WAY TO BE MORE OPTIMAL AND OR LESS CONFUSING
-        path.addSegment(line, new HeadingInterpolator(
-                line.getLength_in() >= 36 ?
-                        InterpolationStyle.TANGENT_OPTIMAL
-                        : InterpolationStyle.SMOOTH_START_TO_END,
-                lastPose.getHeadingComponent(),
-                pose.getHeadingComponent())
-        );
+        path.addSegment(line, buildSafeInterpolator(lastPose, pose));
 
         lastPose = pose;
         return this;
@@ -131,6 +123,32 @@ public class PathBuilder {
     }
 
     /**
+     * Overrides the default (SMOOTH_START_TO_END) heading interpolation strategy for the whole path.
+     * For fastest results, use the default for shorter segments and TANGENT_OPTIMAL for longer ones.
+     *
+     * @param style The style to apply to the whole path
+     * @return The current PathBuilder instance for method chaining.
+     */
+    public PathBuilder setInterpolationStyle(InterpolationStyle style) {
+        switch (style) {
+            case TANGENT_OPTIMAL:
+                currentStyle = InterpolationStyle.TANGENT_OPTIMAL;
+                break;
+            case TANGENT_FORWARD:
+                currentStyle = InterpolationStyle.TANGENT_FORWARD;
+                break;
+            case SMOOTH_START_TO_END:
+                currentStyle = InterpolationStyle.SMOOTH_START_TO_END;
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "You need more parameters for: " + style.name() + "! You can use this style " +
+                        "on specific segments with interpolatePreviousSegmentWith(<HeadingInterpolator>)");
+        }
+        return this;
+    }
+
+    /**
      * Finalizes the construction process and returns the completed path.
      *
      * @return The fully constructed {@link Path} object ready for execution.
@@ -138,4 +156,30 @@ public class PathBuilder {
     public Path build() {
         return path;
     }
+
+    // region Helpers
+
+    /**
+     * Safely constructs a HeadingInterpolator, automatically falling back to TANGENT_FORWARD
+     * and generating a warning if a user forgot to supply valid headings in their Poses.
+     */
+    private HeadingInterpolator buildSafeInterpolator(Pose start, Pose end) {
+        boolean missingHeading = !Double.isFinite(start.getHeading()) || !Double.isFinite(end.getHeading());
+
+        // If the style requires 2 angles, but we are missing one, fallback and warn
+        if (missingHeading && (currentStyle == InterpolationStyle.SMOOTH_START_TO_END || currentStyle == InterpolationStyle.TANGENT_OPTIMAL)) {
+            path.addWarning("APEX WARNING: Segment missing start/end heading! Falling back to TANGENT_FORWARD. Use Pose(x, y, heading) to fix this.");
+            return new HeadingInterpolator(InterpolationStyle.TANGENT_FORWARD);
+        }
+
+        // If they explicitly selected TANGENT_FORWARD, use the 1-argument constructor
+        if (currentStyle == InterpolationStyle.TANGENT_FORWARD) {
+            return new HeadingInterpolator(InterpolationStyle.TANGENT_FORWARD);
+        }
+
+        // Otherwise, we have valid headings and can safely use the 2-angle constructor
+        return new HeadingInterpolator(currentStyle, start.getHeadingComponent(), end.getHeadingComponent());
+    }
+
+    // endregion
 }

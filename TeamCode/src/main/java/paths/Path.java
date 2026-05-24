@@ -2,6 +2,7 @@ package paths;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import paths.heading.HeadingInterpolator;
 import util.Angle;
 
@@ -41,7 +42,9 @@ public class Path {
         // Populated if type == TURN
         public final Angle targetHeading;
 
-        /** Constructor for a geometric drive segment */
+        /**
+         * Constructor for a geometric drive segment
+         */
         public PathNode(PathSegment segment, HeadingInterpolator interpolator) {
             this.type = NodeType.DRIVE;
             this.segment = segment;
@@ -49,7 +52,9 @@ public class Path {
             this.targetHeading = null;
         }
 
-        /** Constructor for a stationary turn */
+        /**
+         * Constructor for a stationary turn
+         */
         public PathNode(Angle targetHeading) {
             this.type = NodeType.TURN;
             this.targetHeading = targetHeading;
@@ -59,19 +64,22 @@ public class Path {
     }
 
     private final List<PathNode> nodes = new ArrayList<>();
+    private final List<String> buildWarnings = new ArrayList<>();
     private int currentIndex = 0;
 
     /**
      * Appends a new segment and its heading strategy to the end of the path.
      *
-     * @param segment The geometric curve to add.
+     * @param segment      The geometric curve to add.
      * @param interpolator The heading strategy for this curve.
      */
     public void addSegment(PathSegment segment, HeadingInterpolator interpolator) {
         nodes.add(new PathNode(segment, interpolator));
     }
 
-    /** Appends a stationary turn to the path */
+    /**
+     * Appends a stationary turn to the path
+     */
     public void addTurn(Angle targetHeading) {
         nodes.add(new PathNode(targetHeading));
     }
@@ -114,6 +122,26 @@ public class Path {
         if (!isLastSegment()) {
             currentIndex++;
         }
+    }
+
+    /**
+     * Adds a per-path warning based on feedback from PathBuilder
+     *
+     * @param warning The warning string to be displayed on the driver hub
+     */
+    public void addWarning(String warning) {
+        if (!buildWarnings.contains(warning)) { // Prevent spamming the exact same warning twice
+            buildWarnings.add(warning);
+        }
+    }
+
+    /**
+     * Gets Path warnings to be displayed to driver
+     *
+     * @return The list of warnings corresponding to each path segment.
+     */
+    public List<String> getWarnings() {
+        return buildWarnings;
     }
 
     /**

@@ -1,7 +1,7 @@
 package paths.heading;
 
 /**
- * Defines the strategy used to calculate the robot's target heading (orientation) 
+ * Defines the strategy used to calculate the robot's target heading (orientation)
  * at any given distance percentage along a path segment.
  * Author: DrPixelCat
  */
@@ -19,14 +19,14 @@ public enum InterpolationStyle {
     CONSTANT_END_HEADING,
 
     /**
-     * The robot aligns its heading with the tangent of the path, but chooses the 
-     * direction (forward, backward, left, right) that requires the least amount of rotation.
+     * The robot aligns its heading with the tangent of the path, but chooses the
+     * direction (forward, backward) that requires the least amount of rotation.
      */
     TANGENT_OPTIMAL,
 
     /**
-     * The robot strictly faces the forward direction of travel along the path 
-     * at all times, driving like a standard car. 
+     * The robot strictly faces the forward direction of travel along the path
+     * at all times, driving like a standard car.
      */
     TANGENT_FORWARD,
 
@@ -37,13 +37,13 @@ public enum InterpolationStyle {
     TANGENT_CUSTOM,
 
     /**
-     * The robot smoothly interpolates its heading from the starting angle to the 
+     * The robot smoothly interpolates its heading from the starting angle to the
      * ending angle as it travels the segment (usually a linear interpolation based on 't').
      */
     SMOOTH_START_TO_END,
 
     /**
-     * The heading is controlled by a custom user-defined function or curve, 
+     * The heading is controlled by a custom user-defined function or curve,
      * allowing for complex heading profiles completely independent of the path's shape.
      */
     CUSTOM_DIST_FUNCTION

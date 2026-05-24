@@ -9,6 +9,7 @@ import util.Vector;
  * across the entire path. Because they are evaluated using a sliding 4-point window,
  * calculating a point on the curve runs in O(1) constant time, regardless of how
  * many control points are in the path.
+ * TODO: Maybe add heading component to each control point
  * Author: DrPixelCat
  */
 public class BSpline implements ParametricSegment {
@@ -19,11 +20,11 @@ public class BSpline implements ParametricSegment {
     private final double[][] cx;
     private final double[][] cy;
 
-    private static final Matrix BLEND_MATRIX = new Matrix(new double[][] {
-            {-1.0 / 6.0,  3.0 / 6.0, -3.0 / 6.0,  1.0 / 6.0},
-            { 3.0 / 6.0, -6.0 / 6.0,  3.0 / 6.0,  0.0      },
-            {-3.0 / 6.0,  0.0,        3.0 / 6.0,  0.0      },
-            { 1.0 / 6.0,  4.0 / 6.0,  1.0 / 6.0,  0.0      }
+    private static final Matrix BLEND_MATRIX = new Matrix(new double[][]{
+            {-1.0 / 6.0, 3.0 / 6.0, -3.0 / 6.0, 1.0 / 6.0},
+            {3.0 / 6.0, -6.0 / 6.0, 3.0 / 6.0, 0.0},
+            {-3.0 / 6.0, 0.0, 3.0 / 6.0, 0.0},
+            {1.0 / 6.0, 4.0 / 6.0, 1.0 / 6.0, 0.0}
     });
 
     /**
@@ -35,8 +36,8 @@ public class BSpline implements ParametricSegment {
      * @throws IllegalArgumentException if there are 2 or fewer points provided.
      */
     public BSpline(Vector[] inputPoints) throws IllegalArgumentException {
-        if (inputPoints.length <= 2) {
-            throw new IllegalArgumentException("You can't make a B-Spline curve with only two points!");
+        if (inputPoints.length <= 1) {
+            throw new IllegalArgumentException("You can't make a B-Spline curve with only one point!");
         }
 
         // 1. Create ghost points
@@ -140,14 +141,5 @@ public class BSpline implements ParametricSegment {
 
         // Chain rule scaling
         return new Vector(ddx, ddy).multiply((double) numSegments * numSegments);
-    }
-
-    private double calcLocalT(double t) {
-        if (t >= 1.0) t = 0.999999;
-        if (t < 0.0) t = 0.0;
-
-        double continuousIndex = t * numSegments;
-        int segment = (int) continuousIndex;
-        return continuousIndex - segment;
     }
 }

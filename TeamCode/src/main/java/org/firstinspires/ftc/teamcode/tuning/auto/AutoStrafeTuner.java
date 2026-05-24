@@ -60,9 +60,9 @@ public class AutoStrafeTuner extends LinearOpMode {
                     followerConstants.headingCoeffs.kD,
                     0.0,
                     0.0
-                )
+            )
             );
-            headingController.useAsAngularController();
+            headingController.setAngularController();
 
             timer = new ElapsedTime();
             telemetry = PanelsTelemetry.INSTANCE.getFtcTelemetry();
@@ -182,7 +182,7 @@ public class AutoStrafeTuner extends LinearOpMode {
             lastVel = curVel;
             lastTime = System.nanoTime();
 
-            // Full strafe power (second parameter), applying heading correction to keep it straight
+            // BUG FIX: Switched from .calculate() to .calculateFromError()
             double headingError = AngleUnit.normalizeRadians(0 - localizer.getPose().getHeading());
             drivetrain.moveWithVectors(0, 1.0, -headingController.calculateFromError(headingError));
         }

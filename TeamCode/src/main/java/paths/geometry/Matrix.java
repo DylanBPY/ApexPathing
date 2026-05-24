@@ -11,6 +11,7 @@ public class Matrix {
 
     /**
      * Constructs a new Matrix from a 2D double array.
+     *
      * @param data The 2D array representing the matrix [rows][columns]
      */
     public Matrix(double[][] data) {
@@ -26,6 +27,7 @@ public class Matrix {
 
     /**
      * Multiplies this matrix by a 1D column vector.
+     *
      * @param vector The 1D array representing the column vector
      * @return A new 1D array containing the result
      */
@@ -54,6 +56,11 @@ public class Matrix {
         return data[row][col];
     }
 
-    public int getRows() { return rows; }
-    public int getCols() { return cols; }
+    public int getRows() {
+        return rows;
+    }
+
+    public int getCols() {
+        return cols;
+    }
 }

@@ -65,9 +65,23 @@ public abstract class Controller {
         this.lastTimestamp = System.nanoTime();
     }
 
+    /**
+     * Calculates the output based on the current state and the internally set target.
+     * @param current The current physical reading (e.g., position, angle)
+     * @return The control output
+     */
     public synchronized double calculate(double current) {
+        return calculateFromError(target - current);
+    }
+
+    /**
+     * Calculates the output directly from a pre-calculated error.
+     * Bypasses the internal target-current math.
+     * @param error The calculated error (Target - Current)
+     * @return The control output
+     */
+    public synchronized double calculateFromError(double error) {
         long currentNano = System.nanoTime();
-        double error = target - current;
 
         // Convert nanoseconds to seconds for standard unit gains
         double deltaTime = (currentNano - lastTimestamp) / 1_000_000_000.0;

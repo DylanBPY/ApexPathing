@@ -9,13 +9,19 @@ import util.Vector;
  */
 public interface ParametricSegment {
 
-    /** @return The (x, y) coordinate at parameter t */
+    /**
+     * @return The (x, y) coordinate at parameter t
+     */
     Vector getPosition(double t);
 
-    /** @return The first derivative (velocity vector) at parameter t */
+    /**
+     * @return The first derivative (velocity vector) at parameter t
+     */
     Vector getFirstDerivative(double t);
 
-    /** @return The second derivative (acceleration vector) at parameter t */
+    /**
+     * @return The second derivative (acceleration vector) at parameter t
+     */
     Vector getSecondDerivative(double t);
 
     /**
@@ -40,6 +46,7 @@ public interface ParametricSegment {
 
     /**
      * Calculates the signed curvature at parameter t.
+     *
      * @return Curvature (1 / radius). A straight line will naturally return 0.0.
      */
     default double getCurvature(double t) {

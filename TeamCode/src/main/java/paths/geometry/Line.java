@@ -19,7 +19,7 @@ public class Line implements ParametricSegment {
      * Constructs a line segment between two points.
      *
      * @param start The starting point (t = 0.0)
-     * @param end The ending point (t = 1.0)
+     * @param end   The ending point (t = 1.0)
      */
     public Line(Vector start, Vector end) {
         this.start = start;
@@ -72,10 +72,14 @@ public class Line implements ParametricSegment {
     /**
      * @return The starting coordinate of the line segment.
      */
-    public Vector getStart() { return start; }
+    public Vector getStart() {
+        return start;
+    }
 
     /**
      * @return The ending coordinate of the line segment.
      */
-    public Vector getEnd() { return end; }
+    public Vector getEnd() {
+        return end;
+    }
 }

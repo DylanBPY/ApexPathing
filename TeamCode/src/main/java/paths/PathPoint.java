@@ -19,9 +19,9 @@ public class PathPoint {
     /**
      * Constructs a precalculated path point.
      *
-     * @param t The parametric value [0.0, 1.0] representing this point's location on the curve.
+     * @param t             The parametric value [0.0, 1.0] representing this point's location on the curve.
      * @param distanceToEnd The calculated arc length from this point to the end of the segment.
-     * @param location The physical 2D coordinate of the curve at this 't' value.
+     * @param location      The physical 2D coordinate of the curve at this 't' value.
      */
     public PathPoint(double t, double distanceToEnd, Vector location) {
         this.t = t;
