@@ -41,11 +41,11 @@ public class P2PFollower extends Follower {
         // Use the unexposed method from the Follower class (converts target pose to inches and radians)
         super.setTargetPose(targetPose);
         this.axialController.reset();
-        this.axialController.setTarget(targetPose.getX());
+        this.axialController.setTarget(this.targetPose.getX());
         this.strafeController.reset();
-        this.strafeController.setTarget(targetPose.getY());
+        this.strafeController.setTarget(this.targetPose.getY());
         this.headingController.reset();
-        this.headingController.setTarget(targetPose.getHeading());
+        this.headingController.setTarget(this.targetPose.getHeading());
     }
 
     public boolean axialAtTarget() { return constants.axialController.isAtTarget(); }
