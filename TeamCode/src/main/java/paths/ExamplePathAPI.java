@@ -13,9 +13,7 @@ import util.Pose;
 public class ExamplePathAPI {
     // 1. INITIALIZE: Pass in start pose.
     // You can use default units (inches/radians) or strongly typed units!
-    public Path testPath () {
-        return new PathBuilder(
-        new Pose(0, 0, 0, Distance.Units.INCHES, Angle.Units.RADIANS))
+    Path funniPathOfAllTime = new PathBuilder(new Pose(0, 0, 0, Distance.Units.INCHES, Angle.Units.RADIANS))
 
             // 2. GLOBAL OVERRIDE: Set the default behavior for all following segments.
             // Options: TANGENT_OPTIMAL, TANGENT_FORWARD, SMOOTH_START_TO_END (Default)
@@ -64,5 +62,4 @@ public class ExamplePathAPI {
 
             // 9. COMPILE: Locks the path and calculates all the Look-Up Tables.
             .build();
-    }
 }

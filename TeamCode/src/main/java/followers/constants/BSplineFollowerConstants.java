@@ -5,7 +5,7 @@ import followers.BSplineFollower;
 import localizers.Localizer;
 
 /**
- * B-Spline path follower constants class
+ * B-Spline path follower constants class.
  * @author Sohum Arora - 22985 Paraducks
  */
 public class BSplineFollowerConstants extends FollowerConstants {
