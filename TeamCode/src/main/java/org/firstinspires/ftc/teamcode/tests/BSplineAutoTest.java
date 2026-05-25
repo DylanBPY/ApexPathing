@@ -21,8 +21,6 @@ public class BSplineAutoTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         BSplineFollower follower = (BSplineFollower) new Constants().build(hardwareMap, Pose.zero());
-        BSplineFollowerConstants followerConstants = new BSplineFollowerConstants();
-
         Path autoPath = new ExamplePathAPI().testPath();
 
         while (opModeInInit()){
