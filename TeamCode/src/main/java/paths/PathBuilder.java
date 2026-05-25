@@ -1,7 +1,6 @@
 package paths;
 
 import java.util.function.Function;
-
 import paths.geometry.BSpline;
 import paths.geometry.Line;
 import paths.heading.HeadingInterpolator;
@@ -30,43 +29,25 @@ public class PathBuilder {
     private static final InterpolationStyle DEFAULT_INTERPOLATION = InterpolationStyle.SMOOTH_START_TO_END;
     private InterpolationStyle currentStyle = DEFAULT_INTERPOLATION;
 
-    /**
-     *
-     */
     public enum SegmentType {
+        LINETO,
         BSPLINE,
-        LINE,
         TURN
     }
+
     /**
-     * Core unified routing method to append different trajectory segments dynamically.
-     *
-     * @param type  The type of segment to construct (LINE_TO, BSPLINE, TURN_TO)
-     * @param poses The target destination(s). For LINE_TO and TURN_TO, pass one Pose.
-     * For BSPLINE, pass intermediate waypoints followed by the end Pose.
-     * @return The current PathBuilder instance for method chaining.
+     * A lightweight container representing a distinct motion sequence step.
      */
-    public PathBuilder newPath(SegmentType type, Pose... poses) {
-        if (poses == null || poses.length == 0) {
-            throw new IllegalArgumentException("You must provide at least one Pose destination!");
-        }
-        switch (type) {
-            case LINE:
-                return this.lineTo(poses[0]);
+    public static class Step {
+        public final SegmentType type;
+        public final Pose[] poses;
 
-            case TURN:
-                return this.turnTo(poses[0].getHeadingComponent());
-
-            case BSPLINE:
-                if (poses.length < 2) {
-                    throw new IllegalArgumentException("A B-Spline requires at least 2 points!");
-                }
-                return this.bSplineTo(poses);
-
-            default:
-                throw new IllegalArgumentException("Unsupported segment type: " + type);
+        public Step(SegmentType type, Pose... poses) {
+            this.type = type;
+            this.poses = poses;
         }
     }
+
     /**
      * Initializes the PathBuilder with the starting location and heading of the robot.
      *
@@ -75,6 +56,45 @@ public class PathBuilder {
     public PathBuilder(Pose startPose) {
         this.path = new Path();
         this.lastPose = startPose;
+    }
+
+    /**
+     * Monolithic routing method to unpack and execute multiple path steps sequentially.
+     *
+     * @param steps An array of Step instructions defining the entire path sequence.
+     * @return The current PathBuilder instance for method chaining.
+     */
+    public PathBuilder newPath(Step... steps) {
+        if (steps == null || steps.length == 0) {
+            throw new IllegalArgumentException("You must provide at least one Step execution sequence!");
+        }
+
+        for (Step step : steps) {
+            if (step.poses == null || step.poses.length == 0) {
+                throw new IllegalArgumentException("Each Step must contain at least one target Pose destination!");
+            }
+
+            switch (step.type) {
+                case LINETO:
+                    this.lineTo(step.poses[0]);
+                    break;
+
+                case TURN:
+                    this.turnTo(step.poses[0].getHeadingComponent());
+                    break;
+
+                case BSPLINE:
+                    if (step.poses.length < 2) {
+                        throw new IllegalArgumentException("A B-Spline Step requires at least 2 points!");
+                    }
+                    this.bSplineTo(step.poses);
+                    break;
+
+                default:
+                    throw new IllegalArgumentException("Unsupported segment type: " + step.type);
+            }
+        }
+        return this;
     }
 
     /**
@@ -135,10 +155,10 @@ public class PathBuilder {
      * @param style is the style of interpolation
      * @return overrides the previous segment with selected style of interpolation
      */
-
     public PathBuilder interpolateSegment(InterpolationStyle style) {
         return interpolateSegment(new HeadingInterpolator(style));
     }
+
     public PathBuilder interpolateSegment(Function<Double, Angle> function) {
         return interpolateSegment(new HeadingInterpolator(function));
     }
@@ -184,11 +204,6 @@ public class PathBuilder {
         path.addHold(lastPose, durationSeconds);
         return this;
     }
-    // keeping this for now, will replace with the method below once we figure it out
-//    public PathBuilder holdPose(double tValue, Supplier<T> callback) {
-//
-//    }
-//TODO: Write the above method to replace the original hold pose method
 
     /**
      * Overrides the default (SMOOTH_START_TO_END) heading interpolation strategy for the whole path.
@@ -228,20 +243,17 @@ public class PathBuilder {
      * and generating a warning if a user forgot to supply valid headings in their Poses.
      */
     private HeadingInterpolator buildSafeInterpolator(Pose start, Pose end) {
-        boolean missingHeading = !Double.isFinite(start.getHeading()) || !Double.isFinite(end.getHeading());
-
-        // If the style requires 2 angles, but we are missing one, fallback and warn
-        if (missingHeading && (currentStyle == InterpolationStyle.SMOOTH_START_TO_END || currentStyle == InterpolationStyle.TANGENT_OPTIMAL)) {
-            path.addWarning("APEX WARNING: Segment missing start/end heading! Falling back to TANGENT_FORWARD. Use Pose(x, y, heading) to fix this.");
-            return new HeadingInterpolator(InterpolationStyle.TANGENT_FORWARD);
-        }
-
-        // If they explicitly selected TANGENT_FORWARD, use the 1-argument constructor
         if (currentStyle == InterpolationStyle.TANGENT_FORWARD) {
             return new HeadingInterpolator(InterpolationStyle.TANGENT_FORWARD);
         }
 
-        // Otherwise, we have valid headings and can safely use the 2-angle constructor
+        boolean missingHeading = !Double.isFinite(start.getHeading()) || !Double.isFinite(end.getHeading());
+
+        if (missingHeading) {
+            path.addWarning("APEX WARNING: Segment missing start/end heading! Falling back to TANGENT_FORWARD. Use Pose(x, y, heading) to fix this.");
+            return new HeadingInterpolator(InterpolationStyle.TANGENT_FORWARD);
+        }
+
         return new HeadingInterpolator(currentStyle, start.getHeadingComponent(), end.getHeadingComponent());
     }
 }
