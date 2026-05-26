@@ -4,12 +4,12 @@ import paths.heading.InterpolationStyle;
 import util.Angle;
 import util.Distance;
 import util.Pose;
-import util.PoseBuilder;
+import util.PoseFactory;
 
 public class ExamplePathAPIV3 {
     private Distance.Units distUnit = Distance.Units.INCHES;
     private Angle.Units angleUnit = Angle.Units.DEGREES;
-    public PoseBuilder pose = new PoseBuilder(distUnit, angleUnit);
+    public PoseFactory pose = new PoseFactory(distUnit, angleUnit);
     private Pose startPose;
 
     public ExamplePathAPIV3(boolean mirror) {
