@@ -83,7 +83,6 @@ public class BSplineTuner extends OpMode {
         if (gamepad1.x) {
             if (!pathActive) {
                 currentPath = new PathBuilder(localizer.getPose())
-                        .lineTo(new Pose(48, 0, 0))
                         .holdPose(1.5)
                         .build();
                 follower.followPath(currentPath);
@@ -93,7 +92,6 @@ public class BSplineTuner extends OpMode {
         } else if (gamepad1.a) {
             if (!pathActive) {
                 currentPath = new PathBuilder(localizer.getPose())
-                        .lineTo(new Pose(0, 0, 0))
                         .build();
                 follower.followPath(currentPath);
                 pathActive = true;

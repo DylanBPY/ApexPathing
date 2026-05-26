@@ -114,4 +114,12 @@ public class PoseFactory {
     public Pose at(double x, double y) {
         return build(x, y, 0.0);
     }
+
+    /**
+     * Alias to build a TightenedPose at the coordinates
+     * //TODO: Make this cleaner?
+     */
+    public ArcPose arcPoseAt(double x, double y, double radius) {
+        return new ArcPose(at(x, y), radius);
+    }
 }

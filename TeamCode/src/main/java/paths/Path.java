@@ -1,5 +1,7 @@
 package paths;
 
+import android.telecom.Call;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +44,11 @@ public class Path {
         // Populated if type == HOLD
         public final Pose holdPose;
         public final double holdDurationSeconds;
+        public double callbackTargetS = -1.0;
+        public Runnable callback = null;
+        public boolean callbackTriggered = false;
+        // Define at the top of the class
+        ArrayList<Callback> callbacks = new ArrayList<>();
 
         public PathNode(PathSegment segment, HeadingInterpolator interpolator) {
             this.type = NodeType.DRIVE;
@@ -68,6 +75,11 @@ public class Path {
             this.targetHeading = null;
             this.holdPose = holdPose;
             this.holdDurationSeconds = durationSeconds;
+        }
+
+        // Revise this method
+        public void addCallback(double s, Runnable callback) {
+            callbacks.add(new Callback(s, callback));
         }
     }
 
