@@ -83,7 +83,7 @@ public class BSplineFollower extends Follower {
             if (Math.abs(headingError) < constants.headingTolerance) {
                 if (path.isLastSegment()) {
                     this.isBusy = false;
-                    this.breakFollowing(drivetrain);
+                    this.breakFollowing();
                 } else {
                     path.advance();
                 }
@@ -105,7 +105,7 @@ public class BSplineFollower extends Follower {
                 holdTimerInitialized = false;
                 if (path.isLastSegment()) {
                     this.isBusy = false;
-                    this.breakFollowing(drivetrain);
+                    this.breakFollowing();
                 } else {
                     path.advance();
                 }
@@ -157,7 +157,7 @@ public class BSplineFollower extends Follower {
                     this.setTargetPose(new Pose(finalPosition.getX(), finalPosition.getY(), targetHeading));
                     this.holdingPose = true;
                     this.isBusy = false;
-                    this.breakFollowing(drivetrain);
+                    this.breakFollowing();
                 } else {
                     path.advance();
                 }
@@ -169,7 +169,9 @@ public class BSplineFollower extends Follower {
     }
 
     /**
-     * Logic to hold a specific Pose on the field
+     * Logic to actively hold the last robot Pose on the field
+     * Actively means that the robot will move back to the hold pose if its pushed off it for example
+     * Useful option for autos
      */
     private void holdPose() {
         Pose currentPose = getPose();

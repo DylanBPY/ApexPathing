@@ -1,8 +1,6 @@
 package paths;
 
 import java.util.function.Function;
-import java.util.function.Supplier;
-
 import paths.geometry.BSpline;
 import paths.geometry.Line;
 import paths.heading.HeadingInterpolator;
@@ -31,6 +29,12 @@ public class PathBuilder {
     private static final InterpolationStyle DEFAULT_INTERPOLATION = InterpolationStyle.SMOOTH_START_TO_END;
     private InterpolationStyle currentStyle = DEFAULT_INTERPOLATION;
 
+    public enum SegmentType {
+        LINETO,
+        BSPLINE,
+        TURN
+    }
+
     /**
      * Initializes the PathBuilder with the starting location and heading of the robot.
      *
@@ -42,6 +46,11 @@ public class PathBuilder {
     }
 
     /**
+     * Monolithic routing method to unpack and execute multiple path steps sequentially,
+     * processing embedded heading overrides completely inside the block.
+     */
+
+    /**
      * Appends a continuous Uniform Cubic B-Spline to the path.
      * The curve automatically begins at the end of the previous segment (or the start pose).
      * By default, this segment will use {@link InterpolationStyle#TANGENT_OPTIMAL} for heading.
@@ -51,7 +60,7 @@ public class PathBuilder {
      * @return The current PathBuilder instance for method chaining.
      * @throws IllegalArgumentException If too few points are provided to construct a valid B-Spline.
      */
-    public PathBuilder bSplineTo(Pose... poses) {
+    public PathBuilder curveTo(Pose... poses) {
         if (poses.length < 2)
             throw new IllegalArgumentException("A B-Spline must be created with > 1 points!");
 
@@ -88,7 +97,7 @@ public class PathBuilder {
      * @param interpolator The custom HeadingInterpolator to apply to the preceding segment.
      * @return The current PathBuilder instance for method chaining.
      */
-    private PathBuilder interpolateSegment(HeadingInterpolator interpolator) {
+    private PathBuilder interpolateWith(HeadingInterpolator interpolator) {
         path.overrideLastInterpolator(interpolator);
         return this;
     }
@@ -99,12 +108,12 @@ public class PathBuilder {
      * @param style is the style of interpolation
      * @return overrides the previous segment with selected style of interpolation
      */
-
-    public PathBuilder interpolateSegment(InterpolationStyle style) {
-        return interpolateSegment(new HeadingInterpolator(style));
+    public PathBuilder interpolateWith(InterpolationStyle style) {
+        return interpolateWith(new HeadingInterpolator(style));
     }
-    public PathBuilder interpolateSegment(Function<Double, Angle> function) {
-        return interpolateSegment(new HeadingInterpolator(function));
+
+    public PathBuilder interpolateWith(Function<Double, Angle> function) {
+        return interpolateWith(new HeadingInterpolator(function));
     }
 
     /**
@@ -148,11 +157,6 @@ public class PathBuilder {
         path.addHold(lastPose, durationSeconds);
         return this;
     }
-    // keeping this for now, will replace with the method below once we figure it out
-//    public PathBuilder holdPose(double tValue, Supplier<T> callback) {
-//
-//    }
-//TODO: Write the above method to replace the original hold pose method
 
     /**
      * Overrides the default (SMOOTH_START_TO_END) heading interpolation strategy for the whole path.
@@ -192,20 +196,31 @@ public class PathBuilder {
      * and generating a warning if a user forgot to supply valid headings in their Poses.
      */
     private HeadingInterpolator buildSafeInterpolator(Pose start, Pose end) {
-        boolean missingHeading = !Double.isFinite(start.getHeading()) || !Double.isFinite(end.getHeading());
-
-        // If the style requires 2 angles, but we are missing one, fallback and warn
-        if (missingHeading && (currentStyle == InterpolationStyle.SMOOTH_START_TO_END || currentStyle == InterpolationStyle.TANGENT_OPTIMAL)) {
-            path.addWarning("APEX WARNING: Segment missing start/end heading! Falling back to TANGENT_FORWARD. Use Pose(x, y, heading) to fix this.");
-            return new HeadingInterpolator(InterpolationStyle.TANGENT_FORWARD);
-        }
-
-        // If they explicitly selected TANGENT_FORWARD, use the 1-argument constructor
         if (currentStyle == InterpolationStyle.TANGENT_FORWARD) {
             return new HeadingInterpolator(InterpolationStyle.TANGENT_FORWARD);
         }
 
-        // Otherwise, we have valid headings and can safely use the 2-angle constructor
+        boolean missingHeading = !Double.isFinite(start.getHeading()) || !Double.isFinite(end.getHeading());
+
+        if (missingHeading) {
+            path.addWarning("APEX WARNING: Segment missing start/end heading! Falling back to TANGENT_FORWARD. Use Pose(x, y, heading) to fix this.");
+            return new HeadingInterpolator(InterpolationStyle.TANGENT_FORWARD);
+        }
+
         return new HeadingInterpolator(currentStyle, start.getHeadingComponent(), end.getHeadingComponent());
+    }
+    /**
+     * Appends a continuous Uniform Cubic B-Spline to the path using the specified control points.
+     * The curve automatically begins at the end of the previous segment (or the start pose).
+     * <p>
+     * This is a fluent alias for {@link #curveTo(Pose...)}.
+     *
+     * @param poses A variable number of waypoints/control points to define the B-Spline curve.
+     * The final pose determines the target heading for the default interpolator.
+     * @return The current PathBuilder instance for method chaining.
+     * @throws IllegalArgumentException If fewer than 2 points are provided.
+     */
+    public PathBuilder addControlPoints(Pose... poses) {
+        return this.curveTo(poses);
     }
 }
