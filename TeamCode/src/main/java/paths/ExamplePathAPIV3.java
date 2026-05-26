@@ -28,11 +28,7 @@ public class ExamplePathAPIV3 {
      */
     public Path testPath() {
         return new PathBuilder(startPose) // TODO: I almost wish startPose was in addControlPoints, but I can't think of a good way to do it :\
-
-                // 1. GLOBAL OVERRIDE: Sets the default heading behavior for the entire path
-                .setInterpolationStyle(InterpolationStyle.TANGENT_OPTIMAL)
-
-                // 2. THE CORE B-SPLINE: Demonstrating standard routing, auto-tightening, and educational warnings
+                // 1. THE CORE B-SPLINE: Demonstrating standard routing, auto-tightening, and educational warnings
                 // A B-Spline can be created with 2 points in Apex because of ghost points that are added during construction
                 .addControlPoints(
                         pose.at(15, 0),             // Standard waypoint
@@ -41,17 +37,17 @@ public class ExamplePathAPIV3 {
                         pose.at(45, 25, 45)         // The final waypoint dictates the target heading for the end of this curve
                 )
 
-                // 3. IN-LINE CALLBACK: Triggers our custom function exactly halfway (s=0.5) down the curve above
+                // 2. IN-LINE CALLBACK: Triggers our custom function exactly halfway (s=0.5) down the curve above
                 .addCallback(0.5, this::exampleCallback) //TODO: Xenon plz review this I just made something rq
 
-                // 5. POINT TURN: The robot stays at (45, 25) and rotates in place to face 180 degrees
+                // 3. POINT TURN: The robot stays at (45, 25) and rotates in place to face 180 degrees
                 .turnTo(Angle.fromDeg(180))
 
-                // 7. ADVANCED LAMBDA INTERPOLATOR: Overrides the previous curve's heading logic with custom math.
+                // 4. ADVANCED LAMBDA INTERPOLATOR: Overrides the previous curve's heading logic with custom math.
                 // Here, we command the robot to do a full 360-degree tornado spin over the course of the curve.
                 .interpolateWith(s -> Angle.fromDeg(180 + (s * 360.0)))
 
-                // 8. COMPILE: Locks the path, calculates all Look-Up Tables, and finalizes geometry.
+                // 5. COMPILE: Locks the path, calculates all Look-Up Tables, and finalizes geometry.
                 .build();
     }
 }

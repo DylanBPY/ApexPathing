@@ -1,5 +1,7 @@
 package paths;
 
+import android.telecom.Call;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,6 +47,8 @@ public class Path {
         public double callbackTargetS = -1.0;
         public Runnable callback = null;
         public boolean callbackTriggered = false;
+        // Define at the top of the class
+        ArrayList<Callback> callbacks = new ArrayList<>();
 
         public PathNode(PathSegment segment, HeadingInterpolator interpolator) {
             this.type = NodeType.DRIVE;
@@ -73,10 +77,9 @@ public class Path {
             this.holdDurationSeconds = durationSeconds;
         }
 
+        // Revise this method
         public void addCallback(double s, Runnable callback) {
-            this.callbackTargetS = s;
-            this.callback = callback;
-            this.callbackTriggered = false;
+            callbacks.add(new Callback(s, callback));
         }
     }
 
@@ -154,23 +157,5 @@ public class Path {
      */
     public void reset() {
         currentIndex = 0;
-    }
-
-    /**
-     * Attaches a callback to the most recently added drive segment.
-     */
-    public void addCallbackToLastSegment(double s, Runnable callback) {
-        if (nodes.isEmpty()) {
-            throw new IllegalStateException("Cannot add a callback before adding a path segment!");
-        }
-
-        PathNode lastNode = nodes.get(nodes.size() - 1);
-
-        if (lastNode.type != NodeType.DRIVE) {
-            throw new IllegalStateException("Callbacks can only be added to drive segments (curves/lines)!");
-        }
-
-        // You will need a way to store this in your PathNode class
-        lastNode.addCallback(s, callback);
     }
 }
