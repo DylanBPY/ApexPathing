@@ -53,7 +53,7 @@ public class ExamplePathAPIV3 {
                 .addDistanceCallback(0.5, this::exampleCallback)
 
                 // 3. ANGULAR CALLBACK: Triggers precisely when the robot rotates past the 180-degree mark
-                .addAngularCallback(new Angle(Math.PI), this::exampleCallback)
+                .addAngularCallback(Angle.fromRad(Math.PI), this::exampleCallback)
 
                 // 4. ADVANCED LAMBDA INTERPOLATOR
                 // Overrides the previous curve's heading logic with custom math.

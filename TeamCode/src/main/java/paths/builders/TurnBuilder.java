@@ -6,8 +6,8 @@ import java.util.function.Consumer;
 
 import paths.movements.Turn;
 import paths.callbacks.AngleCallback;
-import util.Angle;
-import util.Pose;
+import geometry.Angle;
+import geometry.Pose;
 
 /**
  * A builder class designed to construct a {@link Turn} fluently.
@@ -16,7 +16,6 @@ import util.Pose;
  * callbacks at specific angles during the rotation.
  */
 public class TurnBuilder implements MovementBuilder<Turn> {
-
     private final Pose startPose;
     private Angle targetHeading = null;
 
@@ -27,9 +26,7 @@ public class TurnBuilder implements MovementBuilder<Turn> {
      * Initializes the TurnBuilder with the robot's starting state.
      * @param startPose The Pose of the robot before the turn begins.
      */
-    public TurnBuilder(Pose startPose) {
-        this.startPose = startPose;
-    }
+    public TurnBuilder(Pose startPose) { this.startPose = startPose; }
 
     /**
      * Defines the target angle for the point turn.
@@ -52,8 +49,8 @@ public class TurnBuilder implements MovementBuilder<Turn> {
         // We define the validation math now, but wait to execute it until build() is called
         buildTasks.add((finalTurn) -> {
 
-            double startRad = finalTurn.getStartPose().getHeading();
-            double endRad = finalTurn.getEndPose().getHeading();
+            double startRad = finalTurn.getStartPose().getHeading().getRad();
+            double endRad = finalTurn.getEndPose().getHeading().getRad();
             double targetRad = angle.getRad();
 
             double totalDiff = getShortestAngularDifference(startRad, endRad);

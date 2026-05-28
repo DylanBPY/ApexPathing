@@ -7,14 +7,14 @@ import java.util.function.Function;
 import paths.movements.Path;
 import paths.callbacks.AngleCallback;
 import paths.callbacks.DistanceCallback;
-import paths.geometry.BSpline;
-import paths.geometry.PathSegment;
+import geometry.BSpline;
+import geometry.PathSegment;
 import paths.heading.HeadingInterpolator;
 import paths.heading.InterpolationStyle;
-import util.Angle;
-import util.Pose;
-import util.ArcPose;
-import util.Vector;
+import geometry.Angle;
+import geometry.Vector;
+import geometry.ArcPose;
+import geometry.Pose;
 
 /**
  * A builder class designed to construct a {@link Path} fluently.
@@ -143,8 +143,8 @@ public class PathBuilder {
         // Defer validation to build() so expectedEndPose is guaranteed to be set regardless of call order
         //TODO: Fine for now, but add in safety checking for lambda overrides
         buildTasks.add(() -> {
-            double startRad = segmentStartPose.getHeading();
-            double endRad = expectedEndPose.getHeading();
+            double startRad = segmentStartPose.getHeading().getRad();
+            double endRad = expectedEndPose.getHeading().getRad();
 
             if (Double.isFinite(startRad) && Double.isFinite(endRad)) {
                 double targetRad = angle.getRad();
@@ -186,7 +186,7 @@ public class PathBuilder {
         for (int i = 1; i < rawPoses.length - 1; i++) {
             Pose currentPose = rawPoses[i];
 
-            if (!intermediateWarningSent && Double.isFinite(currentPose.getHeading())) {
+            if (!intermediateWarningSent && Double.isFinite(currentPose.getHeading().getRad())) {
                 path.addWarning("APEX WARNING: Intermediate B-Spline headings are ignored! Only the " +
                         "final pose heading controls the end heading.");
                 intermediateWarningSent = true;
@@ -194,7 +194,7 @@ public class PathBuilder {
 
             if (currentPose instanceof ArcPose) {
                 ArcPose arcPose = (ArcPose) currentPose;
-                double radius = arcPose.getRadius();
+                double radius = arcPose.getRadius().getIn();
 
                 if (radius < 2.0) {
                     throw new IllegalArgumentException("ArcPose radius must be at least 2.0 inches.");
@@ -203,11 +203,11 @@ public class PathBuilder {
                 Pose prevPose = rawPoses[i - 1];
                 Pose nextPose = rawPoses[i + 1];
 
-                Vector vecToLast = prevPose.toVec().subtract(arcPose.toVec());
-                Vector vecToNext = nextPose.toVec().subtract(arcPose.toVec());
+                Vector vecToLast = prevPose.getPos().minus(arcPose.getPos());
+                Vector vecToNext = nextPose.getPos().minus(arcPose.getPos());
 
-                double distToLast = vecToLast.getMagnitude();
-                double distToNext = vecToNext.getMagnitude();
+                double distToLast = vecToLast.getMag().getIn();
+                double distToNext = vecToNext.getMag().getIn();
 
                 if (radius > distToLast) {
                     throw new IllegalArgumentException("ArcPose radius (" + radius + ") exceeds distance to the last control point.");
@@ -215,12 +215,12 @@ public class PathBuilder {
                     throw new IllegalArgumentException("ArcPose radius (" + radius + ") exceeds distance to the next control point.");
                 }
 
-                Vector p1Vec = arcPose.toVec().add(vecToLast.multiply(radius / distToLast));
-                Vector p2Vec = arcPose.toVec().add(vecToNext.multiply(radius / distToNext));
+                Vector p1Vec = arcPose.getPos().plus(vecToLast.times(radius / distToLast));
+                Vector p2Vec = arcPose.getPos().plus(vecToNext.times(radius / distToNext));
 
-                processedPoses.add(new Pose(p1Vec.getX(), p1Vec.getY(), arcPose.getHeading()));
+                processedPoses.add(new Pose(p1Vec, arcPose.getHeading()));
                 processedPoses.add(currentPose);
-                processedPoses.add(new Pose(p2Vec.getX(), p2Vec.getY(), arcPose.getHeading()));
+                processedPoses.add(new Pose(p2Vec, arcPose.getHeading()));
 
             } else {
                 processedPoses.add(currentPose);
@@ -231,10 +231,10 @@ public class PathBuilder {
 
         // 2. Build the curve using the fully processed points
         Vector[] vectors = new Vector[processedPoses.size() + 1];
-        vectors[0] = segmentStartPose.toVec(); // Inherit end of previous segment
+        vectors[0] = segmentStartPose.getPos(); // Inherit end of previous segment
 
         for (int i = 0; i < processedPoses.size(); i++) {
-            vectors[i + 1] = processedPoses.get(i).toVec();
+            vectors[i + 1] = processedPoses.get(i).getPos();
         }
 
         PathSegment curve = new PathSegment(new BSpline(vectors));
@@ -266,14 +266,14 @@ public class PathBuilder {
             return new HeadingInterpolator(InterpolationStyle.TANGENT_FORWARD);
         }
 
-        boolean missingHeading = !Double.isFinite(start.getHeading()) || !Double.isFinite(end.getHeading());
+        boolean missingHeading = !Double.isFinite(start.getHeading().getRad()) || !Double.isFinite(end.getHeading().getRad());
 
         if (missingHeading) {
             path.addWarning("APEX WARNING: Segment missing start/end heading! Falling back to TANGENT_FORWARD. Use Pose(x, y, heading) to fix this.");
             return new HeadingInterpolator(InterpolationStyle.TANGENT_FORWARD);
         }
 
-        return new HeadingInterpolator(currentStyle, start.getHeadingComponent(), end.getHeadingComponent());
+        return new HeadingInterpolator(currentStyle, start.getHeading(), end.getHeading());
     }
 
     private double getShortestAngularDifference(double from, double to) {

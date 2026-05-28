@@ -1,6 +1,6 @@
 package paths.callbacks;
 
-import util.Angle;
+import geometry.Angle;
 
 public class AngleCallback implements Callback {
     private final Angle theta;
@@ -12,22 +12,14 @@ public class AngleCallback implements Callback {
         this.action = action;
     }
 
-    public Angle getTheta() {
-        return theta;
-    }
+    public Angle getTheta() { return theta; }
 
     @Override
-    public Runnable getAction() {
-        return action;
-    }
+    public Runnable getAction() { return action; }
 
     @Override
-    public boolean isTriggered() { // Changed to public
-        return triggered;
-    }
+    public boolean isTriggered() { return triggered; }
 
     @Override
-    public void setTriggered(boolean triggered) { // Changed to public
-        this.triggered = triggered;
-    }
+    public void setTriggered(boolean triggered) { this.triggered = triggered; }
 }

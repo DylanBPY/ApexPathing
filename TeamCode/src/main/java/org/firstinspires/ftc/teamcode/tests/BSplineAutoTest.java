@@ -8,7 +8,7 @@ import org.firstinspires.ftc.teamcode.Constants;
 import followers.MovementFollower;
 import followers.constants.BSplineFollowerConstants;
 import paths.ExamplePathAPIV3;
-import paths.Path;
+import paths.movements.Path;
 import geometry.Pose;
 import util.PoseFactory;
 
