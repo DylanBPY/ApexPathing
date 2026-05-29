@@ -14,7 +14,6 @@ import paths.heading.HeadingInterpolator;
 import geometry.Angle;
 import geometry.Vector;
 import geometry.Pose;
-import org.firstinspires.ftc.teamcode.Constants;
 
 /**
  * MovementFollower class, capable of following FollowerMovements made with Builders
