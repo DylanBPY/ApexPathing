@@ -8,7 +8,7 @@ public class AngleCallback implements Callback {
     private boolean triggered = false;
 
     public AngleCallback(Angle theta, Runnable action) {
-        this.theta = theta; //TODO: normalize with new angle class
+        this.theta = theta.normalized();
         this.action = action;
     }
 

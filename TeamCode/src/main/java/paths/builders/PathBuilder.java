@@ -35,7 +35,8 @@ public class PathBuilder {
     private Pose[] rawPoses = null;
 
     private InterpolationStyle currentStyle = InterpolationStyle.SMOOTH_START_TO_END;
-    private HeadingInterpolator customInterpolator = null;
+    private Angle customOffset = null;
+    private Function<Double, Angle> customFunction = null;
 
     // Stores callbacks to be validated and attached during the build process
     private final List<Runnable> buildTasks = new ArrayList<>();
@@ -85,37 +86,33 @@ public class PathBuilder {
      * @return The current PathBuilder instance for method chaining.
      */
     public PathBuilder interpolateWith(InterpolationStyle style) {
-        switch (style) {
-            case TANGENT_OPTIMAL:
-            case TANGENT_FORWARD:
-            case SMOOTH_START_TO_END:
-                path.addWarning("APEX WARNING: SMOOTH_START_TO_END is the default interpolator, there's no need to change it!");
-                this.currentStyle = style;
-                break;
-            default:
-                throw new IllegalArgumentException(
-                        "You need more parameters for: " + style.name() + "!");
-        }
+        this.currentStyle = style;
         return this;
     }
 
     /**
-     * Overrides the default (SMOOTH_START_TO_END) interpolation for one defined with a custom function
-     * of distance percentage (s)
-     *<p>
-     * Example usage that spins the robot as a function of s^2:
-     * </p>
-     * .interpolateWith(s -> Angle.fromDeg(180 * (s * s))
+     * Overrides the interpolation style, providing a custom angular offset.
+     * Used primarily for {@link InterpolationStyle#TANGENT_CUSTOM}.
      *
-     * @param function The Angle function
+     * @param style The interpolation style to apply.
+     * @param angleOffset The fixed angle to offset the calculation by.
+     * @return The current PathBuilder instance for method chaining.
+     */
+    public PathBuilder interpolateWith(InterpolationStyle style, Angle angleOffset) {
+        this.currentStyle = style;
+        this.customOffset = angleOffset;
+        return this;
+    }
+
+    /**
+     * Overrides the default interpolation with a custom function of distance percentage (s).
+     *
+     * @param function A lambda mapping distance percentage [0.0, 1.0] to a target Angle.
      * @return The current PathBuilder instance for method chaining.
      */
     public PathBuilder interpolateWith(Function<Double, Angle> function) {
-        return interpolateWith(new HeadingInterpolator(function));
-    }
-
-    private PathBuilder interpolateWith(HeadingInterpolator interpolator) {
-        this.customInterpolator = interpolator;
+        this.currentStyle = InterpolationStyle.CUSTOM_DIST_FUNCTION;
+        this.customFunction = function;
         return this;
     }
 
@@ -133,31 +130,33 @@ public class PathBuilder {
 
     /**
      * Attaches an executable callback based on the robot reaching a target heading.
-     * Safety checks ensure the angle is mathematically reachable.
      *
      * @param angle The Angle at which the callback should trigger.
      * @param action The code to execute.
      * @return The current PathBuilder instance for method chaining.
      */
     public PathBuilder addAngularCallback(Angle angle, Runnable action) {
-        // Defer validation to build() so expectedEndPose is guaranteed to be set regardless of call order
-        //TODO: Fine for now, but add in safety checking for lambda overrides
         buildTasks.add(() -> {
-            double startRad = segmentStartPose.getHeading().getRad();
-            double endRad = expectedEndPose.getHeading().getRad();
+            // We can only definitively pre-calculate boundary sweeps for SMOOTH lerping.
+            // Tangent and Custom interpolators sweep dynamically based on curve integration,
+            // so we bypass the strict bounds check to prevent falsely crashing the user's build.
+            if (currentStyle == InterpolationStyle.SMOOTH_START_TO_END) {
+                double startRad = segmentStartPose.getHeading().getRad();
+                double endRad = expectedEndPose.getHeading().getRad();
 
-            if (Double.isFinite(startRad) && Double.isFinite(endRad)) {
-                double targetRad = angle.getRad();
+                if (Double.isFinite(startRad) && Double.isFinite(endRad)) {
+                    double targetRad = angle.getRad();
 
-                double totalDiff = getShortestAngularDifference(startRad, endRad);
-                double targetDiff = getShortestAngularDifference(startRad, targetRad);
+                    double totalDiff = getShortestAngularDifference(startRad, endRad);
+                    double targetDiff = getShortestAngularDifference(startRad, targetRad);
 
-                if (Math.abs(totalDiff) < 1e-6) {
-                    if (Math.abs(targetDiff) > 1e-6) {
-                        throw new IllegalArgumentException("Angular callback out of bounds: The path's heading is constant.");
+                    if (Math.abs(totalDiff) < 1e-6) {
+                        if (Math.abs(targetDiff) > 1e-6) {
+                            throw new IllegalArgumentException("Angular callback out of bounds: The path's target heading is constant.");
+                        }
+                    } else if ((totalDiff * targetDiff < 0) || (Math.abs(targetDiff) > Math.abs(totalDiff))) {
+                        throw new IllegalArgumentException("Angular callback is outside the sweep range of the start and end headings.");
                     }
-                } else if ((totalDiff * targetDiff < 0) || (Math.abs(targetDiff) > Math.abs(totalDiff))) {
-                    throw new IllegalArgumentException("Angular callback is outside the range of the path's start and end headings.");
                 }
             }
             path.addCallback(new AngleCallback(angle, action));
@@ -241,10 +240,19 @@ public class PathBuilder {
         path.setParametricPath(curve);
 
         // 3. Inject interpolator state
-        if (customInterpolator != null) {
-            path.setInterpolator(customInterpolator);
+        Angle startH = segmentStartPose.getHeading();
+        Angle endH = expectedEndPose.getHeading();
+
+        if (currentStyle == InterpolationStyle.CUSTOM_DIST_FUNCTION) {
+            path.setInterpolator(new HeadingInterpolator(customFunction));
         } else {
-            path.setInterpolator(buildSafeInterpolator(segmentStartPose, expectedEndPose));
+            boolean missingHeading = !Double.isFinite(startH.getRad()) || !Double.isFinite(endH.getRad());
+
+            if (missingHeading && currentStyle != InterpolationStyle.TANGENT_FORWARD && currentStyle != InterpolationStyle.TANGENT_CUSTOM) {
+                path.addWarning("APEX WARNING: Segment missing start/end heading! Falling back to TANGENT_FORWARD. Use pose.of(x, y, heading) to fix.");
+                currentStyle = InterpolationStyle.TANGENT_FORWARD;
+            }
+            path.setInterpolator(new HeadingInterpolator(currentStyle, startH, endH, customOffset));
         }
 
         // 4. Run deferred tasks (validating boundaries and attaching callbacks)
@@ -253,27 +261,6 @@ public class PathBuilder {
         }
 
         return path;
-    }
-
-    // region Helpers
-
-    /**
-     * Safely constructs a HeadingInterpolator, automatically falling back to TANGENT_FORWARD
-     * and generating a warning if a user forgot to supply valid headings in their Poses.
-     */
-    private HeadingInterpolator buildSafeInterpolator(Pose start, Pose end) {
-        if (currentStyle == InterpolationStyle.TANGENT_FORWARD) {
-            return new HeadingInterpolator(InterpolationStyle.TANGENT_FORWARD);
-        }
-
-        boolean missingHeading = !Double.isFinite(start.getHeading().getRad()) || !Double.isFinite(end.getHeading().getRad());
-
-        if (missingHeading) {
-            path.addWarning("APEX WARNING: Segment missing start/end heading! Falling back to TANGENT_FORWARD. Use Pose(x, y, heading) to fix this.");
-            return new HeadingInterpolator(InterpolationStyle.TANGENT_FORWARD);
-        }
-
-        return new HeadingInterpolator(currentStyle, start.getHeading(), end.getHeading());
     }
 
     private double getShortestAngularDifference(double from, double to) {
