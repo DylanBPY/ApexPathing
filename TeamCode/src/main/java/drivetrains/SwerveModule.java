@@ -9,10 +9,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import org.firstinspires.ftc.teamcode.Constants;
 
 import java.util.Locale;
 
+import drivetrains.constants.SwerveConstants;
 import drivetrains.constants.SwerveModuleConstants;
 
 // TODO: Use the Angle class for angles
@@ -37,6 +37,7 @@ public class SwerveModule {
     private double lastSteerError = 0;
     public double encoderVolts = 3.3;
     private final double voltageToDegrees = 360.0 / this.encoderVolts; // Degrees = voltage * this
+    private double servoPower;
 
     /**
      * @param hardwareMap the hardware map to use for initializing the module
@@ -48,6 +49,7 @@ public class SwerveModule {
         this.steerServo = hardwareMap.get(CRServo.class, this.constants.servoName);
         this.encoder = hardwareMap.get(AnalogInput.class, this.constants.encoderName);
         this.encoderVolts = constants.maxEncoderVolts;
+        this.offsetAngle = constants.offsetAngle;
     }
 
     /**
@@ -103,11 +105,17 @@ public class SwerveModule {
      * Updates the steering servo and drive motor power only if needed.
      */
     public void update() {
-        double error = targetAngle - getAngle();
+        double rawError = targetAngle - getAngle();
+        double error = rawError - (360.0 * Math.round(rawError / 360.0)); // Wrap to [-180, 180]
+
         if (error != lastSteerError) {
-            lastSteerError = error; // Save unwrapped error
-            error -= (360.0 * Math.round(error / 360.0)); // Wrap to [-180, 180]
-            steerServo.setPower(Math.max(-1.0, Math.min(1.0,  this.constants.steeringPGain * error)));
+            lastSteerError = error;
+            if (Math.abs(error) <= SwerveConstants.deadzone) {
+                servoPower = 0.0; //Stops the servo if in deadzone (sets it to 0 for safety)
+            } else {
+                servoPower = Math.max(-1.0, Math.min(1.0, this.constants.steeringPGain * error));
+            }
+            steerServo.setPower(servoPower);
         }
         if (targetPower != lastTargetPower) {
             driveMotor.setPower(targetPower);

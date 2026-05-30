@@ -21,7 +21,7 @@ public class SwerveModuleConstants {
     public String encoderName = "flEncoder"; // 0–3.3V maps to 0–360 degrees
     // Tuned values (these are set by the main SwerveConstants class because all modules should have the same tuning)
     public double steeringPGain = 0.015; // Proportional gain for steering correction
-    double OffsetAngle = 0;
+    public double offsetAngle = 0;
     public double maxEncoderVolts = 3.3; //axon default
 
     /**
@@ -96,7 +96,7 @@ public class SwerveModuleConstants {
      * @return this instance for chaining
      */
     public SwerveModuleConstants setModuleAngleOffset(double degrees){
-        this.OffsetAngle = degrees;
+        this.offsetAngle = degrees;
         return this;
     }
 

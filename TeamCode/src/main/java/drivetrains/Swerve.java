@@ -66,7 +66,8 @@ public class Swerve extends Drivetrain {
 
         // Normalize motor powers to not exceed the max current (if enabled)
         if (constants.maxCurrent > 0) {
-            if (getTotalCurrent() > constants.maxCurrent) {
+            double totalCurrent = getTotalCurrent();
+            if (totalCurrent > constants.maxCurrent) {
                 double currentRatio = getTotalCurrent() / constants.maxCurrent;
                 flPower /= currentRatio;
                 frPower /= currentRatio;
