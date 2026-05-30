@@ -5,18 +5,16 @@ import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-import controllers.PDFLController.PDFLCoefficients;
+import controllers.PDSController;
 import core.ApexBuilder;
 import drivetrains.constants.DrivetrainConstants;
 import drivetrains.constants.MecanumConstants;
-import drivetrains.constants.SwerveConstants;
-import drivetrains.constants.SwerveModuleConstants;
 import localizers.constants.LocalizerConstants;
 import localizers.constants.PinpointConstants;
 import followers.constants.FollowerConstants;
 import followers.constants.P2PFollowerConstants;
-import util.Angle;
-import util.Distance;
+import geometry.Angle;
+import geometry.Dist;
 
 /**
  * This class extends {@link ApexBuilder} and provides the specific constants for the drivetrain,
@@ -58,18 +56,19 @@ public class Constants extends ApexBuilder {
     @Override
     public FollowerConstants setFollowerConstants() { // Any FollowerConstants
         return new P2PFollowerConstants()
-                .setAxialCoeffs(new PDFLCoefficients(0.0, 0.0, 0.0))
-                .setStrafeCoeffs(new PDFLCoefficients(0.0, 0.0, 0.0))
-                .setHeadingCoeffs(new PDFLCoefficients(0.0, 0.0, 0.0))
+                .setAxialCoeffs(new PDSController.PDSCoefficients(0.0, 0.0, 0.0, 0.0))
+                .setStrafeCoeffs(new PDSController.PDSCoefficients(0.0, 0.0, 0.0, 0.0))
+                .setHeadingCoeffs(new PDSController.PDSCoefficients(0.0, 0.0, 0.0, 0.0))
                 .setHeadingTolerance(Angle.fromDeg(2.0))
-                .setTranslationalTolerance(Distance.fromIn(1.5))
-                .setMaxTranslationalPower(1)
+                .setAxialTolerance(Dist.fromIn(1.5))
+                .setStrafeTolerance(Dist.fromIn(1.5))
+                .setMaxAxialPower(1)
+                .setStrafeTolerance(Dist.fromIn(1.5))
+                .setMaxStrafePower(1)
                 .setMaxTurnPower(1);
     }
 
 }
-
-
 
 /* Tank drivetrain constants
 new TankConstants()
@@ -121,8 +120,8 @@ new SwerveConstants()
                                 .setModuleAngleOffset(0) //degrees
                 )
                 .setMaxPower(1.0)
-                .setTrackWidth(Distance.fromMm(0))
-                .setWheelbase(Distance.fromMm(0))
+                .setTrackWidth(Dist.fromMm(0))
+                .setWheelbase(Dist.fromMm(0))
                 .setRobotCentric(true);
     }*/
 

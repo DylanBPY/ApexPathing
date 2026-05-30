@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.Constants;
 
 import followers.P2PFollower;
-import util.Pose;
+import geometry.Pose;
 
 /**
  * Test OpMode for using Apex Pathing in TeleOp mode.
@@ -14,7 +14,6 @@ import util.Pose;
  * @author Sohum Arora - 22985 Paraducks
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
-@SuppressWarnings("unused")
 @TeleOp(name = "Apex TeleOp Test", group = "Apex Pathing Tests")
 public class TeleOpTest extends LinearOpMode {
 
@@ -35,10 +34,10 @@ public class TeleOpTest extends LinearOpMode {
                 telemetry.addLine("Follower stopped");
             } else {
                 follower.drive(
-                        gamepad1.left_stick_x,
                         -gamepad1.left_stick_y,
-                        gamepad1.right_stick_x,
-                        currentPose.getHeading() // (Can be removed if you never use field-centric)
+                        -gamepad1.left_stick_x,
+                        -gamepad1.right_stick_x,
+                        currentPose.getHeading().getRad() // (Can be removed if you never use field-centric)
                 );
             }
 

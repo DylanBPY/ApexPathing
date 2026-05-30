@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.tuning.manual;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import drivetrains.Swerve;

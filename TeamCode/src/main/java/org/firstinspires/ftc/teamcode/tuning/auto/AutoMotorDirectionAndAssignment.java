@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 import drivetrains.constants.MecanumConstants;
 import localizers.Localizer;
-import util.Pose;
+import geometry.Pose;
 
 /**
  * OpMode for automatically determining the direction and position of each motor on a mecanum drivetrain.
@@ -26,44 +26,33 @@ import util.Pose;
  */
 @TeleOp(name = "Auto Motor Direction + Assignment", group = "Apex Pathing Tuning")
 public class AutoMotorDirectionAndAssignment extends LinearOpMode {
-
-    // --- Constants & Lookups ---
     private static final Map<WheelTendencies, WheelPos> MOTOR_LUT = Map.of(
             new WheelTendencies(MovementDirection.NORTH_EAST, Rotation.CW), WheelPos.FRONT_LEFT,
             new WheelTendencies(MovementDirection.NORTH_WEST, Rotation.CCW), WheelPos.FRONT_RIGHT,
             new WheelTendencies(MovementDirection.NORTH_WEST, Rotation.CW), WheelPos.BACK_LEFT,
             new WheelTendencies(MovementDirection.NORTH_EAST, Rotation.CCW), WheelPos.BACK_RIGHT
     );
-
-    private Constants constants;
-
-    // --- Hardware & State ---
-    private DcMotorEx m0, m1, m2, m3;
-    private DcMotorEx[] motorArray;
-    private String[] motorNames;
-    private Localizer localizer;
     private TuningState state = TuningState.POSITIVE_POWER;
 
     // region Main Loop
     @Override
     public void runOpMode() {
-        constants = new Constants();
-        localizer = constants.buildOnlyLocalizer(hardwareMap, Pose.zero());
+        Constants constants = new Constants();
+        Localizer localizer = constants.buildOnlyLocalizer(hardwareMap, Pose.zero());
 
         MecanumConstants driveConstants = (MecanumConstants) constants.drivetrainConstants;
-        motorNames = new String[]{
+        String[] motorNames = new String[]{
                 driveConstants.getFlData().getName(),
                 driveConstants.getFrData().getName(),
                 driveConstants.getBlData().getName(),
                 driveConstants.getBrData().getName()
         };
 
-        m0 = hardwareMap.get(DcMotorEx.class, motorNames[0]);
-        m1 = hardwareMap.get(DcMotorEx.class, motorNames[1]);
-        m2 = hardwareMap.get(DcMotorEx.class, motorNames[2]);
-        m3 = hardwareMap.get(DcMotorEx.class, motorNames[3]);
-
-        motorArray = new DcMotorEx[]{m0, m1, m2, m3};
+        DcMotorEx m0 = hardwareMap.get(DcMotorEx.class, motorNames[0]);
+        DcMotorEx m1 = hardwareMap.get(DcMotorEx.class, motorNames[1]);
+        DcMotorEx m2 = hardwareMap.get(DcMotorEx.class, motorNames[2]);
+        DcMotorEx m3 = hardwareMap.get(DcMotorEx.class, motorNames[3]);
+        DcMotorEx[] motorArray = new DcMotorEx[]{m0, m1, m2, m3};
 
         Map<WheelPos, DcMotorEx> assignedMotors = new java.util.EnumMap<>(WheelPos.class);
         String[] telemetrySummary = new String[motorArray.length];
@@ -75,9 +64,8 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            // FIX: Changed < to >= so it only skips the state machine AFTER all motors are tested
             if (currentMotorIndex >= motorArray.length) {
-                telemetry.addLine("--- Tuning Complete ---");
+                telemetry.addLine("Tuning Complete");
                 for (String result : telemetrySummary) {
                     if (result != null) {
                         telemetry.addLine(result);
@@ -97,7 +85,7 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
             switch (state) {
                 case POSITIVE_POWER:
                     // Reset pose and timer once, then move to a waiting state
-                    localizer.setPose(new Pose(0, 0, 0));
+                    localizer.setPose(Pose.zero());
                     motor.setPower(0.6);
                     timer.setTarget(750);
                     state = TuningState.WAIT_POSITIVE;
@@ -105,14 +93,17 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
 
                 case WAIT_POSITIVE:
                     if (timer.isFinished()) {
+                        motor.setPower(0);
                         state = TuningState.CALCULATE;
                     }
                     break;
 
                 case CALCULATE:
                     // Measure the results
-                    MovementDirection direction = MovementDirection.fromAngle(localizer.getPose().getPositionComponent().getTheta());
-                    Rotation rotation = (localizer.getPose().getHeading() > 0) ? Rotation.CCW : Rotation.CW;
+                    MovementDirection direction = MovementDirection.fromAngle(
+                            localizer.getPose().getPos().getTheta().getRad()
+                    );
+                    Rotation rotation = (localizer.getPose().getHeading().getRad() > 0) ? Rotation.CCW : Rotation.CW;
 
                     // Identify the wheel based on behavior
                     WheelTendencies detected = new WheelTendencies(direction, rotation);
@@ -138,13 +129,11 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
                         telemetrySummary[currentMotorIndex] = "Motor " + motorName + " ERROR: No match found.";
                     }
 
-                    // Cut power and prepare to wait for deceleration
-                    motor.setPower(0);
                     state = TuningState.FIRST_DECELERATE;
                     break;
 
                 case FIRST_DECELERATE:
-                    if (localizer.getVelocity().getPositionComponent().getMagnitudeSquared() < 0.5) {
+                    if (localizer.getVelocity().getPos().getMagSq().getIn() < 0.5) {
                         state = TuningState.NEGATIVE_POWER;
                     }
                     break;
@@ -164,7 +153,7 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
                     break;
 
                 case SECOND_DECELERATE:
-                    if (localizer.getVelocity().getPositionComponent().getMagnitudeSquared() < 0.5) {
+                    if (localizer.getVelocity().getPos().getMagSq().getIn() < 0.5) {
                         // We finished this motor! Increment the index and reset the state.
                         currentMotorIndex++;
                         state = TuningState.POSITIVE_POWER;
@@ -189,9 +178,7 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
 
         private final double angle;
 
-        MovementDirection(double angle) {
-            this.angle = angle;
-        }
+        MovementDirection(double angle) { this.angle = angle; }
 
         public static MovementDirection fromAngle(double targetAngle) {
             MovementDirection closest = null;
@@ -212,9 +199,7 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
             return closest;
         }
 
-        public double getAngle() {
-            return this.angle;
-        }
+        public double getAngle() { return this.angle; }
     }
 
     private enum WheelPos {
@@ -233,10 +218,12 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
 
     private static class EnhancedTimer extends ElapsedTime {
         private int target = -1;
+
         public void setTarget(int ms) {
             reset();
             target = ms;
         }
+
         public boolean isFinished() {
             return target - time(TimeUnit.MILLISECONDS) <= 0 && target > 0;
         }
@@ -252,14 +239,17 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
         }
 
         public WheelTendencies getOpposite() {
-            MovementDirection oppDir =
-                    direction == MovementDirection.NORTH_EAST ? MovementDirection.SOUTH_WEST :
-                            direction == MovementDirection.NORTH_WEST ? MovementDirection.SOUTH_EAST :
-                                    direction == MovementDirection.SOUTH_WEST ? MovementDirection.NORTH_EAST :
-                                            MovementDirection.NORTH_WEST;
-
             Rotation oppRot = rotation == Rotation.CW ? Rotation.CCW : Rotation.CW;
-            return new WheelTendencies(oppDir, oppRot);
+            switch (direction) {
+                case NORTH_EAST:
+                    return new WheelTendencies(MovementDirection.SOUTH_WEST, oppRot);
+                case SOUTH_EAST:
+                    return new WheelTendencies(MovementDirection.NORTH_WEST, oppRot);
+                case SOUTH_WEST:
+                    return new WheelTendencies(MovementDirection.NORTH_EAST, oppRot);
+                default:
+                    return new WheelTendencies(MovementDirection.SOUTH_EAST, oppRot);
+            }
         }
 
         @Override

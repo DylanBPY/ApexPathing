@@ -17,9 +17,7 @@ public abstract class Drivetrain {
      * @param value the input value to apply the deadzone to
      * @return the value after applying the deadzone
      */
-    protected static double deadzone(double value) {
-        return Math.abs(value) < 0.03 ? 0.0 : value;
-    }
+    protected static double deadzone(double value) { return Math.abs(value) < 0.03 ? 0.0 : value; }
 
     /**
      * @return whether the drivetrain should use robot-centric controls (true) or field-centric controls (false)
@@ -29,20 +27,20 @@ public abstract class Drivetrain {
     /**
      * Moves the robot using the provided drive, strafe, and turn vectors.
      * The values are normalized and applied to the motors according to the mecanum drive formulas.
-     * @param drive the forward/backward movement vector (positive for forward, negative for backward)
-     * @param strafe the left/right movement vector (positive for right, negative for left)
-     * @param turn the rotation vector (positive for clockwise, negative for counterclockwise)
+     * @param x the forward/backward movement vector (positive for forward, negative for backward)
+     * @param y the left/right movement vector (positive for left, negative for right)
+     * @param turn the rotation vector (positive for counterclockwise, negative for clockwise)
      */
-    public abstract void moveWithVectors(double drive, double strafe, double turn);
+    public abstract void moveWithVectors(double x, double y, double turn);
 
     /**
      * Drives the robot with provided joystick inputs and the robot's current heading. This method
      * is meant for field-centric control. If you are using robot-centric control, the robotHeading
      * parameter will be ignored, you can use the other drive method that doesn't require the
      * robot's heading.
-     * @param x the left/right joystick input (positive for right, negative for left)
-     * @param y the forward/backward joystick input (positive for forward, negative for backward)
-     * @param turn the rotation joystick input (positive for clockwise, negative for counterclockwise)
+     * @param x the forward/backward joystick input (positive for forward, negative for backward)
+     * @param y the left/right joystick input (positive for left, negative for right)
+     * @param turn the rotation joystick input (positive for counterclockwise, negative for clockwise)
      * @param robotHeading the current heading of the robot in radians, not used for robot centric control
      */
     public void drive(double x, double y, double turn, double robotHeading) {
@@ -57,16 +55,16 @@ public abstract class Drivetrain {
             adjY = deadzone(x * sin + y * cos);
         }
         adjTurn = deadzone(turn);
-        moveWithVectors(adjY, adjX, adjTurn);
+        moveWithVectors(adjX, adjY, adjTurn);
     }
 
     /**
      * Drives the robot with provided joystick inputs. This method is meant for robotic-centric
      * control. If you are using field-centric control, you have to use the other drive method that
      * requires the robot's current heading to be passed in as a parameter.
-     * @param x the left/right joystick input (positive for right, negative for left)
-     * @param y the forward/backward joystick input (positive for forward, negative for backward)
-     * @param turn the rotation joystick input (positive for clockwise, negative for counterclockwise)
+     * @param x the forward/backward joystick input (positive for forward, negative for backward)
+     * @param y the left/right joystick input (positive for left, negative for right)
+     * @param turn the rotation joystick input (positive for counterclockwise, negative for clockwise)
      */
     public void drive(double x, double y, double turn) { drive(x, y, turn, 0); }
 
@@ -79,7 +77,5 @@ public abstract class Drivetrain {
 
     @NonNull
     @Override
-    public String toString() {
-        return "The drivetrain type didn't implement toString()!";
-    }
+    public String toString() { return "The drivetrain type didn't implement toString()!"; }
 }

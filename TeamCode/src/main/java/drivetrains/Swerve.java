@@ -35,10 +35,8 @@ public class Swerve extends Drivetrain {
         this.fr = constants.frModuleConstants.build(hardwareMap);
         this.br = constants.brModuleConstants.build(hardwareMap);
     }
-    
-    protected boolean isRobotCentric() {
-        return constants.robotCentric;
-    }
+
+    protected boolean isRobotCentric() { return constants.robotCentric; }
 
 
     public void moveWithVectors(double drive, double strafe, double turn){
@@ -94,6 +92,13 @@ public class Swerve extends Drivetrain {
      */
     private double getTotalCurrent(){
         return fl.getCurrent() + fr.getCurrent() + bl.getCurrent() + br.getCurrent();
+    }
+
+    public void manuallySetAngles(double frAngle, double flAngle, double brAngle, double blAngle){
+        fl.setTargets(frAngle, 0);
+        fr.setTargets(flAngle, 0);
+        br.setTargets(brAngle, 0);
+        bl.setTargets(blAngle, 0);
     }
 
     public void debug(Telemetry telemetry) {

@@ -1,12 +1,14 @@
 package followers;
 
-import controllers.PDFLController;
+import controllers.PDSController;
 import drivetrains.Drivetrain;
+import geometry.Angle;
 import localizers.Localizer;
 import followers.constants.P2PFollowerConstants;
 
-import util.Pose;
-import util.Vector;
+import geometry.Pose;
+import geometry.Vector;
+import util.DistUnit;
 
 /**
  * Simple point-to-point follower
@@ -16,9 +18,9 @@ import util.Vector;
 public class P2PFollower extends Follower {
     private final P2PFollowerConstants constants;
 
-    private final PDFLController axialController;
-    private final PDFLController strafeController;
-    private final PDFLController headingController;
+    private final PDSController axialController;
+    private final PDSController strafeController;
+    private final PDSController headingController;
 
     /**
      * Constructor for the P2PFollower
@@ -41,26 +43,24 @@ public class P2PFollower extends Follower {
         // Use the unexposed method from the Follower class (converts target pose to inches and radians)
         super.setTargetPose(targetPose);
         this.axialController.reset();
-        this.axialController.setTarget(targetPose.getX());
+        this.axialController.setTarget(this.targetPose.getX().getIn());
         this.strafeController.reset();
-        this.strafeController.setTarget(targetPose.getY());
+        this.strafeController.setTarget(this.targetPose.getY().getIn());
         this.headingController.reset();
-        this.headingController.setTarget(targetPose.getHeading());
+        this.headingController.setTarget(this.targetPose.getHeading().getRad());
     }
 
     public boolean axialAtTarget() { return constants.axialController.isAtTarget(); }
-
     public boolean strafeAtTarget() { return constants.strafeController.isAtTarget(); }
-
     public boolean headingAtTarget() { return constants.headingController.isAtTarget(); }
 
     @Override
     public void update() {
         localizer.update();
         Pose pose = localizer.getPose();
-        double currentX = pose.getXComponent().getIn();
-        double currentY = pose.getYComponent().getIn();
-        double currentHeading = pose.getHeadingComponent().getRad();
+        double currentX = pose.getX().getIn();
+        double currentY = pose.getY().getIn();
+        double currentHeading = pose.getHeading().getRad();
 
         if (!isBusy) {
             return; // No need to calculate anything if we're not busy
@@ -74,13 +74,13 @@ public class P2PFollower extends Follower {
             }
         }
 
-        // Note: powers are clipped to max powers defined in constants
-        Vector translational = new Vector(
+        // Rotate backwards to convert from field to robot centric (CCW rotation = positive)
+        Vector translational = Vector.of(
                 axialController.calculate(currentX),
-                -strafeController.calculate(currentY)
-        ).rotated(-currentHeading); // Rotate to the robot's frame of reference
-        double turn = -headingController.calculate(currentHeading);
-
-        drivetrain.drive(-translational.getX(), translational.getY(), turn);
+                strafeController.calculate(currentY),
+                DistUnit.IN // Not actually inches, but the values will stay the same with inches
+        ).rotate(Angle.fromRad(-currentHeading));
+        double turn = headingController.calculate(currentHeading);
+        drivetrain.drive(translational.getX().getIn(), translational.getY().getIn(), turn);
     }
 }
