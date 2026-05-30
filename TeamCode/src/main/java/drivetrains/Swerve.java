@@ -38,6 +38,7 @@ public class Swerve extends Drivetrain {
 
     protected boolean isRobotCentric() { return constants.robotCentric; }
 
+
     public void moveWithVectors(double drive, double strafe, double turn){
         turn *= -1; // Clockwise turn angle
 
@@ -93,12 +94,6 @@ public class Swerve extends Drivetrain {
         return fl.getCurrent() + fr.getCurrent() + bl.getCurrent() + br.getCurrent();
     }
 
-    public void manuallySetAngles(double frAngle, double flAngle, double brAngle, double blAngle){
-        fl.setTargets(frAngle, 0);
-        fr.setTargets(flAngle, 0);
-        br.setTargets(brAngle, 0);
-        bl.setTargets(blAngle, 0);
-    }
 
     public void debug(Telemetry telemetry) {
         telemetry.addData("Front Left Module", fl.toString());
@@ -113,4 +108,11 @@ public class Swerve extends Drivetrain {
         return String.format(Locale.ENGLISH, "Swerve(fl=%s, bl=%s, fr=%s, br=%s)",
                 fl.toString(), bl.toString(), fr.toString(), br.toString());
     }
+    public void manuallySetAngles(double frAngle, double flAngle, double brAngle, double blAngle){
+        fl.setTargets(frAngle, 0);
+        fr.setTargets(flAngle, 0);
+        br.setTargets(brAngle, 0);
+        bl.setTargets(blAngle, 0);
+    }
+
 }

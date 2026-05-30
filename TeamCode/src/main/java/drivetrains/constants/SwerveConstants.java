@@ -31,7 +31,7 @@ public class SwerveConstants extends DrivetrainConstants {
     public double maxCurrent = -1.0; // Max total motor current in amps, negative for no limit
     public boolean robotCentric = true; // Whether to use robot-centric controls (true) or field-centric controls (false) in TeleOp
 
-    private double totalMaxCurrent = 8; //amps
+    private double totalMaxCurrent = -1; //amps
 
     /** Constructor for the SwerveConstants class */
     public SwerveConstants() {}
