@@ -236,13 +236,14 @@ public class PathSegment {
      * @param secondDerivative The acceleration vector of the segment at the closest point.
      * @return The principal unit normal Vector pointing toward the center of curvature. Returns (0, 0) if the cross product is zero.
      */
-    public Vector getNormal(Vector firstDerivative, Vector secondDerivative) {
-        double vx = firstDerivative.getX(DistUnit.IN);
-        double vy = firstDerivative.getY(DistUnit.IN);
+    public static Vector getNormal(Vector firstDerivative, Vector secondDerivative) {
+        double vx = firstDerivative.getX(util.DistUnit.IN);
+        double vy = firstDerivative.getY(util.DistUnit.IN);
 
-        // 2D cross product determines if the curve is bending left (positive) or right (negative)
+        // .cross() returns a Dist object; .getIn() extracts its raw scalar value
         double cross = firstDerivative.cross(secondDerivative).getIn();
 
+        // If the path is perfectly straight, there is no normal vector
         if (Math.abs(cross) < 1e-6) {
             return Vector.zero();
         }
@@ -250,10 +251,10 @@ public class PathSegment {
         Vector normal;
         if (cross < 0) {
             // Bending right: swap X and Y, negate the new Y
-            normal = Vector.of(vy, -vx, DistUnit.IN);
+            normal = Vector.of(vy, -vx, util.DistUnit.IN);
         } else {
-            // Bending left (or perfectly straight): swap X and Y, negate the new X
-            normal = Vector.of(-vy, vx, DistUnit.IN);
+            // Bending left: swap X and Y, negate the new X
+            normal = Vector.of(-vy, vx, util.DistUnit.IN);
         }
 
         return normal.normalize();

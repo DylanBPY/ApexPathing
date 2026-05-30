@@ -147,26 +147,27 @@ public class MovementFollower extends Follower {
             double t = segment.getBestT(current.getPos());
 
             Vector targetPoseVec = segment.getPosition(t);
-
             //********** CFS YAY! ************
-            Vector targetVelocity = segment.getFirstDerivative(t);
-            Vector targetAcceleration = segment.getSecondDerivative(t);
 
-            //get radius
-            double radius = PathSegment.calculateRadiusOfCurvature(targetVelocity, targetAcceleration);
+            Vector targetVelocity = segment.getFirstDerivative(t); //first derivative
+            Vector targetAcceleration = segment.getSecondDerivative(t); //second derivative
 
-            // apply Centripetal Force Scaling!
-            if (radius != Double.POSITIVE_INFINITY && radius > 1e-6) {
-                // Max safe lateral speed at a given radius
-                double maxSafeVelocity = Math.sqrt(constants.maxLateralAccel * radius);
-                double requestedVelocityMag = targetVelocity.getMag().getIn();
-                //safety check
-                if (requestedVelocityMag > maxSafeVelocity) {
-                    // We multiply the vector by a ratio to shrink its length while preserving its direction
-                    targetVelocity = targetVelocity.times(maxSafeVelocity / requestedVelocityMag);
+            double velocityMag = targetVelocity.getMag().getIn();
+            double crossProductMag = Math.abs(targetVelocity.cross(targetAcceleration).getIn());
+
+            if (velocityMag > 1e-6) {
+                double lateralAccel = crossProductMag / velocityMag;
+
+                if (lateralAccel > constants.getMaxLateralAccel()) {
+                    double radius = crossProductMag < 1e-6 ? Double.POSITIVE_INFINITY : Math.pow(velocityMag, 3) / crossProductMag;
+
+                    if (radius != Double.POSITIVE_INFINITY) {
+                        //calculating maximum safe lateral velocity as the square root of max lateral acceleration * radius
+                        double maxSafeVelocity = Math.sqrt(constants.getMaxLateralAccel() * radius);
+                        targetVelocity = targetVelocity.times(maxSafeVelocity / velocityMag);
+                    }
                 }
             }
-
             Vector error = targetPoseVec.minus(current.getPos());
 
             double errorMag = error.getMag().getIn();
@@ -174,8 +175,8 @@ public class MovementFollower extends Follower {
             double translationPower = translationController.calculateFromError(errorMag);
             Vector feedback = errorMag > 0 ? error.normalize().times(translationPower) : Vector.zero();
 
-            // The scaled targetVel down-regulates feedforward power perfectly here
             Vector feedforward = targetVelocity.times(constants.velocityFF);
+
             Vector drivePower = feedback.plus(feedforward);
 
             double driveX = drivePower.getX().getIn();
@@ -184,15 +185,12 @@ public class MovementFollower extends Follower {
             double distanceRemaining = segment.getDistanceToEnd_in(targetPoseVec, t);
             double distanceTravelled = segment.getLength_in() - distanceRemaining;
 
-            // Updated this to use distanceRemaining as intended
             Angle targetAngle = interpolator.getHeading(distanceTravelled / segment.getLength_in(), targetVelocity);
             double targetHeading = targetAngle.getRad();
             double currentHeading = current.getHeading().getRad();
 
             double headingError = getShortestAngularDistance(currentHeading, targetHeading);
             double turnPower = headingController.calculateFromError(headingError);
-
-            // TODO: use new getNormal() function to implement centripetal force
 
             if (t >= constants.tTolerance && distanceRemaining < constants.distanceTolerance) {
                 Vector finalPosition = currentMovement.getEndPose().getPos(); // Used cached pos to avoid extra compute

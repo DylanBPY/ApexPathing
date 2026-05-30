@@ -61,4 +61,7 @@ public class BSplineFollowerConstants extends FollowerConstants {
         this.tTolerance = tTolerance;
         return this;
     }
+    public double getMaxLateralAccel() {
+        return maxLateralAccel;
+    }
 }
