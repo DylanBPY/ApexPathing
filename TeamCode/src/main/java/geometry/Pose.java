@@ -51,7 +51,7 @@ public class Pose {
     /** Creates a Pose from a position Vector and a heading Angle. */
     public Pose(Vector position, Angle heading) { this.position = position; this.heading = heading; }
 
-    /** Creates a Pose with X, y, and heading equal to zero */
+    /** Creates a Pose with X, Y, and heading equal to zero */
     public static Pose zero() { return new Pose(Vector.zero(), Angle.fromRad(0)); }
     // endregion
 

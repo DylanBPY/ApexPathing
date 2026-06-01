@@ -1,110 +1,58 @@
 package drivetrains;
 
-import androidx.annotation.NonNull;
-
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import java.util.Objects;
 
-import java.util.Locale;
-
-import drivetrains.constants.KiwiConstants;
+import util.MotorFactory;
 
 /**
- * Kiwi drivetrain controller class
+ * Kiwi (also known as Killough or Three-Wheel Omni) drivetrain controller
  *
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
-public class Kiwi extends Drivetrain {
-    KiwiConstants constants;
+public class Kiwi extends BaseDrivetrain<Kiwi.Config> {
+    private final double sqrt3over2 = Math.sqrt(3) / 2; // Precompute this constant for efficiency
 
-    // Motors
-    DcMotorEx frMotor;
-    DcMotorEx bMotor;
-    DcMotorEx flMotor;
+    public Kiwi(Config config, HardwareMap hardwareMap) {
+        super(config, hardwareMap);
 
-    private final double sqrt3over2 = Math.sqrt(3) / 2;
-
-    /**
-     * Creates a kiwi drivetrain
-     * @param hardwareMap the hardware map to use for motor initialization
-     * @param constants {@link KiwiConstants} object containing all tunable values and motor names/directions
-     */
-    public Kiwi(HardwareMap hardwareMap, @NonNull KiwiConstants constants){
-        this.constants = constants;
-
-        frMotor = this.constants.frMotorData.build(hardwareMap);
-        bMotor = this.constants.bMotorData.build(hardwareMap);
-        flMotor = this.constants.flMotorData.build(hardwareMap);
-    }
-
-    protected boolean isRobotCentric() { return constants.robotCentric; }
-
-    /**
-     * Sets the power for each motor, normalizing the powers if any exceed the maximum allowed power.
-     * @param frMotorPower the desired power for motor 1
-     * @param bMotorPower the desired power for motor 2
-     * @param flMotorPower the desired power for motor 3
-     */
-    private void setPowers(double frMotorPower, double bMotorPower, double flMotorPower) {
-        // Normalize powers from -maxPower to maxPower if any exceed the max
-        double max = Math.max(0, Math.abs(frMotorPower));
-        max = Math.max(max, Math.abs(bMotorPower));
-        max = Math.max(max, Math.abs(flMotorPower));
-        if (max > constants.maxPower) {
-            frMotorPower = (frMotorPower / max) * constants.maxPower;
-            bMotorPower = (bMotorPower / max) * constants.maxPower;
-            flMotorPower = (flMotorPower / max) * constants.maxPower;
+        if (Objects.equals(config.blMotorConfig, null)) {
+            throw new IllegalArgumentException(
+                    "Back motor configurations must be provided for a kiwi drivetrain"
+            );
         }
-
-        // Normalize motor powers to not exceed the max current (if enabled)
-        if (constants.maxCurrent > 0) {
-            if (getTotalCurrent() > constants.maxCurrent) {
-                double currentRatio = getTotalCurrent() / constants.maxCurrent;
-                frMotorPower /= currentRatio;
-                bMotorPower /= currentRatio;
-                flMotorPower /= currentRatio;
-            }
-        }
-
-        frMotor.setPower(frMotorPower);
-        bMotor.setPower(bMotorPower);
-        flMotor.setPower(flMotorPower);
     }
 
-    public void moveWithVectors(double x, double y, double turn) {
-        // Video explaining Kiwi kinematics: https://www.youtube.com/watch?v=n6TWzzj74gk&t=27
-        double frMotorPower = (y / 2) + (x * sqrt3over2) - turn;
-        double bMotorPower = -y - turn;
-        double flMotorPower = (y / 2) - (x * sqrt3over2) - turn;
-
-        setPowers(frMotorPower, bMotorPower, flMotorPower);
-    }
-
-    public void stop() { setPowers(0, 0, 0); }
-
-    /**
-     * @return the total motor current of the drivetrain in amps
-     */
-    private double getTotalCurrent(){
-        return frMotor.getCurrent(CurrentUnit.AMPS) + bMotor.getCurrent(CurrentUnit.AMPS) +
-                flMotor.getCurrent(CurrentUnit.AMPS);
-    }
-
-    public void debug(Telemetry telemetry) {
-        telemetry.addData("Motor 1 Power", frMotor.getPower());
-        telemetry.addData("Motor 2 Power", bMotor.getPower());
-        telemetry.addData("Motor 3 Power", flMotor.getPower());
-    }
-    
-    @NonNull
     @Override
-    public String toString() {
-        return String.format(Locale.ENGLISH,
-                "Kiwi(fr=%.2f, b=%.2f, fl=%.2f)",
-                frMotor.getPower(), bMotor.getPower(), flMotor.getPower()
+    public void moveWithVectors(double x, double y, double turn) {
+        // Kiwi kinematics explanation: https://www.youtube.com/watch?v=n6TWzzj74gk&t=27
+        setPowers(
+                (y / 2) - (x * sqrt3over2) - turn,
+                (y / 2) + (x * sqrt3over2) - turn,
+                -y - turn, // Back motor = back left motor in the drivetrain configuration
+                0 // Back right motor isn't used
         );
+    }
+
+    /** Configuration class for Kiwi/Killough/Thee-Wheel Omni drivetrain. */
+    public static class Config extends BaseDrivetrainConfig<Config> {
+        @Override
+        public Kiwi build(HardwareMap hardwareMap) { return new Kiwi(this, hardwareMap); }
+
+        /** Sets the front left motor configuration. */
+        public Config setFrontLeftMotor(MotorFactory motorFactory) {
+            this.flMotorConfig = motorFactory; return this;
+        }
+
+        /** Sets the front right motor configuration. */
+        public Config setFrontRightMotor(MotorFactory motorFactory) {
+            this.frMotorConfig = motorFactory; return this;
+        }
+
+        /** Sets the back motor configuration. */
+        public Config setBackMotor(MotorFactory motorFactory) {
+            this.blMotorConfig = motorFactory; return this; // Uses the back left motor object
+        }
     }
 }

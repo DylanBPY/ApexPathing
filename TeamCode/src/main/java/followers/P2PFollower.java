@@ -1,7 +1,7 @@
 package followers;
 
 import controllers.PDSController;
-import drivetrains.Drivetrain;
+import drivetrains.BaseDrivetrain;
 import geometry.Angle;
 import localizers.Localizer;
 import followers.constants.P2PFollowerConstants;
@@ -27,7 +27,7 @@ public class P2PFollower extends Follower {
      * @param drivetrain the mecanum drivetrain class to control
      * @param localizer the Pinpoint localizer to get pose estimates from
      */
-    public P2PFollower(P2PFollowerConstants constants, Drivetrain drivetrain, Localizer localizer) {
+    public P2PFollower(P2PFollowerConstants constants, BaseDrivetrain<?> drivetrain, Localizer localizer) {
         super(drivetrain, localizer);
         this.constants = constants;
         this.axialController = constants.axialController;

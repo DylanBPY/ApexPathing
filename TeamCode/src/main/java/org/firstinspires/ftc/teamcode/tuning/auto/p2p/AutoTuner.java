@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import controllers.PDSController.PDSCoefficients;
 import controllers.PDSController;
-import drivetrains.Drivetrain;
+import drivetrains.BaseDrivetrain;
 import followers.constants.P2PFollowerConstants;
 import localizers.Localizer;
 import geometry.Angle;
@@ -38,7 +38,7 @@ public abstract class AutoTuner extends LinearOpMode {
     final double TARGET_SWITCH_WAIT_TIME_MS = 1000;
 
     public JoinedTelemetry fullTelem;
-    public Drivetrain drivetrain;
+    public BaseDrivetrain<?> drivetrain;
     public Localizer localizer;
     public PDSController controller;
     public PDSController headingController; // For maintaining heading with translational controllers

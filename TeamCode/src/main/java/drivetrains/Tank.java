@@ -1,127 +1,48 @@
 package drivetrains;
 
-import androidx.annotation.NonNull;
-
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-
-import java.util.Locale;
-
-import drivetrains.constants.TankConstants;
+import util.MotorFactory;
 
 /**
- * Tank Drivetrain controller class
+ * Tank drivetrain controller (supports 2 and 4 motor configurations)
  *
- * @author Xander Haemel - 31616 - 404 Not Found
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
-public class Tank extends Drivetrain {
-    TankConstants constants;
-    // Motors
-    DcMotorEx flMotor;
-    DcMotorEx blMotor; // Only used for 4 motor tank drive
-    DcMotorEx frMotor;
-    DcMotorEx brMotor; // Only used for 4 motor tank drive
+public class Tank extends BaseDrivetrain<Tank.Config> {
+    public Tank(Config config, HardwareMap hardwareMap) { super(config, hardwareMap); }
 
-    public Tank(HardwareMap hardwareMap, @NonNull TankConstants constants) {
-        this.constants = constants;
-
-        flMotor = this.constants.flData.build(hardwareMap);
-        frMotor = this.constants.frData.build(hardwareMap);
-
-        if (constants.fourMotor) {
-            blMotor = this.constants.blData.build(hardwareMap);
-            brMotor = this.constants.brData.build(hardwareMap);
-        }
-    }
-
-    protected boolean isRobotCentric() {
-        return this.constants.robotCentric;
-    }
-
-    public void moveWithVectors(double x, double y, double turn) {
-        // Tank isn't holonomic, ignore the strafe vector
-        double leftPower = x - turn;
-        double rightPower = x + turn;
-
-        // Normalize powers if any exceed the max power
-        double max = Math.max(Math.abs(leftPower), Math.abs(rightPower));
-        if (max > constants.maxPower) {
-            leftPower = (leftPower / max) * constants.maxPower;
-            rightPower = (rightPower / max) * constants.maxPower;
-        }
-
-        // Apply to motors
-        setPowers(leftPower, rightPower);
-    }
-
-    /**
-     * Sets the power for each side of the robot, normalizing the powers if any exceed the maximum
-     * allowed power.
-     * @param leftPower the power to set for the left motors
-     * @param rightPower the power to set for the right motors
-     */
-    private void setPowers(double leftPower, double rightPower) {
-        // Normalize powers from -maxPower to maxPower if any exceed the max
-        double max = Math.max(Math.abs(leftPower), Math.abs(rightPower));
-        if (max > constants.maxPower) {
-            leftPower = (leftPower / max) * constants.maxPower;
-            rightPower = (rightPower / max) * constants.maxPower;
-        }
-
-        // Normalize motor powers to not exceed the max current (if enabled)
-        if (constants.maxCurrent > 0) {
-            if (getTotalCurrent() > constants.maxCurrent) {
-                double currentRatio = getTotalCurrent() / constants.maxCurrent;
-                leftPower /= currentRatio;
-                rightPower /= currentRatio;
-            }
-        }
-
-        flMotor.setPower(leftPower);
-        frMotor.setPower(rightPower);
-        if (constants.fourMotor) {
-            blMotor.setPower(leftPower);
-            brMotor.setPower(rightPower);
-        }
-    }
-
-    public void stop() { setPowers(0, 0); }
-
-    /**
-     * @return the total motor current of the drivetrain in amps
-     */
-    private double getTotalCurrent(){
-        return flMotor.getCurrent(CurrentUnit.AMPS) + frMotor.getCurrent(CurrentUnit.AMPS) +
-                (constants.fourMotor ?
-                        blMotor.getCurrent(CurrentUnit.AMPS) + brMotor.getCurrent(CurrentUnit.AMPS) : 0
-                );
-    }
-
-    public void debug(Telemetry telemetry) {
-        telemetry.addData("Front Left Power", flMotor.getPower());
-        telemetry.addData("Front Right Power", frMotor.getPower());
-
-        if (constants.fourMotor) {
-            telemetry.addData("Back left Power", blMotor.getPower());
-            telemetry.addData("Back Right Power", brMotor.getPower());
-        }
-    }
-
-    @NonNull
     @Override
-    public String toString() {
-        if (constants.fourMotor) {
-            return String.format(Locale.ENGLISH,
-                    "Tank(fourMotor=true, fl=%.1f, bl=%.1f, fr=%.1f, br=%.1f)",
-                    flMotor.getPower(), blMotor.getPower(), frMotor.getPower(), brMotor.getPower());
-        } else {
-            return String.format(Locale.ENGLISH,
-                    "Tank(fourMotor=false, fl=%.1f, fr=%.1f)",
-                    flMotor.getPower(), frMotor.getPower());
+    public void moveWithVectors(double x, double y, double turn) {
+        // Tank kinematics explanation (FRC, more in depth): https://www.youtube.com/watch?v=Ym34WI2rSdc
+        // For FTC, not in depth, but shows simple code: https://www.youtube.com/watch?v=pREkiGl9yi0
+        // 2 motor tank uses the front motors only, 4 motor tank uses all motors with the same power
+        setPowers(x - turn, x + turn, x - turn, x + turn);
+    }
+
+    /** Configuration class for Tank drivetrain. */
+    public static class Config extends BaseDrivetrainConfig<Config> {
+        @Override
+        public Tank build(HardwareMap hardwareMap) { return new Tank(this, hardwareMap); }
+
+        /** Sets the front left motor configuration. */
+        public Config setFrontLeftMotor(MotorFactory motorFactory) {
+            this.flMotorConfig = motorFactory; return this;
+        }
+
+        /** Sets the front right motor configuration. */
+        public Config setFrontRightMotor(MotorFactory motorFactory) {
+            this.frMotorConfig = motorFactory; return this;
+        }
+
+        /** Sets the back left motor configuration. Do not use this for 2 wheel tank */
+        public Config setBackLeftMotor(MotorFactory motorFactory) {
+            this.blMotorConfig = motorFactory; return this;
+        }
+
+        /** Sets the back right motor configuration. Do not use this for 2 wheel tank */
+        public Config setBackRightMotor(MotorFactory motorFactory) {
+            this.brMotorConfig = motorFactory; return this;
         }
     }
 }

@@ -25,6 +25,9 @@ public final class Angle {
 
     /** Creates an Angle from radians. */
     public static Angle fromRad(double radians) { return of(radians, AngleUnit.RAD); }
+
+    /** Creates an Angle with a value of zero. */
+    public static Angle zero() { return new Angle(0); }
     // endregion
 
     // region Getters

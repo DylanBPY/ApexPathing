@@ -39,6 +39,9 @@ public final class Dist {
 
     /** Creates a Distance from meters. */
     public static Dist fromM(double meters) { return of(meters, DistUnit.M); }
+
+    /** Creates a Distance with a value of 0 inches. */
+    public static Dist zero() { return new Dist(0); }
     // endregion
 
     // region Getters

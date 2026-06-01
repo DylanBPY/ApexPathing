@@ -2,10 +2,10 @@ package core;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import drivetrains.Drivetrain;
+import drivetrains.BaseDrivetrain;
 import localizers.Localizer;
 import followers.Follower;
-import drivetrains.constants.DrivetrainConstants;
+import drivetrains.BaseDrivetrainConfig;
 import localizers.constants.LocalizerConstants;
 import followers.constants.FollowerConstants;
 import geometry.Pose;
@@ -20,7 +20,7 @@ import geometry.Pose;
  * @author Dylan B. 18597 RoboClovers - Delta
  */
 public abstract class ApexBuilder {
-    public DrivetrainConstants drivetrainConstants;
+    public BaseDrivetrainConfig<?> drivetrainConstants;
     public LocalizerConstants localizerConstants;
     public FollowerConstants followerConstants;
 
@@ -38,15 +38,15 @@ public abstract class ApexBuilder {
      * <pre>
      * {@code
      * @Override
-     * public DrivetrainConstants setDrivetrainConstants() { // Any DrivetrainConstants
-     *      return new MecanumConstants() // This can be any class that extends DrivetrainConstants
+     * public BaseDrivetrainConfig setDrivetrainConstants() {
+     *      return new MecanumConstants() // This can be any class that extends BaseDrivetrainConfig
      * }
      * }
      * </pre>
      *
-     * @return any constants class that extends {@link DrivetrainConstants} with the appropriate values set.
+     * @return any constants class that extends {@link BaseDrivetrainConfig} with the appropriate values set.
      */
-    public abstract DrivetrainConstants setDrivetrainConstants();
+    public abstract BaseDrivetrainConfig<?> setDrivetrainConstants();
 
     /**
      * Override this method to set the localizer constants for your robot.
@@ -92,7 +92,7 @@ public abstract class ApexBuilder {
      * @return a {@link Follower} object built with the specified constants and hardware
      */
     public Follower build(HardwareMap hardwareMap, Pose startPose) {
-        Drivetrain drivetrain = this.buildOnlyDrivetrain(hardwareMap);
+        BaseDrivetrain<?> drivetrain = this.buildOnlyDrivetrain(hardwareMap);
         Localizer localizer = this.buildOnlyLocalizer(hardwareMap, startPose);
 
         return this.followerConstants.build(drivetrain, localizer);
@@ -102,9 +102,9 @@ public abstract class ApexBuilder {
      * Builds only the drivetrain using the constants set in the overridden setDrivetrainConstants()
      * method. You generally shouldn't use this method as a user unless you know what you're doing.
      * @param hardwareMap the {@link HardwareMap} object from the OpMode
-     * @return a {@link Drivetrain} object built with the specified constants and hardware
+     * @return a {@link BaseDrivetrain} object built with the specified constants and hardware
      */
-    public Drivetrain buildOnlyDrivetrain(HardwareMap hardwareMap) {
+    public BaseDrivetrain<?> buildOnlyDrivetrain(HardwareMap hardwareMap) {
         return this.drivetrainConstants.build(hardwareMap);
     }
 

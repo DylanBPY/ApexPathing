@@ -7,14 +7,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import controllers.PDSController;
 import core.ApexBuilder;
-import drivetrains.constants.DrivetrainConstants;
-import drivetrains.constants.MecanumConstants;
+import drivetrains.BaseDrivetrainConfig;
+import drivetrains.Mecanum;
 import localizers.constants.LocalizerConstants;
 import localizers.constants.PinpointConstants;
 import followers.constants.FollowerConstants;
 import followers.constants.P2PFollowerConstants;
 import geometry.Angle;
 import geometry.Dist;
+import util.MotorFactory;
 
 /**
  * This class extends {@link ApexBuilder} and provides the specific constants for the drivetrain,
@@ -25,18 +26,14 @@ import geometry.Dist;
  *
  * @author Dylan B. 18597 RoboClovers - Delta
  */
-
 public class Constants extends ApexBuilder {
     @Override
-    public DrivetrainConstants setDrivetrainConstants() { // Any DrivetrainConstants
-        return new MecanumConstants()
-                .setFrontLeftMotorName("frontLeftMotor")
-                .setBackLeftMotorName("backLeftMotor")
-                .setFrontRightMotorName("frontRightMotor")
-                .setBackRightMotorName("backRightMotor")
-                .setFrontRightReversed(true)
-                .setBackRightReversed(true)
-                .setBrakeMode(true)
+    public BaseDrivetrainConfig<?> setDrivetrainConstants() { // Any baseDrivetrainConfig child
+        return new Mecanum.Config()
+                .setFrontLeftMotor(new MotorFactory("frontLeftMotor"))
+                .setBackLeftMotor(new MotorFactory("backLeftMotor"))
+                .setFrontRightMotor(new MotorFactory("frontRightMotor").reverse())
+                .setBackRightMotor(new MotorFactory("backRightMotor").reverse())
                 .setRobotCentric(true)
                 .setMaxPower(1.0);
     }

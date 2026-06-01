@@ -12,7 +12,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import drivetrains.constants.MecanumConstants;
+import drivetrains.BaseDrivetrainConfig;
+import drivetrains.Mecanum;
+import drivetrains.Mecanum.Config;
 import localizers.Localizer;
 import geometry.Pose;
 
@@ -40,12 +42,12 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
         Constants constants = new Constants();
         Localizer localizer = constants.buildOnlyLocalizer(hardwareMap, Pose.zero());
 
-        MecanumConstants driveConstants = (MecanumConstants) constants.drivetrainConstants;
+        BaseDrivetrainConfig<Mecanum.Config> driveConstants = (Mecanum.Config) constants.drivetrainConstants;
         String[] motorNames = new String[]{
-                driveConstants.getFlData().getName(),
-                driveConstants.getFrData().getName(),
-                driveConstants.getBlData().getName(),
-                driveConstants.getBrData().getName()
+                driveConstants.getFlMotorConfig().getName(),
+                driveConstants.getFrMotorConfig().getName(),
+                driveConstants.getBlMotorConfig().getName(),
+                driveConstants.getBrMotorConfig().getName()
         };
 
         DcMotorEx m0 = hardwareMap.get(DcMotorEx.class, motorNames[0]);

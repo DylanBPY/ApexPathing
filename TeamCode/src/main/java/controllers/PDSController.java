@@ -31,7 +31,7 @@ public class PDSController extends Controller {
         }
 
         /**
-         * Creates a PDFLCoefficients object with all coefficients set to 0.
+         * Creates a PDSCoefficients object with all coefficients set to 0.
          */
         public PDSCoefficients() { this(0.0, 0.0, 0.0, 0.0); }
     }

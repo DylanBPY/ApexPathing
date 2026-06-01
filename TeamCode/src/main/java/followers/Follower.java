@@ -1,6 +1,6 @@
 package followers;
 
-import drivetrains.Drivetrain;
+import drivetrains.BaseDrivetrain;
 import localizers.Localizer;
 import geometry.Pose;
 
@@ -11,7 +11,7 @@ import geometry.Pose;
  * @author Dylan B. 18597 RoboClovers - Delta
  */
 public abstract class Follower {
-    protected Drivetrain drivetrain;
+    protected BaseDrivetrain<?> drivetrain;
     protected Localizer localizer;
 
     protected boolean holdingPose;
@@ -21,12 +21,12 @@ public abstract class Follower {
 
     /**
      * Constructor for the Follower class
-     * Every Follower should take FollowerConstants, a Drivetrain, and a Localizer as parameters
+     * Every Follower should take FollowerConstants, a BaseDrivetrain, and a Localizer as parameters
      * Here is an example constructor for a P2PFollower, the same structure should be used for all.
      *
      * <pre>
      * {@code
-     * public P2PFollower(P2PFollowerConstants constants, Drivetrain drivetrain, Localizer localizer) {
+     * public P2PFollower(P2PFollowerConstants constants, BaseDrivetrain drivetrain, Localizer localizer) {
      *     super(drivetrain, localizer);
      *     this.constants = constants;
      * }
@@ -36,7 +36,7 @@ public abstract class Follower {
      * @param drivetrain the drivetrain to control
      * @param localizer the localizer to get pose estimates from
      */
-    public Follower(Drivetrain drivetrain, Localizer localizer) {
+    public Follower(BaseDrivetrain<?> drivetrain, Localizer localizer) {
         this.drivetrain = drivetrain;
         this.localizer = localizer;
     }
