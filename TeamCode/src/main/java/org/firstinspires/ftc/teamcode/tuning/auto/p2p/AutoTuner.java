@@ -35,7 +35,7 @@ public abstract class AutoTuner extends LinearOpMode {
     final double TIME_PER_GUESS_MS = 500;
     final long WAIT_TIME_BETWEEN_GUESSES_MS = 500;
     final double PD_TUNER_DURATION = 2000;
-    final double TARGET_SWITCH_WAIT_TIME_MS = 1000;
+    public final double TARGET_SWITCH_WAIT_TIME_MS = 1000;
 
     public JoinedTelemetry fullTelem;
     public Drivetrain drivetrain;
