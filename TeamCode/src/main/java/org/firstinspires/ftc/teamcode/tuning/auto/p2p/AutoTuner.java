@@ -22,6 +22,7 @@ import geometry.Pose;
  * Base class for P2P follower PDS controller tuner OpModes
  * @author Joel - 7842 Browncoats Alumni
  * @author Dylan B. - 18597 RoboClovers - Delta
+ * @author Sohum Arora - 22985 Paraducks
  */
 public abstract class AutoTuner extends LinearOpMode {
     // Assigned by child classes
