@@ -144,7 +144,6 @@ public class CoaxialSwerve extends BaseDrivetrain<CoaxialSwerve.Config> {
 
         public PDSCoefficients steeringCoefficients = new PDSCoefficients();
 
-        public double maxEncoderVolts = 3.3;
         public Angle offsetAngle = Angle.zero(); // Encoder value facing forward position
         public Dist wheelbase = Dist.fromIn(14); // Front pod to back pod spacing
         public Dist trackWidth = Dist.fromIn(14); // Left pod to right pod spacing
@@ -196,11 +195,6 @@ public class CoaxialSwerve extends BaseDrivetrain<CoaxialSwerve.Config> {
         /** Sets the coefficients for the steering PDS controllers. */
         public Config setSteeringCoefficients(PDSCoefficients coefficients) {
             this.steeringCoefficients = coefficients; return this;
-        }
-
-        /** Sets the maximum voltage output of the steering encoders. */
-        public Config setMaxEncoderVolts(double maxEncoderVolts) {
-            this.maxEncoderVolts = maxEncoderVolts; return this;
         }
 
         /** Sets the encoders reported angle when the wheel is facing forward. */
