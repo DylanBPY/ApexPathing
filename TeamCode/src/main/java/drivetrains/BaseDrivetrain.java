@@ -9,10 +9,10 @@ import java.util.Objects;
  * Base class for all drivetrain controllers.
  *
  * <p>
- * This class handles motor initialization and provides
- * common methods for driving and setting motor powers. Specific drivetrain types (like Tank, Mecanum, etc.)
- * should extend this class and implement the moveWithVectors method to define how the drive, strafe, and turn
- * vectors are translated into motor powers.
+ * This class handles motor initialization and provides common methods for driving and setting motor
+ * powers. Specific drivetrain types (like Tank, Mecanum, etc.) should extend this class and
+ * implement the moveWithVectors method to define how the drive, strafe, and turn vectors are
+ * translated into motor powers.
  * </p>
  *
  * @param <T> the type of drivetrain configuration this drivetrain uses, which must extend {@link BaseDrivetrainConfig}

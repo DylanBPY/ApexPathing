@@ -3,7 +3,7 @@ package followers.constants;
 import controllers.PDSController.PDSCoefficients;
 import drivetrains.BaseDrivetrain;
 import followers.MovementFollower;
-import localizers.Localizer;
+import localizers.BaseLocalizer;
 
 /**
  * B-Spline path follower constants class.
@@ -25,7 +25,7 @@ public class BSplineFollowerConstants extends FollowerConstants {
     public BSplineFollowerConstants() {}
 
     @Override
-    public MovementFollower build(BaseDrivetrain<?> drivetrain, Localizer localizer) {
+    public MovementFollower build(BaseDrivetrain<?> drivetrain, BaseLocalizer<?> localizer) {
         return new MovementFollower(this, drivetrain, localizer);
     }
 

@@ -12,7 +12,7 @@ import controllers.PDSController.PDSCoefficients;
 import controllers.PDSController;
 import drivetrains.BaseDrivetrain;
 import followers.constants.P2PFollowerConstants;
-import localizers.Localizer;
+import localizers.BaseLocalizer;
 import geometry.Dist;
 import geometry.Pose;
 
@@ -30,7 +30,7 @@ import geometry.Pose;
 @TeleOp(name = "Axial Tuner", group = "Apex Pathing Tuning")
 public class AxialTuner extends OpMode {
     private BaseDrivetrain<?> drivetrain;
-    private Localizer localizer;
+    private BaseLocalizer<?> localizer;
     private PDSController controller;
     private PDSController headingController;
     private JoinedTelemetry fullTelem;

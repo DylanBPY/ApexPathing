@@ -9,12 +9,13 @@ import controllers.PDSController;
 import core.ApexBuilder;
 import drivetrains.BaseDrivetrainConfig;
 import drivetrains.Mecanum;
-import localizers.constants.LocalizerConstants;
-import localizers.constants.PinpointConstants;
+import localizers.BaseLocalizerConfig;
+import localizers.Pinpoint;
 import followers.constants.FollowerConstants;
 import followers.constants.P2PFollowerConstants;
 import geometry.Angle;
 import geometry.Dist;
+import util.DistUnit;
 import util.MotorFactory;
 
 /**
@@ -28,7 +29,7 @@ import util.MotorFactory;
  */
 public class Constants extends ApexBuilder {
     @Override
-    public BaseDrivetrainConfig<?> setDrivetrainConstants() { // Any baseDrivetrainConfig child
+    public BaseDrivetrainConfig<Mecanum.Config> setDrivetrainConstants() { // Any baseDrivetrainConfig child
         return new Mecanum.Config()
                 .setFrontLeftMotor(new MotorFactory("frontLeftMotor"))
                 .setBackLeftMotor(new MotorFactory("backLeftMotor"))
@@ -39,16 +40,12 @@ public class Constants extends ApexBuilder {
     }
 
     @Override
-    public LocalizerConstants setLocalizerConstants() { // Any LocalizerConstants
-        return new PinpointConstants()
+    public BaseLocalizerConfig<Pinpoint.Config> setLocalizerConstants() { // Any LocalizerConstants
+        return new Pinpoint.Config()
                 .setName("pinpoint")
-                .setDistanceUnit(DistanceUnit.INCH)
-                .setAngleUnit(AngleUnit.DEGREES)
-                .setXOffset(0.0) // In distanceUnit
-                .setYOffset(0.0) // In distanceUnit
-                .setXPodDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-                .setYPodDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-                .setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+                .setOffsets(0, 0, DistUnit.IN)
+                .setEncoderDirections(Pinpoint.EncoderDirection.FORWARD, Pinpoint.EncoderDirection.FORWARD)
+                .setEncoderResolution(Pinpoint.GoBildaPods.goBILDA_4_BAR_POD);
     }
 
     @Override

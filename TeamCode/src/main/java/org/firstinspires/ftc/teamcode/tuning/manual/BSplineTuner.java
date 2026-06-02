@@ -12,7 +12,7 @@ import controllers.PDSController.PDSCoefficients;
 import drivetrains.BaseDrivetrain;
 import followers.MovementFollower;
 import followers.constants.BSplineFollowerConstants;
-import localizers.Localizer;
+import localizers.BaseLocalizer;
 import paths.movements.Path;
 import paths.builders.PathBuilder;
 import geometry.Pose;
@@ -31,7 +31,7 @@ import util.PoseFactory;
 @TeleOp(name = "BSpline Tuner", group = "Apex Pathing Tuning")
 public class BSplineTuner extends OpMode {
     private BaseDrivetrain<?> drivetrain;
-    private Localizer localizer;
+    private BaseLocalizer<?> localizer;
     private MovementFollower follower;
     private BSplineFollowerConstants followerConstants;
     private JoinedTelemetry fullTelem;

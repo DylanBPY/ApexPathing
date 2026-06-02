@@ -47,6 +47,12 @@ public final class Angle {
 
     /** @return a new Angle that is the difference between this Angle and another one. */
     public Angle minus(Angle other) { return new Angle(this.radians - other.radians); }
+
+    /** @return a new Angle that is this Angle multiplied by a scalar. */
+    public Angle times(double scalar) { return new Angle(this.radians * scalar); }
+
+    /** @return a new Angle that is this Angle divided by a scalar. */
+    public Angle div(double scalar) { return new Angle(this.radians / scalar); }
     // endregion
 
     // region Other operations and methods

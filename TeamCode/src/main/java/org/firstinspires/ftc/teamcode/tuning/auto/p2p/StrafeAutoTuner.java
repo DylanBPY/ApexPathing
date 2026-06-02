@@ -28,7 +28,7 @@ public class StrafeAutoTuner extends AutoTuner {
     public double getCurrentPosition() { return this.localizer.getPose().getY().getIn(); }
 
     @Override
-    public double getCurrentVelocity() { return this.localizer.getVelocity().getY().getIn(); }
+    public double getCurrentVelocity() { return this.localizer.getVel().getY().getIn(); }
 
     @Override
     public void applyControl(double controlOutput, double headingCorrection) {

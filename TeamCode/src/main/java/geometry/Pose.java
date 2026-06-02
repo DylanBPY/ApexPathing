@@ -88,6 +88,16 @@ public class Pose {
     public Pose minus(Pose other) {
         return new Pose(this.position.minus(other.position), this.heading.minus(other.heading));
     }
+
+    /** @return a new Pose that is this Pose multiplied by a scalar. */
+    public Pose times(double scalar) {
+        return new Pose(this.position.times(scalar), this.heading.times(scalar));
+    }
+
+    /** @return a new Pose that is this Pose divided by a scalar. */
+    public Pose div(double scalar) {
+        return new Pose(this.position.div(scalar), this.heading.div(scalar));
+    }
     // endregion
 
     // region Other operations and methods

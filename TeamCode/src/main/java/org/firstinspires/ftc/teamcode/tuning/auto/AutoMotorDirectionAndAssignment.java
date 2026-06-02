@@ -14,8 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 import drivetrains.BaseDrivetrainConfig;
 import drivetrains.Mecanum;
-import drivetrains.Mecanum.Config;
-import localizers.Localizer;
+import localizers.BaseLocalizer;
 import geometry.Pose;
 
 /**
@@ -40,7 +39,7 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
     @Override
     public void runOpMode() {
         Constants constants = new Constants();
-        Localizer localizer = constants.buildOnlyLocalizer(hardwareMap, Pose.zero());
+        BaseLocalizer<?> localizer = constants.buildOnlyLocalizer(hardwareMap, Pose.zero());
 
         BaseDrivetrainConfig<Mecanum.Config> driveConstants = (Mecanum.Config) constants.drivetrainConstants;
         String[] motorNames = new String[]{
@@ -135,7 +134,7 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
                     break;
 
                 case FIRST_DECELERATE:
-                    if (localizer.getVelocity().getPos().getMagSq().getIn() < 0.5) {
+                    if (localizer.getVel().getPos().getMagSq().getIn() < 0.5) {
                         state = TuningState.NEGATIVE_POWER;
                     }
                     break;
@@ -155,7 +154,7 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
                     break;
 
                 case SECOND_DECELERATE:
-                    if (localizer.getVelocity().getPos().getMagSq().getIn() < 0.5) {
+                    if (localizer.getVel().getPos().getMagSq().getIn() < 0.5) {
                         // We finished this motor! Increment the index and reset the state.
                         currentMotorIndex++;
                         state = TuningState.POSITIVE_POWER;
