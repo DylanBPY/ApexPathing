@@ -7,14 +7,16 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import controllers.PDSController;
 import core.ApexBuilder;
-import drivetrains.constants.DrivetrainConstants;
-import drivetrains.constants.MecanumConstants;
-import localizers.constants.LocalizerConstants;
-import localizers.constants.PinpointConstants;
+import drivetrains.BaseDrivetrainConfig;
+import drivetrains.Mecanum;
+import localizers.BaseLocalizerConfig;
+import localizers.Pinpoint;
 import followers.constants.FollowerConstants;
 import followers.constants.P2PFollowerConstants;
 import geometry.Angle;
 import geometry.Dist;
+import util.DistUnit;
+import util.MotorFactory;
 
 /**
  * This class extends {@link ApexBuilder} and provides the specific constants for the drivetrain,
@@ -25,33 +27,25 @@ import geometry.Dist;
  *
  * @author Dylan B. 18597 RoboClovers - Delta
  */
-
 public class Constants extends ApexBuilder {
     @Override
-    public DrivetrainConstants setDrivetrainConstants() { // Any DrivetrainConstants
-        return new MecanumConstants()
-                .setFrontLeftMotorName("frontLeftMotor")
-                .setBackLeftMotorName("backLeftMotor")
-                .setFrontRightMotorName("frontRightMotor")
-                .setBackRightMotorName("backRightMotor")
-                .setFrontRightReversed(true)
-                .setBackRightReversed(true)
-                .setBrakeMode(true)
+    public BaseDrivetrainConfig<Mecanum.Config> setDrivetrainConstants() { // Any baseDrivetrainConfig child
+        return new Mecanum.Config()
+                .setFrontLeftMotor(new MotorFactory("frontLeftMotor"))
+                .setBackLeftMotor(new MotorFactory("backLeftMotor"))
+                .setFrontRightMotor(new MotorFactory("frontRightMotor").reverse())
+                .setBackRightMotor(new MotorFactory("backRightMotor").reverse())
                 .setRobotCentric(true)
                 .setMaxPower(1.0);
     }
 
     @Override
-    public LocalizerConstants setLocalizerConstants() { // Any LocalizerConstants
-        return new PinpointConstants()
+    public BaseLocalizerConfig<Pinpoint.Config> setLocalizerConstants() { // Any LocalizerConstants
+        return new Pinpoint.Config()
                 .setName("pinpoint")
-                .setDistanceUnit(DistanceUnit.INCH)
-                .setAngleUnit(AngleUnit.DEGREES)
-                .setXOffset(0.0) // In distanceUnit
-                .setYOffset(0.0) // In distanceUnit
-                .setXPodDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-                .setYPodDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-                .setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+                .setOffsets(0, 0, DistUnit.IN)
+                .setEncoderDirections(Pinpoint.EncoderDirection.FORWARD, Pinpoint.EncoderDirection.FORWARD)
+                .setEncoderResolution(Pinpoint.GoBildaPods.goBILDA_4_BAR_POD);
     }
 
     @Override

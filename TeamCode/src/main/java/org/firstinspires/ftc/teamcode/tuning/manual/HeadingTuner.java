@@ -10,9 +10,9 @@ import org.firstinspires.ftc.teamcode.Constants;
 
 import controllers.PDSController.PDSCoefficients;
 import controllers.PDSController;
-import drivetrains.Drivetrain;
+import drivetrains.BaseDrivetrain;
 import followers.constants.P2PFollowerConstants;
-import localizers.Localizer;
+import localizers.BaseLocalizer;
 import geometry.Angle;
 import geometry.Pose;
 
@@ -28,8 +28,8 @@ import geometry.Pose;
 @Configurable
 @TeleOp(name = "Heading Tuner", group = "Apex Pathing Tuning")
 public class HeadingTuner extends OpMode {
-    private Drivetrain drivetrain;
-    private Localizer localizer;
+    private BaseDrivetrain<?> drivetrain;
+    private BaseLocalizer<?> localizer;
     private PDSController controller;
     private JoinedTelemetry fullTelem;
 

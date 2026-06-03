@@ -51,7 +51,7 @@ public class Pose {
     /** Creates a Pose from a position Vector and a heading Angle. */
     public Pose(Vector position, Angle heading) { this.position = position; this.heading = heading; }
 
-    /** Creates a Pose with X, y, and heading equal to zero */
+    /** Creates a Pose with X, Y, and heading equal to zero */
     public static Pose zero() { return new Pose(Vector.zero(), Angle.fromRad(0)); }
     // endregion
 
@@ -87,6 +87,16 @@ public class Pose {
     /** @return a new Pose that is the difference between this Pose and another Pose. */
     public Pose minus(Pose other) {
         return new Pose(this.position.minus(other.position), this.heading.minus(other.heading));
+    }
+
+    /** @return a new Pose that is this Pose multiplied by a scalar. */
+    public Pose times(double scalar) {
+        return new Pose(this.position.times(scalar), this.heading.times(scalar));
+    }
+
+    /** @return a new Pose that is this Pose divided by a scalar. */
+    public Pose div(double scalar) {
+        return new Pose(this.position.div(scalar), this.heading.div(scalar));
     }
     // endregion
 

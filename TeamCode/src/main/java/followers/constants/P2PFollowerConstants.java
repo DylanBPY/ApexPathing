@@ -2,9 +2,9 @@ package followers.constants;
 
 import controllers.PDSController.PDSCoefficients;
 import controllers.PDSController;
-import drivetrains.Drivetrain;
+import drivetrains.BaseDrivetrain;
 import followers.P2PFollower;
-import localizers.Localizer;
+import localizers.BaseLocalizer;
 import geometry.Angle;
 import geometry.Dist;
 
@@ -34,7 +34,7 @@ public class P2PFollowerConstants extends FollowerConstants {
     }
 
     @Override
-    public P2PFollower build(Drivetrain drivetrain, Localizer localizer) {
+    public P2PFollower build(BaseDrivetrain<?> drivetrain, BaseLocalizer<?> localizer) {
         return new P2PFollower(this, drivetrain, localizer);
     }
 

@@ -1,9 +1,9 @@
 package followers;
 
 import controllers.PDSController;
-import drivetrains.Drivetrain;
+import drivetrains.BaseDrivetrain;
 import followers.constants.BSplineFollowerConstants;
-import localizers.Localizer;
+import localizers.BaseLocalizer;
 
 import paths.movements.FollowerMovement;
 import paths.movements.Path;
@@ -41,7 +41,7 @@ public class MovementFollower extends Follower {
      * MovementFollower constructor
      * @param constants - Your BSplineFollowerConstants (ensure configured)
      */
-    public MovementFollower(BSplineFollowerConstants constants, Drivetrain drivetrain, Localizer localizer) {
+    public MovementFollower(BSplineFollowerConstants constants, BaseDrivetrain<?> drivetrain, BaseLocalizer<?> localizer) {
         super(drivetrain, localizer);
         this.constants = constants;
 

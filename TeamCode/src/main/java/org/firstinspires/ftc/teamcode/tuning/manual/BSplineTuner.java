@@ -9,10 +9,10 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.Constants;
 
 import controllers.PDSController.PDSCoefficients;
-import drivetrains.Drivetrain;
+import drivetrains.BaseDrivetrain;
 import followers.MovementFollower;
 import followers.constants.BSplineFollowerConstants;
-import localizers.Localizer;
+import localizers.BaseLocalizer;
 import paths.movements.Path;
 import paths.builders.PathBuilder;
 import geometry.Pose;
@@ -30,8 +30,8 @@ import util.PoseFactory;
 @Configurable
 @TeleOp(name = "BSpline Tuner", group = "Apex Pathing Tuning")
 public class BSplineTuner extends OpMode {
-    private Drivetrain drivetrain;
-    private Localizer localizer;
+    private BaseDrivetrain<?> drivetrain;
+    private BaseLocalizer<?> localizer;
     private MovementFollower follower;
     private BSplineFollowerConstants followerConstants;
     private JoinedTelemetry fullTelem;

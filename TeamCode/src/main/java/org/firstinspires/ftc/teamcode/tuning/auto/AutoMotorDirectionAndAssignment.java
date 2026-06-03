@@ -12,8 +12,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import drivetrains.constants.MecanumConstants;
-import localizers.Localizer;
+import drivetrains.BaseDrivetrainConfig;
+import drivetrains.Mecanum;
+import localizers.BaseLocalizer;
 import geometry.Pose;
 
 /**
@@ -38,14 +39,14 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
     @Override
     public void runOpMode() {
         Constants constants = new Constants();
-        Localizer localizer = constants.buildOnlyLocalizer(hardwareMap, Pose.zero());
+        BaseLocalizer<?> localizer = constants.buildOnlyLocalizer(hardwareMap, Pose.zero());
 
-        MecanumConstants driveConstants = (MecanumConstants) constants.drivetrainConstants;
+        BaseDrivetrainConfig<Mecanum.Config> driveConstants = (Mecanum.Config) constants.drivetrainConstants;
         String[] motorNames = new String[]{
-                driveConstants.getFlData().getName(),
-                driveConstants.getFrData().getName(),
-                driveConstants.getBlData().getName(),
-                driveConstants.getBrData().getName()
+                driveConstants.getFlMotorConfig().getName(),
+                driveConstants.getFrMotorConfig().getName(),
+                driveConstants.getBlMotorConfig().getName(),
+                driveConstants.getBrMotorConfig().getName()
         };
 
         DcMotorEx m0 = hardwareMap.get(DcMotorEx.class, motorNames[0]);
@@ -133,7 +134,7 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
                     break;
 
                 case FIRST_DECELERATE:
-                    if (localizer.getVelocity().getPos().getMagSq().getIn() < 0.5) {
+                    if (localizer.getVel().getPos().getMagSq().getIn() < 0.5) {
                         state = TuningState.NEGATIVE_POWER;
                     }
                     break;
@@ -153,7 +154,7 @@ public class AutoMotorDirectionAndAssignment extends LinearOpMode {
                     break;
 
                 case SECOND_DECELERATE:
-                    if (localizer.getVelocity().getPos().getMagSq().getIn() < 0.5) {
+                    if (localizer.getVel().getPos().getMagSq().getIn() < 0.5) {
                         // We finished this motor! Increment the index and reset the state.
                         currentMotorIndex++;
                         state = TuningState.POSITIVE_POWER;

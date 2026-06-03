@@ -1,8 +1,8 @@
 package followers.constants;
 
-import drivetrains.Drivetrain;
+import drivetrains.BaseDrivetrain;
 import followers.Follower;
-import localizers.Localizer;
+import localizers.BaseLocalizer;
 
 /**
  * Abstract base class for follower constants.
@@ -22,5 +22,5 @@ public abstract class FollowerConstants {
      * @param localizer the Localizer to use for tracking the robot's position and heading
      * @return a Follower instance configured with the constants defined in this class
      */
-    public abstract Follower build(Drivetrain drivetrain, Localizer localizer);
+    public abstract Follower build(BaseDrivetrain<?> drivetrain, BaseLocalizer<?> localizer);
 }

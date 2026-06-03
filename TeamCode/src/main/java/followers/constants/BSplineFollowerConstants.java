@@ -1,21 +1,20 @@
 package followers.constants;
 
-import controllers.PDSController;
-import drivetrains.Drivetrain;
+import controllers.PDSController.PDSCoefficients;
+import drivetrains.BaseDrivetrain;
 import followers.MovementFollower;
-import localizers.Localizer;
+import localizers.BaseLocalizer;
 
 /**
  * B-Spline path follower constants class.
  * Configured via the BSplineTuner OpMode for live dashboard tuning.
- * * @author Sohum Arora - 22985 Paraducks
+ * @author Sohum Arora - 22985 Paraducks
  */
 public class BSplineFollowerConstants extends FollowerConstants {
 
-    // PDS Coefficients instead of flat primitives!
-    public PDSController.PDSCoefficients translationCoeffs = new PDSController.PDSCoefficients(0.1, 0.0, 0.0, 0.0);
-    public PDSController.PDSCoefficients headingCoeffs = new PDSController.PDSCoefficients(0.4, 0.0, 0.0, 0.0);
-    public double velocityFF = 0.01;
+    public PDSCoefficients translationCoeffs = new PDSCoefficients();
+    public PDSCoefficients headingCoeffs = new PDSCoefficients();
+    public double velocityFF = 0.0;
 
     // Tolerances
     public double headingTolerance = Math.toRadians(1.0);
@@ -26,18 +25,18 @@ public class BSplineFollowerConstants extends FollowerConstants {
     public BSplineFollowerConstants() {}
 
     @Override
-    public MovementFollower build(Drivetrain drivetrain, Localizer localizer) {
+    public MovementFollower build(BaseDrivetrain<?> drivetrain, BaseLocalizer<?> localizer) {
         return new MovementFollower(this, drivetrain, localizer);
     }
 
     // --- Builder Setters for Constants.java ---
 
-    public BSplineFollowerConstants setTranslationCoeffs(PDSController.PDSCoefficients translationCoeffs) {
+    public BSplineFollowerConstants setTranslationCoeffs(PDSCoefficients translationCoeffs) {
         this.translationCoeffs = translationCoeffs;
         return this;
     }
 
-    public BSplineFollowerConstants setHeadingCoeffs(PDSController.PDSCoefficients headingCoeffs) {
+    public BSplineFollowerConstants setHeadingCoeffs(PDSCoefficients headingCoeffs) {
         this.headingCoeffs = headingCoeffs;
         return this;
     }
