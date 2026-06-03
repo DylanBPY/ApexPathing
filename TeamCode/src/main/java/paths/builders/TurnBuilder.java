@@ -2,53 +2,28 @@ package paths.builders;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
-
 import paths.callbacks.Callback;
 import paths.movements.Turn;
 import geometry.Angle;
 import geometry.Pose;
 
-/**
- * A builder class designed to construct a {@link Turn} fluently.
- * <p>
- * This handles stationary point-turns, allowing users to inject mechanical
- * callbacks at specific angles during the rotation.
- */
-public class TurnBuilder implements MovementBuilder<Turn> {
+public class TurnBuilder {
     private final Pose startPose;
     private Angle targetHeading = null;
+    private final List<Runnable> buildTasks = new ArrayList<>();
 
-    // Instead of a Runnable, we use a Consumer so we can pass the finalized Turn object into the lambda later
-    private final List<Consumer<Turn>> buildTasks = new ArrayList<>();
+    protected TurnBuilder(Pose startPose) {
+        this.startPose = startPose;
+    }
 
-    /**
-     * Initializes the TurnBuilder with the robot's starting state.
-     * @param startPose The Pose of the robot before the turn begins.
-     */
-    public TurnBuilder(Pose startPose) { this.startPose = startPose; }
-
-    /**
-     * Defines the target angle for the point turn.
-     * @param targetHeading The Angle to rotate to.
-     * @return The current TurnBuilder instance.
-     */
     public TurnBuilder turnTo(Angle targetHeading) {
         this.targetHeading = targetHeading;
         return this;
     }
 
-    /**
-     * Attaches an executable callback to trigger when the robot passes a specific angle during the turn.
-     *
-     * @param angle The angle at which the callback should trigger.
-     * @param action The code to execute.
-     * @return The current TurnBuilder instance.
-     */
     public TurnBuilder addAngularCallback(Angle angle, Runnable action) {
-        // We define the validation math now, but wait to execute it until build() is called
-        buildTasks.add((finalTurn) -> {
-
+        buildTasks.add(() -> {
+            Turn finalTurn = new Turn(startPose, targetHeading);
             Angle startRad = finalTurn.getStartPose().getHeading();
             Angle endRad = finalTurn.getEndPose().getHeading();
 
@@ -57,34 +32,30 @@ public class TurnBuilder implements MovementBuilder<Turn> {
 
             if (Math.abs(totalDiff) < 1e-6) {
                 if (Math.abs(targetDiff) > 1e-6) {
-                    throw new IllegalArgumentException("Callback out of bounds: The turn has no rotational distance.");
+                    throw new IllegalArgumentException("Callback out of bounds: No rotational distance.");
                 }
             } else if ((totalDiff * targetDiff < 0) || (Math.abs(targetDiff) > Math.abs(totalDiff))) {
-                throw new IllegalArgumentException("Angular callback is outside the sweep range of this turn.");
+                throw new IllegalArgumentException("Angular callback outside the sweep range.");
             }
-
-            finalTurn.addCallback(new Callback(angle, action));
         });
-
         return this;
     }
 
-    /**
-     * Compiles the turn, verifies callback bounds, and returns the executable Turn movement.
-     * @return The fully constructed {@link Turn}.
-     */
-    @Override
     public Turn build() {
         if (targetHeading == null) {
-            throw new IllegalStateException("Cannot build Turn: No target heading was specified! Use .turnTo().");
+            throw new IllegalStateException("Cannot build Turn: No target heading was specified!");
         }
 
-        // Create the final, accurate Turn object
         Turn finalTurn = new Turn(startPose, targetHeading);
 
-        // Execute all the deferred math and callback attachments, handing them the finalTurn object
-        for (Consumer<Turn> task : buildTasks) {
-            task.accept(finalTurn);
+        // Setup internal structures via safe execution tasks
+        for (Runnable task : buildTasks) {
+            task.run();
+        }
+
+        // Execute the native Turn object callback attachment safely
+        for (Runnable task : buildTasks) {
+            finalTurn.addCallback(new Callback(targetHeading, task));
         }
 
         return finalTurn;

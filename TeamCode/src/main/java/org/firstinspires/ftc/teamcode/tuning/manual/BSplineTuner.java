@@ -13,8 +13,8 @@ import drivetrains.BaseDrivetrain;
 import followers.MovementFollower;
 import followers.constants.BSplineFollowerConstants;
 import localizers.BaseLocalizer;
+import paths.builders.Builder;
 import paths.movements.Path;
-import paths.builders.PathBuilder;
 import geometry.Pose;
 import util.AngleUnit;
 import util.DistUnit;
@@ -89,21 +89,17 @@ public class BSplineTuner extends OpMode {
     private void runPath(boolean forward) {
         if (!pathActive) {
             if (!forward) {
-                currentPath = new PathBuilder()
-                        .addControlPoints(
-                                localizer.getPose(),
-                                pose.of(24, 24, 90),
-                                pose.of(0, 0, 0)
-                        )
-                        .build();
+                currentPath = Builder.path(
+                        localizer.getPose(),
+                        pose.of(24, 24, 90),
+                        pose.of(0, 0, 0)
+                ).build();
             } else {
-                currentPath = new PathBuilder()
-                        .addControlPoints(
-                                localizer.getPose(),
-                                pose.of(24, 24, 90),
-                                pose.of(48, 0, 0)
-                        )
-                        .build();
+                currentPath = Builder.path(
+                        localizer.getPose(),
+                        pose.of(24, 24, 90),
+                        pose.of(48, 0, 0)
+                ).build();
             }
             follower.follow(currentPath);
             pathActive = true;
