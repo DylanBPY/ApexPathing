@@ -153,7 +153,7 @@ public class MovementFollower extends Follower {
                 return;
             }
 
-            // 1. READS: Extract all state, geometry, and error values
+            // region 1. READS: Extract all state, geometry, and error values
             double t = segment.getBestT(current.getPos());
             double currentHeading = current.getHeading().getRad();
 
@@ -179,14 +179,14 @@ public class MovementFollower extends Follower {
             Vector fieldError = targetPoseVec.minus(current.getPos());
             double headingError = getShortestAngularDistance(currentHeading, targetHeading);
 
-            // 2. CALCULATIONS: Apply physics, scaling, and PID math
+            // region 2. CALCULATIONS: Apply physics, scaling, and PID math
             double availableMotorPower = 1.0;
 
-            // --- 1. Turn Power Allocation (Highest Priority) ---
+            //  region --- 1. Turn Power Allocation (Highest Priority) ---
             double turnPower = headingController.calculateFromError(headingError);
             availableMotorPower -= Math.abs(turnPower);
 
-            // --- 2. Combined Lateral Power (Centripetal + Feedback) ---
+            // region --- 2. Combined Lateral Power (Centripetal + Feedback) ---
             double radius = PathSegment.calculateRadiusOfCurvature(velVec, accelVec);
             double robotVelMag = robotVelocity.getMag().getIn();
 
@@ -205,10 +205,8 @@ public class MovementFollower extends Follower {
             Vector lateralDriveVec = normal.times(netLateralMag);
             availableMotorPower -= Math.abs(netLateralMag);
 
-            // --- 3. Tangent/Along-Track Power Allocation ---
-
-            // TODO: Implement properly with velocity limit in constants!
-            double desiredVelocity = 10.0;
+            // region --- 3. Tangent/Along-Track Power Allocation ---
+            double desiredVelocity = constants.velocityLimit.getIn();
 
             // Cap the desired speed if the upcoming curve is too sharp
             if (radius != Double.POSITIVE_INFINITY) {
@@ -263,7 +261,7 @@ public class MovementFollower extends Follower {
             double driveX = driveOutput.getX().getIn();
             double driveY = driveOutput.getY().getIn();
 
-            // 3. WRITES: Actuate motors or advance state machine
+            // region 3. WRITES: Actuate motors or advance state machine
             if (t >= constants.tTolerance && distanceRemaining < constants.distanceTolerance) {
                 Vector finalPosition = currentMovement.getEndPose().getPos();
                 this.setTargetPose(new Pose(finalPosition, Angle.fromRad(targetHeading)));

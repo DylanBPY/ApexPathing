@@ -3,6 +3,7 @@ package followers.constants;
 import controllers.PDSController;
 import drivetrains.Drivetrain;
 import followers.MovementFollower;
+import geometry.Dist;
 import localizers.Localizer;
 
 /**
@@ -17,6 +18,7 @@ public class BSplineFollowerConstants extends FollowerConstants {
     public PDSController.PDSCoefficients headingCoeffs = new PDSController.PDSCoefficients(0.4, 0.0, 0.0, 0.0);
     public double kV = 0.01;
     public double kA = 0.01;
+    public Dist velocityLimit = null;
 
     // Tolerances
     public double headingTolerance = Math.toRadians(1.0);
@@ -50,6 +52,11 @@ public class BSplineFollowerConstants extends FollowerConstants {
 
     public BSplineFollowerConstants setkA(double kA) {
         this.kA = kA;
+        return this;
+    }
+
+    public BSplineFollowerConstants setVelocityLimit(Dist velocityLimit) {
+        this.velocityLimit = velocityLimit;
         return this;
     }
 
