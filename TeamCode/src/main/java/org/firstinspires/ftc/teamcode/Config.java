@@ -2,11 +2,11 @@ package org.firstinspires.ftc.teamcode;
 
 import controllers.PDSController;
 import core.ApexConfig;
+import core.FollowerConfig;
 import drivetrains.BaseDrivetrainConfig;
 import drivetrains.Mecanum;
 import localizers.BaseLocalizerConfig;
 import localizers.Pinpoint;
-import core.FollowerConfig;
 import geometry.Angle;
 import geometry.Dist;
 import util.DistUnit;
@@ -23,7 +23,7 @@ import util.MotorFactory;
  */
 public class Config extends ApexConfig {
     @Override
-    public BaseDrivetrainConfig<Mecanum.Config> drivetrainConfig() { // Any baseDrivetrainConfig child
+    public BaseDrivetrainConfig<?> drivetrainConfig() {
         return new Mecanum.Config()
                 .setFrontLeftMotor(new MotorFactory("frontLeftMotor"))
                 .setBackLeftMotor(new MotorFactory("backLeftMotor"))
@@ -34,7 +34,7 @@ public class Config extends ApexConfig {
     }
 
     @Override
-    public BaseLocalizerConfig<Pinpoint.Config> localizerConfig() { // Any LocalizerConstants
+    public BaseLocalizerConfig<?> localizerConfig() {
         return new Pinpoint.Config()
                 .setName("pinpoint")
                 .setOffsets(0, 0, DistUnit.IN)
@@ -43,7 +43,7 @@ public class Config extends ApexConfig {
     }
 
     @Override
-    public FollowerConfig followerConfig() { // Any FollowerConstants
+    public FollowerConfig followerConfig() {
         return new FollowerConfig()
                 .setHeadingCoeffs(new PDSController.PDSCoefficients())
                 .setLateralCoeffs(new PDSController.PDSCoefficients())
@@ -59,80 +59,44 @@ public class Config extends ApexConfig {
 }
 
 /* Tank drivetrain constants
-new TankConstants()
-        .setFourMotorDrive(true)
-        .setFrontLeftMotorName("leftFront")
-        .setBackLeftMotorName("leftRear")
-        .setFrontRightMotorName("rightFront")
-        .setBackRightMotorName("rightRear")
-        .setFrontRightReversed(true)
-        .setBackRightReversed(true)
-        .setBrakeMode(true)
+return new Tank.Config()
+        .setFrontLeftMotor(new MotorFactory("frontLeftMotor"))
+        .setBackLeftMotor(new MotorFactory("backLeftMotor"))
+        .setFrontRightMotor(new MotorFactory("frontRightMotor").reverse()) // Don't use back motors for 2 wheel
+        .setBackRightMotor(new MotorFactory("backRightMotor").reverse())
         .setRobotCentric(true)
-        .setMaxPower(0.5);
+        .setMaxPower(1.0);
  */
 
 /* Swerve drivetrain constants
-SwerveConstants()
-                .setFrontLeftModuleConstants(
-                        new SwerveModuleConstants()
-                                .setMotorName("frontLeftMotor")
-                                .setServoName("flServo")
-                                .setEncoderName("flEncoder")
-                                .setMotorReversed(false)
-                                .setModuleAngleOffset(0) //degrees
-                                .setMaxEncoderVoltage(3.3)
-                                .setSteering_kP_val(0.1)
-                )
-                .setFrontRightModuleConstants(
-                        new SwerveModuleConstants()
-                                .setMotorName("frontRightMotor")
-                                .setServoName("frServo")
-                                .setEncoderName("frEncoder")
-                                .setMotorReversed(true)
-                                .setModuleAngleOffset(0) //degrees
-                                .setMaxEncoderVoltage(3.3)
-                                .setSteering_kP_val(0.1)
-                )
-                .setBackLeftModuleConstants(
-                        new SwerveModuleConstants()
-                                .setMotorName("backLeftMotor")
-                                .setServoName("blServo")
-                                .setEncoderName("blEncoder")
-                                .setMotorReversed(false)
-                                .setModuleAngleOffset(0) //degrees
-                                .setMaxEncoderVoltage(3.3)
-                                .setSteering_kP_val(0.1)
-                )
-                .setBackRightModuleConstants(
-                        new SwerveModuleConstants()
-                                .setMotorName("backRightMotor")
-                                .setServoName("brServo")
-                                .setEncoderName("brEncoder")
-                                .setMotorReversed(true)
-                                .setModuleAngleOffset(0) //degrees
-                                .setMaxEncoderVoltage(3.3)
-                                .setSteering_kP_val(0.1)
-                )
-                .setMaxPower(1.0)
-                .setTrackWidth(Dist.fromMm(0))
-                .setWheelbase(Dist.fromMm(0))
-                .setRobotCentric(true);
-    }*/
+return new CoaxialSwerve.Config()
+        .setFrontLeftMotor(new MotorFactory("frontLeftMotor"))
+        .setFrontRightMotor(new MotorFactory("frontRightMotor").reverse())
+        .setBackLeftMotor(new MotorFactory("backLeftMotor"))
+        .setBackRightMotor(new MotorFactory("backRightMotor").reverse())
+        .setServoNames("flServo", "frServo", "blServo", "brServo")
+        .setEncoderNames("flEncoder", "frEncoder", "blEncoder", "brEncoder")
+        .setMaxPower(1.0)
+        .setTrackWidth(Dist.fromMm(288))
+        .setWheelbase(Dist.fromMm(288))
+        .setRobotCentric(true)
+        .setOffsetAngle(Angle.fromDeg(0))
+        .setSteeringCoefficients(new PDSController.PDSCoefficients());
+*/
 
 /* Kiwi drivetrain constants
-return new KiwiConstants()
-                .setFrontRightMotorName("frMotor")
-                .setBackMotorName("bMotor")
-                .setFrontLeftMotorName("flMotor")
-                .setMaxPower(1.0)
-                .setRobotCentric(true);
+return new Kiwi.Config()
+        .setFrontLeftMotor(new MotorFactory("frontLeftMotor"))
+        .setBackMotor(new MotorFactory("backMotor"))
+        .setFrontRightMotor(new MotorFactory("frontRightMotor").reverse())
+        .setMaxPower(1.0)
+        .setRobotCentric(true);
 */
 
 /* OTOS Constants
-new OTOSConstants() // Tuned for Dylan + Mikey strafer chassis with OTOS, don't change these
-    .setName("otos")
-    .setOffset(new Pose(227, -16, 0, Distance.Units.MILLIMETERS, Angle.Units.DEGREES))
-    .setLinearScalar(1.05)
-    .setHeadingScalar(1.0);
+return new OTOS.Config() // Tuned for Dylan + Mikey strafer chassis with OTOS, don't change these
+        .setName("otos")
+        .setOffset(new Pose(Vector.of(227, -16, DistUnit.MM), Angle.fromDeg(0)))
+        .setLinearScalar(1.05)
+        .setAngularScalar(1.0);
 */
