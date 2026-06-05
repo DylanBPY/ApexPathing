@@ -5,7 +5,7 @@ import geometry.Angle;
 import geometry.Dist;
 
 /**
- * Abstract base class for follower constants.
+ * Apex Pathing Follower configuration class.
  *
  * @author Dylan B. - 18597 RoboClovers - Delta
  */

@@ -256,7 +256,7 @@ public class Follower {
      * @param turn the rotation joystick input (positive for clockwise, negative for counterclockwise)
      * @param robotHeading the current heading of the robot in radians, not used for robot centric control
      */
-    public void drive(double x, double y, double turn, double robotHeading) {
+    public void teleOpDrive(double x, double y, double turn, double robotHeading) {
         if (isBusy()) { stop(); }
         drivetrain.drive(x, y, turn, robotHeading);
     }
@@ -270,7 +270,7 @@ public class Follower {
      * @param y the forward/backward joystick input (positive for forward, negative for backward)
      * @param turn the rotation joystick input (positive for clockwise, negative for counterclockwise)
      */
-    public void drive(double x, double y, double turn) { drive(x, y, turn, 0); }
+    public void teleOpDrive(double x, double y, double turn) { teleOpDrive(x, y, turn, 0); }
     // endregion
 
     // region Localizer passthrough methods
