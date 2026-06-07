@@ -113,7 +113,7 @@ public class MovementFollower extends Follower {
 
         Pose current = getPose();
 
-        // Turn logic
+        // region Turn logic
         if (currentMovement instanceof Turn) {
             Turn turn = (Turn) currentMovement;
 

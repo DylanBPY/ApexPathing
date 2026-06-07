@@ -41,7 +41,7 @@ public class PathSegment {
                 distFromEnd += lastPoint.minus(location).getMag().getIn();
             }
             lastPoint = location;
-            LUTpoints[i] = new PathPoint(t, distFromEnd, location);
+            LUTpoints[i] = new PathPoint(t, distFromEnd, location, getSignedCurvature(t), getCurvatureDerivative(t));
         }
 
         this.length = distFromEnd;
@@ -220,6 +220,68 @@ public class PathSegment {
         double numerator = Math.pow(velocityMag, 3);
 
         return numerator / crossProductMag;
+    }
+
+    /**
+     * Estimates the derivative of curvature with respect to the parameter 't' (dK/dt)
+     * using a central finite difference method.
+     * <p>
+     * To prevent floating-point precision loss or computational instability on extremely
+     * long or short segments, the delta 't' (dt) is dynamically scaled based on the
+     * physical length of the curve to evaluate across a consistent physical distance.
+     *
+     * @param t The parametric progression [0.0, 1.0].
+     * @return The estimated rate of change of signed curvature.
+     */
+    public double getCurvatureDerivative(double t) {
+        final double targetPhysicalDelta_in = 0.1;
+        double dt = targetPhysicalDelta_in / Math.max(this.length, 1e-6);
+
+        dt = Math.max(1e-5, Math.min(dt, 0.05));
+
+        double t1 = t - dt;
+        double t2 = t + dt;
+
+        // Shift the window to a forward or backward difference if we hit the [0, 1] bounds
+        if (t1 < 0.0) {
+            t1 = 0.0;
+            t2 = 2.0 * dt;
+        } else if (t2 > 1.0) {
+            t2 = 1.0;
+            t1 = 1.0 - 2.0 * dt;
+        }
+
+        double k1 = getSignedCurvature(t1);
+        double k2 = getSignedCurvature(t2);
+
+        return (k2 - k1) / (t2 - t1);
+    }
+
+    /**
+     * Calculates the signed curvature at a given parameter 't'.
+     * <p>
+     * Unlike the radius of curvature, signed curvature retains the direction of the bend
+     * (positive vs. negative). This is mathematically required to correctly calculate
+     * continuous derivatives across inflection points where the path changes bend direction.
+     *
+     * @param t The parametric progression [0.0, 1.0].
+     * @return The instantaneous signed curvature.
+     */
+    private double getSignedCurvature(double t) {
+        Vector v = segment.getFirstDerivative(t);
+        Vector a = segment.getSecondDerivative(t);
+
+        // The 2D cross product retains the sign (left vs right bend)
+        double cross = v.cross(a).getIn();
+        double vMag = v.getMag().getIn();
+
+        // Safety Check: Prevent division by zero if the robot is momentarily stationary
+        if (vMag < 1e-6) {
+            return 0.0;
+        }
+
+        // k = (x'y'' - y'x'') / ||v||^3
+        return cross / Math.pow(vMag, 3);
     }
 
     /**
