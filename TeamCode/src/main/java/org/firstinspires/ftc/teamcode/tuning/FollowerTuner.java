@@ -2,9 +2,11 @@ package org.firstinspires.ftc.teamcode.tuning;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import core.ApexConfig;
 import core.Follower;
@@ -30,32 +32,44 @@ import org.firstinspires.ftc.teamcode.Constants;
  */
 @TeleOp(name = "Follower Tuner", group = "Apex Pathing Tuning")
 public class FollowerTuner extends LinearOpMode {
+
     enum TuningState {
-        HEADING,
-        TRANSLATION,
+        AWAIT_CONFIRM,
+        KS_SEARCH,
+        STEP_RESPONSE,
         VELOCITY_FF,
         LATERAL_ACCEL,
-        COMPLETE
+        LATERAL_ACCEL_TEST,
+        CONFIRM,
+        SAVE
     }
 
-    TuningState currentState = TuningState.HEADING;
+    enum TuningPhase { HEADING, TRANSLATION, VELOCITY_FF, LATERAL_ACCEL, COMPLETE }
 
-    private double headingP = 0.0, headingD = 0.0, headingS = 0.0;
-    private double translationP = 0.0, translationD = 0.0, translationS = 0.0;
-    private double velocityFF = 0.0;
+    private TuningPhase phase = TuningPhase.HEADING;
+    private TuningState state = TuningState.AWAIT_CONFIRM;
+
+    private double headingP, headingD, headingS;
+    private double translationP, translationD, translationS;
+    private double velocityFF;
     private double maxLateralAccel = 40.0;
-    private double headingToleranceDeg = 1.0;
-    private double distanceToleranceIn = 0.5;
-    private double tTolerance = 0.95;
+    private double headingToleranceDeg, distanceToleranceIn, tTolerance;
 
-    private Follower follower;
+    private double ksMax = 0.2, ksMin = 0.0, ksGuess = 0.0, ksLastGuess = -1.0, ksMaxDeviation;
+    private double stepMaxAccel, stepMaxVel, stepLastVel, stepLastTime, stepStartTime, stepTimeStamp, stepVelAtTimeStamp;
+    private double accelMaxError;
+    private boolean driftDetected;
+
+    private final ElapsedTime timer = new ElapsedTime();
     private final Constants baseConstants = new Constants();
     private final FollowerConstants followerConstants = new FollowerConstants();
+    private Follower follower;
+
+    private boolean lastA = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
         FollowerConstants defaults = baseConstants.followerConfig().loadFromJson();
-
         headingP = defaults.headingCoeffs.kP;
         headingD = defaults.headingCoeffs.kD;
         headingS = defaults.headingCoeffs.kS;
@@ -69,143 +83,295 @@ public class FollowerTuner extends LinearOpMode {
         maxLateralAccel = defaults.maxLateralAccel > 10 ? defaults.maxLateralAccel : 40.0;
 
         while (opModeInInit()) {
-            telemetry.addLine("ROBOT INITIALIZED - FULLY AUTOMATED TUNING MODE");
-            telemetry.addLine("1. Ensure 6x6 feet of clear floor space.");
-            telemetry.addLine("2. Place robot at the center-back of the area.");
-            telemetry.addLine("3. Press START to begin the full auto-tuning sequence.");
+            telemetry.addLine("Robot Initialized");
+            telemetry.addLine("Tuning order:\n 1) Heading PDS \n 2) Translation PDS \n 3) Velocity FF \n 4) Max Lateral Accel");
+            telemetry.addLine("Run the OpMode to proceed with the Heading Tuner");
+            telemetry.addLine("Press 'A' (cross) to directly run the Translation Tuner if you have already run the Heading Tuner");
+            telemetry.addLine("Press 'B' (circle) to directly run the Velocity FF Tuner if you have already run the Heading Tuner and Translation Tuner");
+            telemetry.addLine("Once all of these 3 tuners are complete, press 'A' (circle) to run the Max Lateral Acceleration Tuner");
+            telemetry.addLine("IMPORTANT: Do NOT run the tuners out of order");
+
+            if (gamepad1.a) {
+                phase = TuningPhase.TRANSLATION;
+            } else if (gamepad1.b) {
+                phase = TuningPhase.VELOCITY_FF;
+            }
+
+            telemetry.addData("Selected Phase", phase);
             telemetry.update();
         }
 
         updateFollowerConfig();
         follower = new Follower(customConfig, hardwareMap);
-        follower.setPose(new Pose(new Vector(Dist.of(0, DistUnit.IN),Dist.of(0, DistUnit.IN)), Angle.fromDeg(0)));
 
         waitForStart();
 
-        autoTuneHeading();
-        autoTuneTranslation();
-        autoTuneVelocityFF();
-        autoTuneMaxLateralAccel();
+        while (opModeIsActive() && phase != TuningPhase.COMPLETE && !isStopRequested()) {
+            switch (phase) {
+                case HEADING:
+                case TRANSLATION: {
+                    boolean isAngular = phase == TuningPhase.HEADING;
+                    switch (state) {
+                        case AWAIT_CONFIRM:
+                            telemetry.addLine("Press 'A' to proceed with the " + phase + " tuner");
+                            telemetry.update();
+                            if (gamepad1.a && !lastA) {
+                                resetKsSearch();
+                                state = TuningState.KS_SEARCH;
+                            }
+                            break;
 
-        currentState = TuningState.COMPLETE;
-        saveConstantsToJson();
+                        case KS_SEARCH:
+                            if (Math.abs(ksLastGuess - ksGuess) <= 0.01) {
+                                if (isAngular) headingS = ksGuess;
+                                else translationS = ksGuess;
+                                resetStepResponse();
+                                state = TuningState.STEP_RESPONSE;
+                                break;
+                            }
+
+                            follower.setPose(new Pose(new Vector(Dist.of(0, DistUnit.IN), Dist.of(0, DistUnit.IN)), Angle.fromDeg(0)));
+                            follower.update();
+                            ksGuess = (ksMax + ksMin) / 2.0;
+                            ksMaxDeviation = 0.0;
+                            timer.reset();
+
+                            while (opModeIsActive() && timer.time(TimeUnit.MILLISECONDS) < 500) {
+                                follower.update();
+                                double pos = isAngular
+                                        ? follower.getPose().getHeading().getRad()
+                                        : follower.getPose().getPos().getX().getIn();
+                                ksMaxDeviation = Math.max(Math.abs(pos), ksMaxDeviation);
+                                if (isAngular) follower.teleOpDrive(0, 0, ksGuess);
+                                else follower.teleOpDrive(ksGuess, 0, 0);
+                            }
+
+                            if (ksMaxDeviation > 0.025) ksMax = ksGuess;
+                            else ksMin = ksGuess;
+                            ksLastGuess = ksGuess;
+
+                            follower.teleOpDrive(0, 0, 0);
+                            sleep(500);
+                            break;
+
+                        case STEP_RESPONSE:
+                            if (timer.time(TimeUnit.MILLISECONDS) >= 2000) {
+                                follower.teleOpDrive(0, 0, 0);
+                                sleep(500);
+
+                                double L = stepTimeStamp - (stepVelAtTimeStamp / stepMaxAccel);
+                                double kP = 1.2 / (L * stepMaxAccel);
+                                double kD = 0.6 / stepMaxAccel;
+
+                                if (isAngular) {
+                                    headingP = kP > 0 ? kP : 0.01;
+                                    headingD = kD > 0 ? kD : 0.001;
+                                } else {
+                                    translationP = Double.isFinite(kP) && kP > 0 ? kP : 0.01;
+                                    translationD = Double.isFinite(kD) && kD > 0 ? kD : 0.001;
+                                }
+
+                                updateFollowerConfig();
+                                state = TuningState.CONFIRM;
+                                break;
+                            }
+
+                            follower.update();
+                            double curVel = isAngular
+                                    ? follower.getVelocity().getHeading().getRad()
+                                    : follower.getVelocity().getPos().getX().getIn();
+
+                            double now = System.nanoTime();
+                            double deltaT = (now - stepLastTime) / 1e9;
+                            double deltaV = curVel - stepLastVel;
+                            double accel = deltaT > 1e-6 ? deltaV / deltaT : 0.0;
+
+                            if (accel > stepMaxAccel) {
+                                stepMaxAccel = accel;
+                                stepTimeStamp = (now - stepStartTime) / 1e9;
+                                stepVelAtTimeStamp = curVel;
+                            }
+
+                            stepMaxVel = Math.max(curVel, stepMaxVel);
+                            stepLastVel = curVel;
+                            stepLastTime = now;
+
+                            if (isAngular) follower.teleOpDrive(0, 0, 1.0);
+                            else follower.teleOpDrive(1.0, 0, 0);
+                            break;
+
+                        case CONFIRM:
+                            telemetry.addData("Current Phase", phase);
+                            telemetry.addLine("Press 'A' to accept and advance.");
+                            if (isAngular) {
+                                telemetry.addData("Heading P", headingP);
+                                telemetry.addData("Heading D", headingD);
+                                telemetry.addData("Heading S", headingS);
+                            } else {
+                                telemetry.addData("Translation P", translationP);
+                                telemetry.addData("Translation D", translationD);
+                                telemetry.addData("Translation S", translationS);
+                            }
+                            telemetry.addData("Robot Pose", follower.getPose().toString());
+                            telemetry.update();
+
+                            follower.teleOpDrive(-gamepad1.left_stick_x, gamepad1.left_stick_y, -gamepad1.right_stick_x);
+
+                            if (gamepad1.a && !lastA) {
+                                phase = isAngular ? TuningPhase.TRANSLATION : TuningPhase.VELOCITY_FF;
+                                state = TuningState.AWAIT_CONFIRM;
+                                resetKsSearch();
+                            }
+                            break;
+                    }
+                    break;
+                }
+
+                case VELOCITY_FF: {
+                    switch (state) {
+                        case AWAIT_CONFIRM:
+                            telemetry.addLine("Press 'A' to proceed with the VELOCITY_FF tuner");
+                            telemetry.update();
+                            if (gamepad1.a && !lastA) {
+                                state = TuningState.VELOCITY_FF;
+                            }
+                            break;
+
+                        case VELOCITY_FF:
+                            follower.teleOpDrive(0, 1.0, 0);
+                            sleep(1500);
+                            double maxVel = Math.abs(follower.getVelocity().getPos().getX().getIn());
+                            velocityFF = 1.0 / maxVel;
+                            follower.teleOpDrive(0, 0, 0);
+                            sleep(500);
+                            updateFollowerConfig();
+                            state = TuningState.CONFIRM;
+                            break;
+
+                        case CONFIRM:
+                            telemetry.addData("Current Phase", phase);
+                            telemetry.addLine("Press 'A' to accept and advance.");
+                            telemetry.addData("Velocity FF (kV)", velocityFF);
+                            telemetry.addData("Robot Pose", follower.getPose().toString());
+                            telemetry.update();
+
+                            follower.teleOpDrive(-gamepad1.left_stick_x, gamepad1.left_stick_y, -gamepad1.right_stick_x);
+
+                            if (gamepad1.a && !lastA) {
+                                phase = TuningPhase.LATERAL_ACCEL;
+                                state = TuningState.AWAIT_CONFIRM;
+                                maxLateralAccel = 50.0;
+                                driftDetected = false;
+                            }
+                            break;
+                    }
+                    break;
+                }
+
+                case LATERAL_ACCEL: {
+                    switch (state) {
+                        case AWAIT_CONFIRM:
+                            telemetry.addLine("Press 'A' to proceed with the LATERAL_ACCEL tuner");
+                            telemetry.update();
+                            if (gamepad1.a && !lastA) {
+                                state = TuningState.LATERAL_ACCEL;
+                            }
+                            break;
+
+                        case LATERAL_ACCEL:
+                            if (driftDetected || maxLateralAccel > 300) {
+                                if (!driftDetected) maxLateralAccel -= 20.0;
+                                updateFollowerConfig();
+                                state = TuningState.CONFIRM;
+                                break;
+                            }
+
+                            updateFollowerConfig();
+                            follower.setPose(new Pose(new Vector(Dist.of(0, DistUnit.IN), Dist.of(0, DistUnit.IN)), Angle.fromDeg(0)));
+
+                            Pose start = follower.getPose();
+                            Path testCurve = Builder.path(
+                                    start,
+                                    new Pose(start.getPos().plus(new Vector(Dist.of(30, DistUnit.IN), Dist.of(0, DistUnit.IN))), start.getHeading()),
+                                    new Pose(start.getPos().plus(new Vector(Dist.of(30, DistUnit.IN), Dist.of(30, DistUnit.IN))), start.getHeading().plus(Angle.fromDeg(90))),
+                                    new Pose(start.getPos().plus(new Vector(Dist.of(0, DistUnit.IN), Dist.of(30, DistUnit.IN))), start.getHeading().plus(Angle.fromDeg(180)))
+                            ).build();
+
+                            follower.follow(testCurve);
+                            accelMaxError = 0;
+                            state = TuningState.LATERAL_ACCEL_TEST;
+                            break;
+
+                        case LATERAL_ACCEL_TEST:
+                            follower.update();
+                            double err = follower.getPose().getPos().getMag().getIn();
+                            if (err > accelMaxError) accelMaxError = err;
+
+                            if (!follower.isBusy()) {
+                                if (accelMaxError > 4.0) {
+                                    driftDetected = true;
+                                    maxLateralAccel -= 20.0;
+                                } else {
+                                    maxLateralAccel += 20.0;
+                                    sleep(1000);
+                                }
+                                state = TuningState.LATERAL_ACCEL;
+                            }
+                            break;
+
+                        case CONFIRM:
+                            telemetry.addData("Current Phase", phase);
+                            telemetry.addLine("Press 'A' to accept and finish.");
+                            telemetry.addData("Max Lateral Accel", maxLateralAccel);
+                            telemetry.addData("Robot Pose", follower.getPose().toString());
+                            telemetry.update();
+
+                            follower.teleOpDrive(-gamepad1.left_stick_x, gamepad1.left_stick_y, -gamepad1.right_stick_x);
+
+                            if (gamepad1.a && !lastA) {
+                                state = TuningState.SAVE;
+                            }
+                            break;
+
+                        case SAVE:
+                            saveConstantsToJson();
+                            phase = TuningPhase.COMPLETE;
+                            break;
+                    }
+                    break;
+                }
+            }
+
+            lastA = gamepad1.a;
+            telemetry.update();
+        }
 
         while (opModeIsActive()) {
-            telemetry.addData("Status", "AUTOMATED TUNING COMPLETE");
-            telemetry.addLine("Constants saved to /sdcard/FIRST/FollowerConstants.json");
+            telemetry.addData("Status", "All Tuning Cycles Complete! Configuration Saved to JSON.");
             telemetry.update();
             follower.teleOpDrive(0, 0, 0);
         }
     }
 
-    private void autoTuneHeading() {
-        telemetry.addLine("PHASE 1/4: Tuning Heading (PDS)");
-        telemetry.update();
-
-        double power = 0;
-        while (opModeIsActive() && Math.abs(follower.getVelocity().getHeading().getRad()) < 0.02) {
-            power += 0.0005;
-            follower.teleOpDrive(0, 0, power);
-            sleep(10);
-        }
-        headingS = power;
-        follower.teleOpDrive(0, 0, 0);
-        sleep(500);
-
-        headingP = 0.1;
-        boolean settled = false;
-        while (opModeIsActive() && !settled) {
-            updateFollowerConfig();
-            Angle target = Angle.fromDeg(90);
-            long startTime = System.currentTimeMillis();
-
-            while (opModeIsActive() && Math.abs(follower.getPose().getHeading().minus(target).getDeg()) > 1.0) {
-                if (System.currentTimeMillis() - startTime > 2500) break;
-                follower.teleOpDrive(0, 0, 0); // Follower logic handles PDS via update/follow if implemented,
-                // otherwise we use teleOpDrive as a placeholder for controller update
-                sleep(10);
-            }
-
-            if (Math.abs(follower.getPose().getHeading().minus(target).getDeg()) < 1.0) settled = true;
-            else headingP += 0.05;
-        }
-        sleep(500);
+    private void resetKsSearch() {
+        ksMax = 0.2;
+        ksMin = 0.0;
+        ksGuess = 0.0;
+        ksLastGuess = -1.0;
+        ksMaxDeviation = 0.0;
     }
 
-    private void autoTuneTranslation() {
-        telemetry.addLine("PHASE 2/4: Tuning Translation (PDS)");
-        telemetry.update();
+    private void resetStepResponse() {
+        stepMaxAccel = 0;
+        stepMaxVel = 0;
+        stepLastVel = 0;
+        stepTimeStamp = 0;
+        stepVelAtTimeStamp = 0;
+        stepLastTime = System.nanoTime();
+        stepStartTime = System.nanoTime();
+        timer.reset();
 
-        double power = 0;
-        while (opModeIsActive() && Math.abs(follower.getVelocity().getPos().getX().getIn()) < 0.1) {
-            power += 0.001;
-            follower.teleOpDrive(0, power, 0);
-            sleep(10);
-        }
-        translationS = power;
-        follower.teleOpDrive(0, 0, 0);
-        sleep(500);
-
-        translationP = 0.05;
-        translationD = 0.01;
-    }
-
-    private void autoTuneVelocityFF() {
-        telemetry.addLine("PHASE 3/4: Tuning Velocity Feedforward (kV)");
-        telemetry.update();
-
-        follower.teleOpDrive(0, 1.0, 0);
-        sleep(1500);
-        double maxVel = Math.abs(follower.getVelocity().getPos().getX().getIn());
-        velocityFF = 1.0 / maxVel;
-        follower.teleOpDrive(0, 0, 0);
-        sleep(500);
-    }
-
-    private void autoTuneMaxLateralAccel() {
-        telemetry.addLine("PHASE 4/4: Tuning Max Lateral Acceleration");
-        telemetry.update();
-
-        maxLateralAccel = 50.0;
-        boolean driftDetected = false;
-
-        while (opModeIsActive() && !driftDetected) {
-            updateFollowerConfig();
-            follower.setPose(new Pose(new Vector(Dist.of(0, DistUnit.IN),Dist.of(0, DistUnit.IN)), Angle.fromDeg(0)));
-
-            generateAndFollowTestCurve();
-
-            double maxError = 0;
-            while (opModeIsActive() && follower.isBusy()) {
-                follower.update();
-                double currentError = follower.getPose().getPos().getMag().getIn();  if (currentError > maxError) maxError = currentError;
-                telemetry.addData("Testing Limit", maxLateralAccel);
-                telemetry.addData("Current Gs", Math.abs(follower.getAcceleration().getY().getIn()));
-                telemetry.update();
-            }
-
-            if (maxError > 4.0 || maxLateralAccel > 300) {
-                driftDetected = true;
-                maxLateralAccel -= 20.0;
-            } else {
-                maxLateralAccel += 20.0;
-                telemetry.addLine("Success. Increasing limit...");
-                telemetry.update();
-                sleep(1000);
-            }
-        }
-    }
-
-    private void generateAndFollowTestCurve() {
-        Pose start = follower.getPose();
-        Path testCurve = Builder.path(
-                start,
-                new Pose(start.getPos().plus(new Vector(Dist.of(30, DistUnit.IN), Dist.of(0, DistUnit.IN))), start.getHeading()),
-                new Pose(start.getPos().plus(new Vector(Dist.of(30, DistUnit.IN), Dist.of(30,DistUnit.IN))), start.getHeading().plus(Angle.fromDeg(90))),
-                new Pose(start.getPos().plus(new Vector(Dist.of(0, DistUnit.IN), Dist.of(30, DistUnit.IN))), start.getHeading().plus(Angle.fromDeg(180)))
-        ).build();
-
-        follower.follow(testCurve);
+        follower.setPose(new Pose(new Vector(Dist.of(0, DistUnit.IN), Dist.of(0, DistUnit.IN)), Angle.fromDeg(0)));
     }
 
     private void updateFollowerConfig() {
