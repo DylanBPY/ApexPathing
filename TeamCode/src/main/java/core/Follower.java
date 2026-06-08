@@ -23,7 +23,7 @@ import paths.movements.Turn;
  * @author Xander Haemel 31616 404 Not Found
  */
 public class Follower {
-    private final FollowerConfig config;
+    private final FollowerContants config;
     private final BaseDrivetrain<?> drivetrain;
     private final BaseLocalizer<?> localizer;
 
@@ -148,7 +148,7 @@ public class Follower {
             double feedforward = 0.0;
             double tangentFeedbackMag;
             if (t < 1.0) {
-                feedforward = (config.kV * desiredVelocity) + (config.kA * requiredAccel) + velocityS;
+                feedforward = (config.lateralKV * desiredVelocity) + (config.lateralKA * requiredAccel) + velocityS;
 
                 double alongTrackError = fieldError.dot(unitTangent).getIn();
                 tangentFeedbackMag = driveController.calculateFromError(alongTrackError);

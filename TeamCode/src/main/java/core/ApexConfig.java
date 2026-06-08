@@ -3,8 +3,9 @@ package core;
 import drivetrains.BaseDrivetrainConfig;
 import localizers.BaseLocalizerConfig;
 
-// TODO: Rewrite JavaDocs
 /**
+ * Abstract base class for your constants
+ * Method implemented by {@link org.firstinspires.ftc.teamcode.Constants}
  * @author Dylan B. 18597 RoboClovers - Delta
  */
 public abstract class ApexConfig {
@@ -12,5 +13,5 @@ public abstract class ApexConfig {
 
     public abstract BaseLocalizerConfig<?> localizerConfig();
 
-    public abstract FollowerConfig followerConfig();
+    public abstract FollowerContants followerConfig();
 }

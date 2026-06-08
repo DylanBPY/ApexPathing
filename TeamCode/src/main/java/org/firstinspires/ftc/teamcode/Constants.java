@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import controllers.PDSController;
 import core.ApexConfig;
-import core.FollowerConfig;
+import core.FollowerContants;
 import drivetrains.BaseDrivetrainConfig;
 import drivetrains.Mecanum;
 import localizers.BaseLocalizerConfig;
@@ -21,7 +21,7 @@ import util.MotorFactory;
  *
  * @author Dylan B. 18597 RoboClovers - Delta
  */
-public class Config extends ApexConfig {
+public class Constants extends ApexConfig {
     @Override
     public BaseDrivetrainConfig<?> drivetrainConfig() {
         return new Mecanum.Config()
@@ -43,8 +43,8 @@ public class Config extends ApexConfig {
     }
 
     @Override
-    public FollowerConfig followerConfig() {
-        return new FollowerConfig()
+    public FollowerContants followerConfig() {
+        return new FollowerContants()
                 .setHeadingCoeffs(new PDSController.PDSCoefficients())
                 .setLateralCoeffs(new PDSController.PDSCoefficients())
                 .setDriveCoeffs(new PDSController.PDSCoefficients())
