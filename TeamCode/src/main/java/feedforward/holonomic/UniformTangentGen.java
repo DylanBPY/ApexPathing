@@ -3,13 +3,13 @@ package feedforward.holonomic;
 import feedforward.BaseFeedforwardGen;
 import geometry.PathPoint;
 
-public class TangentGen extends BaseFeedforwardGen {
+public class UniformTangentGen extends BaseFeedforwardGen {
 
     // Specific constants for this type of drive/interpolation
     private final double kW, kaA, kC, kV, kA, kS;
     private final double w_max, aA_max;
 
-    public TangentGen(double kW, double kaA, double kC, double kV, double kA, double kS, double v_max, double a_max, double w_max, double aA_max) {
+    public UniformTangentGen(double kW, double kaA, double kC, double kV, double kA, double kS, double v_max, double a_max, double w_max, double aA_max) {
         super(v_max, a_max); // Pass the universal kinematics to the base algorithm
         this.kW = kW;
         this.kaA = kaA;

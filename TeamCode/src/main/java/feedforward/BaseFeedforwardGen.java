@@ -117,7 +117,9 @@ public abstract class BaseFeedforwardGen {
             log.previousVelocity = lut[worstIndex].getTangentialVel();
 
             // Pin and Propagate
-            lut[worstIndex].setTangentialVel(log.previousVelocity * 0.9);
+            lut[worstIndex].setTangentialVel(log.previousVelocity * 0.90); /* NOTE: I know this kinda
+            sucks. I will work on a better model that maintains speed better, but this is here just
+            for the proof of concept */
             log.newVelocity = lut[worstIndex].getTangentialVel();
 
             lastReport.logs.add(log);
