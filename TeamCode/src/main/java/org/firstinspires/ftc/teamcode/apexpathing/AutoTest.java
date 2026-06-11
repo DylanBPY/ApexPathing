@@ -12,13 +12,12 @@ import util.PoseFactory;
  * IMPORTANT: Make sure your {@link core.FollowerConstants} have been tuned by running {@link FollowerTuner} before running this OpMode
  * @author Sohum Arora 22985 Paraducks
  */
-@Autonomous(name = "Apex BSpline Auto Test", group = "Apex Pathing Tests")
+@Autonomous(name = "Apex Auto Test", group = "Apex Pathing Tests")
 public class AutoTest extends LinearOpMode {
     Constants constants = new Constants();
     ExampleAutoPath path = new ExampleAutoPath(PoseFactory.Mirror.NONE);
-    enum Paths {TEST_PATH, TEST_TURN, COMPLETE}
-    Paths currentPath = Paths.TEST_PATH;
-    boolean pathStarted = false;
+    enum Path {TEST_PATH, TEST_TURN, COMPLETE}
+    Path currentState = Path.TEST_PATH;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -34,37 +33,17 @@ public class AutoTest extends LinearOpMode {
         while (opModeIsActive() && !isStopRequested()) {
             follower.update();
 
-            switch (currentPath) {
-                case TEST_PATH:
-                    if (!pathStarted) {
-                        follower.follow(path.testPath);
-                        pathStarted = true;
-                    }
-                    if (!follower.isBusy()) {
-                        currentPath = Paths.TEST_TURN;
-                        pathStarted = false;
-                    }
-                    break;
-
-                case TEST_TURN:
-                    if (!pathStarted) {
-                        follower.follow(path.testTurn);
-                        pathStarted = true;
-                    }
-                    if (!follower.isBusy()) {
-                        currentPath = Paths.COMPLETE;
-                        pathStarted = false;
-                    }
-                    break;
-
-                case COMPLETE:
-                    follower.stop();
-                    telemetry.addLine("Auto Test complete!");
-                    break;
+            if (currentState == Path.TEST_PATH) {
+                if (!path.testPath.hasStarted()) follower.follow(path.testPath);
+                if (path.testPath.hasEnded()) currentState = Path.TEST_TURN;
             }
+            if (currentState == Path.TEST_TURN) {
+                if (!path.testTurn.hasStarted()) follower.follow(path.testTurn);
+                if (path.testTurn.hasEnded()) currentState = Path.COMPLETE;
+            }
+            if (currentState == Path.COMPLETE) telemetry.addLine("Auto Test Complete!");
 
             telemetry.addLine(follower.isBusy() ? "Follower IS busy" : "Follower is NOT busy");
-            telemetry.addData("Current Path", currentPath);
             telemetry.addData("Current X", follower.getPose().getX());
             telemetry.addData("Current Y", follower.getPose().getY());
             telemetry.addData("Heading", follower.getPose().getHeading());

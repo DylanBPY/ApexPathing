@@ -1,13 +1,9 @@
 package paths.builders;
 
 import geometry.Pose;
+import paths.movements.FollowerMovement;
 
 public class Builder {
-
-    public enum MovementType {
-        PATH, TURN
-    }
-
     /**
      * Entry point for constructing continuous translational paths.
      */

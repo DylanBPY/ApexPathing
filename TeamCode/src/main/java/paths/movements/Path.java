@@ -26,6 +26,7 @@ public class Path implements FollowerMovement {
     private PathSegment parametricPath;
     private HeadingInterpolator interpolator;
     private Pose endPose;
+    private boolean started = false, ended = false;
 
     /**
      * Attaches an executable mechanical/software action to this path.
@@ -50,6 +51,25 @@ public class Path implements FollowerMovement {
      * * @return The geometric terminus of the route.
      */
     public Pose getEndPose() { return endPose; }
+
+    @Override
+    public boolean hasStarted() {
+        return started;
+    }
+
+    @Override
+    public boolean hasEnded() {
+        return ended;
+    }
+    @Override
+    public void setStarted(boolean started) {
+        this.started = started;
+    }
+
+    @Override
+    public void setEnded(boolean ended) {
+        this.ended = ended;
+    }
 
     /**
      * Injects the calculated geometric curve (e.g., a B-Spline) that defines

@@ -5,9 +5,6 @@ import geometry.Pose;
 /**
  * A marker interface representing any executable navigational action 
  * (e.g., driving a spline path, executing a point turn, or holding a pose).
- * <p>
- * Your Follower class will maintain a queue or list of these movements 
- * and execute them sequentially.
  */
 public interface FollowerMovement {
     /**
@@ -16,4 +13,13 @@ public interface FollowerMovement {
      * @return The final Pose.
      */
     Pose getEndPose();
+
+    /**
+     * Below are methods to track a robot's progress along a given FollowerMovement, enabling the implementation of a robust FSM
+     */
+    boolean hasStarted();
+    boolean hasEnded();
+
+    void setStarted(boolean started);
+    void setEnded(boolean ended);
 }

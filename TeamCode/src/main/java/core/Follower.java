@@ -204,6 +204,10 @@ public class Follower {
 
         // Update current movement and extract necessary values based on the movement type
         this.currentMovement = movement;
+
+        this.currentMovement.setStarted(true);
+        this.currentMovement.setEnded(false);
+
         this.targetHeading = movement.getEndPose().getHeading();
         if (movement instanceof Turn) {
             Turn turn = (Turn) currentMovement;
@@ -221,6 +225,10 @@ public class Follower {
 
     /** Stops the drivetrain and any ongoing movement. The busy state will be set to false. */
     public void stop() {
+        if (this.currentMovement != null) {
+            this.currentMovement.setEnded(true);
+        }
+
         // Reset current movement and temporary values
         this.currentMovement = null;
         this.segment = null;
