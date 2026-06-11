@@ -202,13 +202,11 @@ public class Follower {
             );
         }
 
-        // Update current movement and extract necessary values based on the movement type
         this.currentMovement = movement;
-
         this.currentMovement.setStarted(true);
         this.currentMovement.setEnded(false);
-
         this.targetHeading = movement.getEndPose().getHeading();
+
         if (movement instanceof Turn) {
             Turn turn = (Turn) currentMovement;
             this.targetTurnPoseVec = turn.getStartPose().getPos();
@@ -229,7 +227,6 @@ public class Follower {
             this.currentMovement.setEnded(true);
         }
 
-        // Reset current movement and temporary values
         this.currentMovement = null;
         this.segment = null;
         this.targetHeading = null;
@@ -237,7 +234,6 @@ public class Follower {
 
         this.drivetrain.stop();
     }
-
     /** Stops the drivetrain and any ongoing movement. The busy state will remain true. */
     public void pause() {
         this.paused = true;

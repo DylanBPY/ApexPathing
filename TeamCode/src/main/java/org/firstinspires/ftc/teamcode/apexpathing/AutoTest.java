@@ -33,15 +33,18 @@ public class AutoTest extends LinearOpMode {
         while (opModeIsActive() && !isStopRequested()) {
             follower.update();
 
-            if (currentState == Path.TEST_PATH) {
-                if (!path.testPath.hasStarted()) follower.follow(path.testPath);
-                if (path.testPath.hasEnded()) currentState = Path.TEST_TURN;
+            switch (currentState) {
+                case TEST_PATH:
+                    if (!path.testPath.hasStarted()) follower.follow(path.testPath);
+                    if (path.testPath.hasEnded()) currentState = Path.TEST_TURN;
+
+                case TEST_TURN:
+                    if (!path.testTurn.hasStarted()) follower.follow(path.testTurn);
+                    if (path.testTurn.hasEnded()) currentState = Path.COMPLETE;
+
+                case COMPLETE:
+                    telemetry.addLine("Auto Test Completed!");
             }
-            if (currentState == Path.TEST_TURN) {
-                if (!path.testTurn.hasStarted()) follower.follow(path.testTurn);
-                if (path.testTurn.hasEnded()) currentState = Path.COMPLETE;
-            }
-            if (currentState == Path.COMPLETE) telemetry.addLine("Auto Test Complete!");
 
             telemetry.addLine(follower.isBusy() ? "Follower IS busy" : "Follower is NOT busy");
             telemetry.addData("Current X", follower.getPose().getX());

@@ -214,6 +214,7 @@ public class PathBuilder {
         }
 
         path.setInterpolator(new HeadingInterpolator(currentStyle, startH, endH, customOffset));
+        path.setEndPose(expectedEndPose);
 
         for (Runnable task : buildTasks) {
             task.run();

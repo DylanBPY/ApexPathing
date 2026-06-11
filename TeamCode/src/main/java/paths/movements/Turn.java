@@ -12,13 +12,12 @@ import geometry.Pose;
  * <p>
  * The robot will remain at its starting (x, y) coordinates and rotate 
  * to the specified target heading.
+ * @author Sohum Arora 22985 Paraducks
  */
-public class Turn implements FollowerMovement {
+public class Turn extends FollowerMovement {
     private final Pose startPose;
     private final Pose endPose;
     private final List<Callback> callbacks = new ArrayList<>();
-    private boolean started = false;
-    private boolean ended = false;
 
     /**
      * Constructs a Turn movement.
@@ -40,24 +39,5 @@ public class Turn implements FollowerMovement {
     @Override
     public Pose getEndPose() {
         return endPose;
-    }
-
-    @Override
-    public boolean hasStarted() {
-        return started;
-    }
-
-    @Override
-    public boolean hasEnded() {
-        return ended;
-    }
-    @Override
-    public void setStarted(boolean started) {
-        this.started = started;
-    }
-
-    @Override
-    public void setEnded(boolean ended) {
-        this.ended = ended;
     }
 }

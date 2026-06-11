@@ -1,7 +1,6 @@
 package paths.builders;
 
 import geometry.Pose;
-import paths.movements.FollowerMovement;
 
 public class Builder {
     /**
