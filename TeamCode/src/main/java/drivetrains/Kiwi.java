@@ -37,6 +37,11 @@ public class Kiwi extends BaseDrivetrain<Kiwi.Config> {
         );
     }
 
+    @Override
+    public boolean isHolonomic() {
+        return true;
+    }
+
     /** Configuration class for Kiwi/Killough/Thee-Wheel Omni drivetrain. */
     public static class Config extends BaseDrivetrainConfig<Config> {
         @Override

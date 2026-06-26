@@ -68,7 +68,7 @@ public class FollowerTuner extends LinearOpMode {
     private double translationP, translationD, translationS;
     private double velocityFF;
     private double maxLateralAccel = 40.0;
-    private double headingToleranceDeg, distanceToleranceIn, tTolerance;
+    private double headingToleranceDeg, distanceToleranceIn;
 
     private double ksMax = 0.2, ksMin = 0.0, ksGuess = 0.0, ksLastGuess = -1.0, ksMaxDeviation;
     private double stepMaxAccel, stepMaxVel, stepLastVel, stepLastTime, stepStartTime, stepTimeStamp, stepVelAtTimeStamp;
@@ -93,15 +93,14 @@ public class FollowerTuner extends LinearOpMode {
         translationP = defaults.driveCoeffs.kP;
         translationD = defaults.driveCoeffs.kD;
         translationS = defaults.driveCoeffs.kS;
-        velocityFF = defaults.lateralKV;
+        velocityFF = defaults.translationalKV;
         headingToleranceDeg = defaults.headingTolerance.getDeg();
         distanceToleranceIn = defaults.distanceTolerance.getIn();
-        tTolerance = defaults.tTolerance;
         maxLateralAccel = defaults.maxLateralAccel > 10 ? defaults.maxLateralAccel : 40.0;
 
         boolean headingRun = defaults.headingCoeffs.kP != 0.0 || defaults.headingCoeffs.kD != 0.0 || defaults.headingCoeffs.kS != 0.0;
         boolean translationRun = defaults.driveCoeffs.kP != 0.0 || defaults.driveCoeffs.kD != 0.0 || defaults.driveCoeffs.kS != 0.0;
-        boolean velocityFFRun = defaults.lateralKV != 0.0;
+        boolean velocityFFRun = defaults.translationalKV != 0.0;
         boolean accelRun = defaults.maxLateralAccel > 10.0;
 
         while (opModeInInit()) {
@@ -207,7 +206,7 @@ public class FollowerTuner extends LinearOpMode {
                                 follower.update();
                                 double pos = isAngular
                                         ? follower.getPose().getHeading().getRad()
-                                        : follower.getPose().getPos().getX().getIn();
+                                        : follower.getPose().getVec().getX().getIn();
                                 ksMaxDeviation = Math.max(Math.abs(pos), ksMaxDeviation);
                                 if (isAngular) follower.teleOpDrive(0, 0, ksGuess);
                                 else follower.teleOpDrive(ksGuess, 0, 0);
@@ -247,7 +246,7 @@ public class FollowerTuner extends LinearOpMode {
                             follower.update();
                             double curVel = isAngular
                                     ? follower.getVelocity().getHeading().getRad()
-                                    : follower.getVelocity().getPos().getX().getIn();
+                                    : follower.getVelocity().getVec().getX().getIn();
 
                             double now = System.nanoTime();
                             double deltaT = (now - stepLastTime) / 1e9;
@@ -354,7 +353,7 @@ public class FollowerTuner extends LinearOpMode {
                         case VELOCITY_FF:
                             follower.teleOpDrive(0, 1.0, 0);
                             timer.wait(1500);
-                            double maxVel = Math.abs(follower.getVelocity().getPos().getX().getIn());
+                            double maxVel = Math.abs(follower.getVelocity().getVec().getX().getIn());
                             velocityFF = 1.0 / maxVel;
                             follower.teleOpDrive(0, 0, 0);
                             timer.wait(500);
@@ -448,11 +447,11 @@ public class FollowerTuner extends LinearOpMode {
                             follower.setPose(new Pose(new Vector(Dist.of(0, DistUnit.IN), Dist.of(0, DistUnit.IN)), Angle.fromDeg(0)));
 
                             Pose start = follower.getPose();
-                            Path testCurve = Builder.path(
+                            Path testCurve = Builder.holonomicPath(
                                     start,
-                                    new Pose(start.getPos().plus(new Vector(Dist.of(30, DistUnit.IN), Dist.of(0, DistUnit.IN))), start.getHeading()),
-                                    new Pose(start.getPos().plus(new Vector(Dist.of(30, DistUnit.IN), Dist.of(30, DistUnit.IN))), start.getHeading().plus(Angle.fromDeg(90))),
-                                    new Pose(start.getPos().plus(new Vector(Dist.of(0, DistUnit.IN), Dist.of(30, DistUnit.IN))), start.getHeading().plus(Angle.fromDeg(180)))
+                                    new Pose(start.getVec().plus(new Vector(Dist.of(30, DistUnit.IN), Dist.of(0, DistUnit.IN))), start.getHeading()),
+                                    new Pose(start.getVec().plus(new Vector(Dist.of(30, DistUnit.IN), Dist.of(30, DistUnit.IN))), start.getHeading().plus(Angle.fromDeg(90))),
+                                    new Pose(start.getVec().plus(new Vector(Dist.of(0, DistUnit.IN), Dist.of(30, DistUnit.IN))), start.getHeading().plus(Angle.fromDeg(180)))
                             ).build();
 
                             follower.follow(testCurve);
@@ -462,7 +461,7 @@ public class FollowerTuner extends LinearOpMode {
 
                         case LATERAL_ACCEL_TEST:
                             follower.update();
-                            double err = follower.getPose().getPos().getMag().getIn();
+                            double err = follower.getPose().getVec().getMag().getIn();
                             if (err > accelMaxError) accelMaxError = err;
 
                             if (!follower.isBusy()) {
@@ -567,11 +566,10 @@ public class FollowerTuner extends LinearOpMode {
     private void updateFollowerConfig() {
         followerConstants.headingCoeffs = new PDSCoefficients(headingP, headingD, headingS, 0);
         followerConstants.driveCoeffs = new PDSCoefficients(translationP, translationD, translationS, 0);
-        followerConstants.lateralCoeffs = new PDSCoefficients(translationP, translationD, translationS, 0);
-        followerConstants.lateralKV = velocityFF;
+        followerConstants.translationalCoeffs = new PDSCoefficients(translationP, translationD, translationS, 0);
+        followerConstants.translationalKV = velocityFF;
         followerConstants.headingTolerance = Angle.fromDeg(headingToleranceDeg);
         followerConstants.distanceTolerance = Dist.fromIn(distanceToleranceIn);
-        followerConstants.tTolerance = tTolerance;
         followerConstants.maxLateralAccel = maxLateralAccel;
     }
 

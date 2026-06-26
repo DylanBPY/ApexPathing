@@ -20,6 +20,11 @@ public class Tank extends BaseDrivetrain<Tank.Config> {
         setPowers(x - turn, x + turn, x - turn, x + turn);
     }
 
+    @Override
+    public boolean isHolonomic() {
+        return true;
+    }
+
     /** Configuration class for Tank drivetrain. */
     public static class Config extends BaseDrivetrainConfig<Config> {
         @Override

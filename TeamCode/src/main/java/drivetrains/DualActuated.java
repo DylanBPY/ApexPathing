@@ -15,7 +15,7 @@ import util.MotorFactory;
  *
  * @author DrPixelCat - 7842 Alum
  */
-public class ActuatedDualDrivetrain extends BaseDrivetrain<ActuatedDualDrivetrain.Config> {
+public class DualActuated extends BaseDrivetrain<DualActuated.Config> {
 
     public enum DriveState {
         TRACTION,  // Locked rollers or deployed traction wheels (Tank kinematics)
@@ -25,7 +25,7 @@ public class ActuatedDualDrivetrain extends BaseDrivetrain<ActuatedDualDrivetrai
     private DriveState state;
     private final List<Actuator> actuators = new ArrayList<>();
 
-    public ActuatedDualDrivetrain(Config config, HardwareMap hardwareMap) {
+    public DualActuated(Config config, HardwareMap hardwareMap) {
         super(config, hardwareMap);
 
         if (Objects.equals(config.blMotorConfig, null) || Objects.equals(config.brMotorConfig, null)) {
@@ -53,6 +53,11 @@ public class ActuatedDualDrivetrain extends BaseDrivetrain<ActuatedDualDrivetrai
                     x + y - turn, x - y + turn
             );
         }
+    }
+
+    @Override
+    public boolean isHolonomic() {
+        return state != DriveState.TRACTION;
     }
 
     /**
@@ -125,8 +130,8 @@ public class ActuatedDualDrivetrain extends BaseDrivetrain<ActuatedDualDrivetrai
         public final List<ServoConfig> servoConfigs = new ArrayList<>();
 
         @Override
-        public ActuatedDualDrivetrain build(HardwareMap hardwareMap) {
-            return new ActuatedDualDrivetrain(this, hardwareMap);
+        public DualActuated build(HardwareMap hardwareMap) {
+            return new DualActuated(this, hardwareMap);
         }
 
         /** Sets the initial startup state of the drivetrain */

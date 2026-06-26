@@ -57,7 +57,7 @@ public class Pose {
 
     // region Getters
     /** @return the position of this Pose as a Vector */
-    public Vector getPos() { return position; }
+    public Vector getVec() { return position; }
 
     /** @return the x component of the position as a {@link Dist} */
     public Dist getX() { return position.getX(); }

@@ -30,7 +30,6 @@ public abstract class BaseDrivetrain<T extends BaseDrivetrainConfig<T>> {
     private double lastFrPower = 0;
     private double lastBlPower = 0;
     private double lastBrPower = 0;
-
     /**
      * Your drivetrain class constructor should call this super constructor to initialize motors and
      * store the configuration.
@@ -102,6 +101,11 @@ public abstract class BaseDrivetrain<T extends BaseDrivetrainConfig<T>> {
      * @param turn the rotation joystick input (positive for counterclockwise, negative for clockwise)
      */
     public void drive(double x, double y, double turn) { drive(x, y, turn, 0); }
+
+    /**
+     * @return Whether the drivetrain is currently in a holonomic state or not
+     */
+    public abstract boolean isHolonomic();
 
     /**
      * Sets the power for each drivetrain motor, applying limits from the configurations. If your

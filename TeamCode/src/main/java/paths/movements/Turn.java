@@ -3,6 +3,7 @@ package paths.movements;
 import java.util.ArrayList;
 import java.util.List;
 
+import feedforward.FeedforwardLut;
 import paths.callbacks.Callback;
 import geometry.Angle;
 import geometry.Pose;
@@ -17,6 +18,7 @@ import geometry.Pose;
 public class Turn extends FollowerMovement {
     private final Pose startPose;
     private final Pose endPose;
+    private FeedforwardLut feedforwardLut = null;
     private final List<Callback> callbacks = new ArrayList<>();
 
     /**
@@ -27,7 +29,7 @@ public class Turn extends FollowerMovement {
     public Turn(Pose startPose, Angle targetHeading) {
         this.startPose = startPose;
         // The end pose shares the same X/Y, but updates the heading
-        this.endPose = new Pose(startPose.getPos(), targetHeading);
+        this.endPose = new Pose(startPose.getVec(), targetHeading);
     }
 
     public void addCallback(Callback callback) { callbacks.add(callback); }
@@ -35,6 +37,13 @@ public class Turn extends FollowerMovement {
     public Callback[] getCallbacks() { return callbacks.toArray(new Callback[0]); }
 
     public Pose getStartPose() { return startPose; }
+    public FeedforwardLut getFeedforwardLut() {
+        return feedforwardLut;
+    }
+
+    public void setFeedforwardLut(FeedforwardLut feedforwardLut) {
+        this.feedforwardLut = feedforwardLut;
+    }
 
     @Override
     public Pose getEndPose() {

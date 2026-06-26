@@ -11,8 +11,6 @@ import localizers.BaseLocalizerConfig;
  */
 public abstract class ApexConfig {
     public abstract BaseDrivetrainConfig<?> drivetrainConfig();
-
     public abstract BaseLocalizerConfig<?> localizerConfig();
     public abstract FollowerConstants followerConfig();
-
 }

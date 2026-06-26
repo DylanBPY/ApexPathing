@@ -6,7 +6,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import feedforward.FeedforwardLut;
+import geometry.PathPoint;
 import paths.callbacks.Callback;
+import paths.constraint.PathConstraint;
 import paths.heading.HeadingInterpolator;
 import geometry.PathSegment;
 import geometry.Pose;
@@ -24,10 +27,18 @@ import geometry.Pose;
 public class Path extends FollowerMovement {
     private final List<String> buildWarnings = new ArrayList<>();
     private final ArrayList<Callback> callbacks = new ArrayList<>();
+    private final ArrayList<PathConstraint> constraints = new ArrayList<>();
 
     private PathSegment parametricPath;
     private HeadingInterpolator interpolator;
     private Pose endPose;
+    private FeedforwardLut feedforwardLut;
+    private final boolean isTankPath;
+
+
+    public Path(boolean isTankPath) {
+        this.isTankPath = isTankPath;
+    }
 
     /**
      * Attaches an executable mechanical/software action to this path.
@@ -42,6 +53,16 @@ public class Path extends FollowerMovement {
     public Callback[] getCallbacks() { return callbacks.toArray(new Callback[0]); }
 
     /**
+     * @param constraint The kinematic constraint
+     */
+    public void addConstraint(PathConstraint constraint) { constraints.add(constraint); }
+
+    /**
+     * @return the path's kinematic constraints
+     */
+    public PathConstraint[] getConstraints() { return constraints.toArray(new PathConstraint[0]); }
+
+    /**
      * Sets the final target pose (coordinates and heading) of this path.
      * * @param endPose The geometric terminus of the route.
      */
@@ -52,6 +73,13 @@ public class Path extends FollowerMovement {
      * * @return The geometric terminus of the route.
      */
     public Pose getEndPose() { return endPose; }
+
+    /**
+     * @return The generated LUT points from the ParametricPath
+     */
+    public PathPoint[] getGeneratedPoints() {
+        return parametricPath.getPointLUT().clone();
+    }
 
     /**
      * Injects the calculated geometric curve (e.g., a B-Spline) that defines
@@ -82,6 +110,26 @@ public class Path extends FollowerMovement {
      * * @return The heading interpolator.
      */
     public HeadingInterpolator getInterpolator() { return interpolator; }
+
+    /**
+     * Returns the motion profile of the path
+     * @return The feedforward look-up motion profile
+     */
+    public FeedforwardLut getFeedforwardLut() {
+        return feedforwardLut;
+    }
+
+    public void setFeedforwardLut(FeedforwardLut feedforwardLut) {
+        this.feedforwardLut = feedforwardLut;
+    }
+
+    /**
+     * Determines if this path contains a generated motion profile.
+     * @return true if built with profiledBuild(), false if built with quickBuild()
+     */
+    public boolean isProfiled() {
+        return feedforwardLut != null;
+    }
 
     /**
      * Logs a non-fatal warning generated during the path building process

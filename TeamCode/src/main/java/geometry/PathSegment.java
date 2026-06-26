@@ -44,7 +44,8 @@ public class PathSegment {
                 distFromEnd += lastPoint.minus(location).getMag().getIn();
             }
             lastPoint = location;
-            LUTpoints[i] = new PathPoint(t, distFromEnd, location, getSignedCurvature(t), getCurvatureDerivative(t));
+            LUTpoints[i] = new PathPoint(t, distFromEnd, location,
+                    getFirstDerivative(t), getSignedCurvature(t), getCurvatureDerivative(t));
         }
 
         this.length = distFromEnd;
@@ -265,6 +266,10 @@ public class PathSegment {
 
         // k = (x'y'' - y'x'') / ||v||^3
         return cross / Math.pow(vMag, 3);
+    }
+
+    public PathPoint[] getPointLUT() {
+        return LUTpoints;
     }
 
     /**

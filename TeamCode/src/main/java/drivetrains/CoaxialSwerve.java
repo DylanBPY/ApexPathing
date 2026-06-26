@@ -131,6 +131,11 @@ public class CoaxialSwerve extends BaseDrivetrain<CoaxialSwerve.Config> {
         setPowers(flPower, frPower, blPower, brPower);
     }
 
+    @Override
+    public boolean isHolonomic() {
+        return true;
+    }
+
     /** @return the error wrapped to the range [-pi, pi] to ensure the shortest path is taken. */
     private double wrapError(double target, double current) {
         double errorRaw = target - current;

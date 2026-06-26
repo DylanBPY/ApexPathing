@@ -1,6 +1,6 @@
 package feedforward;
 
-public class FeedforwardParams {
+public class MotionParameters {
     private double tangentialVel;
     private double tangentialAccel;
     private double angularVel;
@@ -10,7 +10,7 @@ public class FeedforwardParams {
     /**
      * No-args constructor to initialize a blank, reusable parameters object.
      */
-    public FeedforwardParams() {
+    public MotionParameters() {
         this.tangentialVel = 0.0;
         this.tangentialAccel = 0.0;
         this.angularVel = 0.0;
@@ -21,7 +21,7 @@ public class FeedforwardParams {
     /**
      * All-args constructor for immediate full initialization.
      */
-    public FeedforwardParams(double tangentialVel, double tangentialAccel, double angularVel, double angularAccel, double distAlongCurve) {
+    public MotionParameters(double tangentialVel, double tangentialAccel, double angularVel, double angularAccel, double distAlongCurve) {
         this.tangentialVel = tangentialVel;
         this.tangentialAccel = tangentialAccel;
         this.angularVel = angularVel;
@@ -29,29 +29,29 @@ public class FeedforwardParams {
         this.distAlongCurve = distAlongCurve;
     }
 
-    public FeedforwardParams(double tangentialVel, double tangentialAccel, double angularVel, double angularAccel) {
+    public MotionParameters(double tangentialVel, double tangentialAccel, double angularVel, double angularAccel) {
         this.tangentialVel = tangentialVel;
         this.tangentialAccel = tangentialAccel;
         this.angularVel = angularVel;
         this.angularAccel = angularAccel;
     }
 
-    public FeedforwardParams setTangentialVel(double tangentialVel) {
+    public MotionParameters setTangentialVel(double tangentialVel) {
         this.tangentialVel = tangentialVel;
         return this;
     }
 
-    public FeedforwardParams setTangentialAccel(double tangentialAccel) {
+    public MotionParameters setTangentialAccel(double tangentialAccel) {
         this.tangentialAccel = tangentialAccel;
         return this;
     }
 
-    public FeedforwardParams setAngularVel(double angularVel) {
+    public MotionParameters setAngularVel(double angularVel) {
         this.angularVel = angularVel;
         return this;
     }
 
-    public FeedforwardParams setAngularAccel(double angularAccel) {
+    public MotionParameters setAngularAccel(double angularAccel) {
         this.angularAccel = angularAccel;
         return this;
     }
@@ -72,7 +72,7 @@ public class FeedforwardParams {
         return angularAccel;
     }
 
-    public double getDistAlongCurve() {
+    public double getProgression() {
         return distAlongCurve;
     }
 }
