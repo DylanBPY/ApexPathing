@@ -16,6 +16,7 @@ import geometry.PathSegment;
 import geometry.Pose;
 import geometry.Vector;
 import localizers.BaseLocalizer;
+import paths.callbacks.Callback;
 import paths.movements.FollowerMovement;
 import paths.movements.Path;
 import paths.movements.Turn;
@@ -39,6 +40,7 @@ public class Follower {
 
     private double lastS = -1.0;
     private long lastNano = -1;
+    private Angle lastHeading = null; // Tracks heading between ticks for angular callback sweeps
 
     private final PDSController headingController;
     private final MecanumDriveController mecanumDriveController;
@@ -78,6 +80,57 @@ public class Follower {
     }
 
     /**
+     * Evaluates all callbacks attached to the current movement and executes them if their conditions are met.
+     * * @param t The current geometric progression percentage [0.0, 1.0]. Pass -1.0 for turns.
+     * @param currentHeading The robot's current field orientation.
+     */
+    private void processCallbacks(double t, Angle currentHeading) {
+        Callback[] callbacks = null;
+        if (currentMovement instanceof Path) {
+            callbacks = ((Path) currentMovement).getCallbacks();
+        } else if (currentMovement instanceof Turn) {
+            callbacks = ((Turn) currentMovement).getCallbacks();
+        }
+
+        if (callbacks != null) {
+            for (Callback cb : callbacks) {
+                if (cb.isTriggered()) continue;
+
+                boolean shouldTrigger = false;
+
+                if (cb.getType() == Callback.CallbackType.DISTANCE) {
+                    if (t >= cb.getS() && t >= 0.0) {
+                        shouldTrigger = true;
+                    }
+                } else if (cb.getType() == Callback.CallbackType.ANGLE) {
+                    double error = Math.abs(currentHeading.getShortestAngleTo(cb.getTheta()).getRad());
+
+                    // Trigger if resting within 1 degree of target
+                    if (error < Math.toRadians(1.0)) {
+                        shouldTrigger = true;
+                    }
+                    // Trigger if the target angle was swept past between the last tick and this tick
+                    else if (lastHeading != null) {
+                        double tickSweep = lastHeading.getShortestAngleTo(currentHeading).getRad();
+                        double targetSweep = lastHeading.getShortestAngleTo(cb.getTheta()).getRad();
+
+                        // If sweeps are in the same direction AND the tick sweep is larger, it was crossed
+                        if (Math.signum(tickSweep) == Math.signum(targetSweep) && Math.abs(targetSweep) <= Math.abs(tickSweep)) {
+                            shouldTrigger = true;
+                        }
+                    }
+                }
+
+                if (shouldTrigger) {
+                    cb.getAction().run();
+                    cb.setTriggered(true);
+                }
+            }
+        }
+        lastHeading = currentHeading;
+    }
+
+    /**
      * The main execution loop of the follower.
      * Must be called continuously during the active OpMode loop to drive the robot along the path.
      */
@@ -101,9 +154,12 @@ public class Follower {
 
         if (currentMovement instanceof Turn) {
             Turn turn = (Turn) currentMovement;
-            double currentAngularVel = localizer.getVel().getHeading().getRad();
 
-            // Require both positional accuracy and low velocity to stop
+            // Process angular callbacks
+            processCallbacks(-1.0, currentHeading);
+
+            // Require both positional accuracy and low angular velocity to prevent momentum overshoot
+            double currentAngularVel = localizer.getVel().getHeading().getRad();
             if (Math.abs(headingError) < headingTol && Math.abs(currentAngularVel) < 0.05) {
                 this.stop();
                 return;
@@ -115,6 +171,9 @@ public class Follower {
                 // Query profile using absolute angular distance remaining
                 MotionParameters turnTargets = turn.getFeedforwardLut().getFeedforwardParams(Math.abs(headingError));
                 headingFF = (turnTargets.getAngularVel() * config.angularKV) + (turnTargets.getAngularAccel() * config.angularKA);
+                if (Math.abs(turnTargets.getAngularVel()) > 1e-6) {
+                    headingFF += Math.signum(turnTargets.getAngularVel()) * config.headingCoeffs.kS;
+                }
             }
 
             double headingFeedback = headingController.calculateFromError(headingError);
@@ -123,7 +182,7 @@ public class Follower {
             Vector error = targetTurnPoseVec.minus(currentPos);
             double errorMag = error.getMag().getIn();
 
-            // Hold position while rotating
+            // Hold xy position actively while turning
             if (errorMag > 0) {
                 Vector feedback = mecanumDriveController.calculatePointToPoint(
                         targetTurnPoseVec,
@@ -134,7 +193,7 @@ public class Follower {
             } else {
                 drivetrain.drive(0, 0, totalTurnPower);
             }
-            return;
+
         } else if (segment == null) {
             this.stop();
             return;
@@ -142,6 +201,10 @@ public class Follower {
         } else if (drivetrain.isHolonomic()) {
             // Retrieve path geometry at closest point
             double t = segment.getBestT(currentPos);
+
+            // Process scheduled distance and angular callbacks
+            processCallbacks(t, currentHeading);
+
             Vector targetPoseVec = segment.getPosition(t);
             double s = segment.getDistanceToEndIn(targetPoseVec, t);
             Vector velVec = segment.getFirstDerivative(t);
@@ -176,6 +239,9 @@ public class Follower {
                 double alphaTarget = (fDoublePrime * (robotTangentialVel * robotTangentialVel)) + (fPrime * targets.getTangentialAccel());
 
                 headingFF = (omegaTarget * config.angularKV) + (alphaTarget * config.angularKA);
+                if (Math.abs(omegaTarget) > 1e-6) {
+                    headingFF += Math.signum(omegaTarget) * config.headingCoeffs.kS;
+                }
             }
 
             double headingFeedback = headingController.calculateFromError(headingTarg.getRad() - currentHeading.getRad());
@@ -242,6 +308,10 @@ public class Follower {
         } else {
             // Process tank driving via Ramsete controller
             double t = segment.getBestT(currentPos);
+
+            // Process scheduled distance and angular callbacks
+            processCallbacks(t, currentHeading);
+
             Vector targetPoseVec = segment.getPosition(t);
             double s = segment.getDistanceToEndIn(targetPoseVec, t);
             Vector velVec = segment.getFirstDerivative(t);
@@ -276,6 +346,7 @@ public class Follower {
             // Convert velocity commands to motor power using feedforward constants
             double totalTangentPower = (v_cmd * config.translationalKV) + (a_d * config.translationalKA) + (Math.signum(v_cmd) * config.translationalCoeffs.kS);
             double turnPow = (w_cmd * config.angularKV) + (alpha_d * config.angularKA);
+            turnPow += Math.signum(turnPow) * config.headingCoeffs.kS;
 
             double availableMotorPower = 1.0;
             turnPow = Range.clip(turnPow, -availableMotorPower, availableMotorPower);
@@ -328,6 +399,9 @@ public class Follower {
 
         headingController.reset();
         mecanumDriveController.pds.reset();
+
+        // Reset sweeping tracker for angular callbacks so it doesn't instantly trigger on path start
+        lastHeading = null;
     }
 
     /**
