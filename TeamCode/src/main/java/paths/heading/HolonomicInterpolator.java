@@ -10,16 +10,17 @@ import geometry.Vector;
 public class HolonomicInterpolator implements HeadingInterpolator {
 
     private final HolonomicInterpolationStyle style;
-    private Angle startHeading;
-    private Angle endHeading;
-    private Angle customOffset;
-    private CubicSpline1D headingSpline;
+    private final Angle startHeading;
+    private final Angle endHeading;
+    private final Angle customOffset;
+    private final CubicSpline1D headingSpline;
 
     private double pathLength = 1.0;
     private final double DEFAULT_BLEND_WINDOW_IN = 15.0;
     private double blendWindow = DEFAULT_BLEND_WINDOW_IN;
 
-    public HolonomicInterpolator(HolonomicInterpolationStyle style, Angle startHeading, Angle endHeading, Angle customOffset, CubicSpline1D spline) {
+    public HolonomicInterpolator(HolonomicInterpolationStyle style, Angle startHeading,
+                                 Angle endHeading, Angle customOffset, CubicSpline1D spline) {
         this.style = style;
         this.startHeading = startHeading != null ? startHeading.copy() : null;
         this.endHeading = endHeading != null ? endHeading.copy() : null;
@@ -63,12 +64,23 @@ public class HolonomicInterpolator implements HeadingInterpolator {
         double pctTraveled = (pathLength - s) / pathLength;
 
         switch (style) {
-            case CONSTANT_START_HEADING: baseHeading = startHeading.copy(); break;
-            case CONSTANT_END_HEADING: baseHeading = endHeading.copy(); break;
-            case TANGENT_FORWARD: baseHeading = pathTangent.getTheta(); break;
-            case TANGENT_CUSTOM: baseHeading = pathTangent.getTheta().plus(customOffset); break;
-            case NODE_BASED: baseHeading = Angle.fromRad(headingSpline.evaluate(pctTraveled)); break;
-            default: throw new IllegalStateException("Unhandled HolonomicHeadingStyle");
+            case CONSTANT_START_HEADING:
+                baseHeading = startHeading.copy();
+                break;
+            case CONSTANT_END_HEADING:
+                baseHeading = endHeading.copy();
+                break;
+            case TANGENT_FORWARD:
+                baseHeading = pathTangent.getTheta();
+                break;
+            case TANGENT_CUSTOM:
+                baseHeading = pathTangent.getTheta().plus(customOffset);
+                break;
+            case NODE_BASED:
+                baseHeading = Angle.fromRad(headingSpline.evaluate(pctTraveled));
+                break;
+            default:
+                throw new IllegalStateException("Unhandled HolonomicHeadingStyle");
         }
 
         double u = getBlendU(s);
@@ -113,7 +125,8 @@ public class HolonomicInterpolator implements HeadingInterpolator {
             baseDoublePrime = dKappa;
         } else if (style == HolonomicInterpolationStyle.NODE_BASED) {
             // Chain rule: d2(theta)/ds_traveled2 = d2(theta)/d(pct)2 * (d(pct)/ds_traveled)^2
-            baseDoublePrime = headingSpline.getSecondDerivative(pctTraveled) * (1.0 / (pathLength * pathLength));
+            baseDoublePrime =
+                    headingSpline.getSecondDerivative(pctTraveled) * (1.0 / (pathLength * pathLength));
         }
 
         double u = getBlendU(s);

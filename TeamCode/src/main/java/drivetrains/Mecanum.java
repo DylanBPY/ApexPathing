@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import java.util.Objects;
 
-import feedforward.MotionParameters;
 import geometry.Angle;
 import geometry.Vector;
 import util.MotorFactory;
@@ -18,9 +17,11 @@ public class Mecanum extends BaseDrivetrain<Mecanum.Config> {
     public Mecanum(Config config, HardwareMap hardwareMap) {
         super(config, hardwareMap);
 
-        if (Objects.equals(config.blMotorConfig, null) || Objects.equals(config.brMotorConfig, null)) {
+        if (Objects.equals(config.blMotorConfig, null) || Objects.equals(config.brMotorConfig,
+                null)) {
             throw new IllegalArgumentException(
-                    "Back left and right motor configurations must be provided for a mecanum drivetrain"
+                    "Back left and right motor configurations must be provided for a mecanum " +
+                            "drivetrain"
             );
         }
     }
@@ -88,7 +89,8 @@ public class Mecanum extends BaseDrivetrain<Mecanum.Config> {
             public final double velMultiplier;
             public final double accelMultiplier;
 
-            public DirectionalKinematics(double maxVel, double maxAccel, double velMultiplier, double accelMultiplier) {
+            public DirectionalKinematics(double maxVel, double maxAccel, double velMultiplier,
+                                         double accelMultiplier) {
                 this.maxVel = maxVel;
                 this.maxAccel = maxAccel;
                 this.velMultiplier = velMultiplier;
@@ -106,7 +108,8 @@ public class Mecanum extends BaseDrivetrain<Mecanum.Config> {
          * @param maxSfeVel   Absolute maximum strafing velocity (in/s)
          * @param maxSfeAccel Absolute maximum strafing acceleration (in/s^2)
          */
-        public MecanumDirectionalLut(double maxFwdVel, double maxFwdAccel, double maxSfeVel, double maxSfeAccel) {
+        public MecanumDirectionalLut(double maxFwdVel, double maxFwdAccel, double maxSfeVel,
+                                     double maxSfeAccel) {
 
             for (int i = 0; i < 360; i++) {
                 double theta = Math.toRadians(i);
@@ -123,7 +126,8 @@ public class Mecanum extends BaseDrivetrain<Mecanum.Config> {
                 double velMultiplier = maxFwdVel / maxVel;
                 double accelMultiplier = maxFwdAccel / maxAccel;
 
-                lut[i] = new DirectionalKinematics(maxVel, maxAccel, velMultiplier, accelMultiplier);
+                lut[i] = new DirectionalKinematics(maxVel, maxAccel, velMultiplier,
+                        accelMultiplier);
             }
         }
 

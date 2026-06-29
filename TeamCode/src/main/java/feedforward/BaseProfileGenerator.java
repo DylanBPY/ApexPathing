@@ -16,7 +16,7 @@ import paths.movements.Path;
 public abstract class BaseProfileGenerator {
 
     protected FollowerMovement path;
-    private ElapsedTime timer = new ElapsedTime();
+    private final ElapsedTime timer = new ElapsedTime();
     private DebugReport lastReport;
 
     public DebugReport getLastDebugReport() {
@@ -24,7 +24,8 @@ public abstract class BaseProfileGenerator {
     }
 
     // region Abstract Methods
-    protected abstract double calculateMaxTangentialVelocity(PathPoint point, PathPoint lastPoint, Path path, double maxAngVel, double maxAngAccel);
+    protected abstract double calculateMaxTangentialVelocity(PathPoint point, PathPoint lastPoint
+            , Path path, double maxAngVel, double maxAngAccel);
 
     protected abstract void evaluatePoint(
             Path path, PathPoint prev, PathPoint current,
@@ -32,9 +33,11 @@ public abstract class BaseProfileGenerator {
             EvaluationResult outResult
     );
 
-    protected abstract double getMaxTangentialAccel(double currentVel, PathPoint point, Path path, double maxAngAccel);
+    protected abstract double getMaxTangentialAccel(double currentVel, PathPoint point, Path path
+            , double maxAngAccel);
 
-    protected abstract double calculateDynamicMaxAccel(double currentVel, PathPoint point, Path path, double maxAngAccel);
+    protected abstract double calculateDynamicMaxAccel(double currentVel, PathPoint point,
+                                                       Path path, double maxAngAccel);
 
     // region Master Loop
 
@@ -69,7 +72,8 @@ public abstract class BaseProfileGenerator {
             int globalWorstIndex = -1;
 
             for (int i = 1; i < points.length; i++) {
-                double ds = Math.abs(points[i].getDistanceToEnd_in() - points[i - 1].getDistanceToEnd_in());
+                double ds =
+                        Math.abs(points[i].getDistanceToEnd_in() - points[i - 1].getDistanceToEnd_in());
                 if (ds < 1e-6) {
                     utilizations[i] = 0.0;
                     continue;
@@ -99,9 +103,9 @@ public abstract class BaseProfileGenerator {
             boolean pinnedAny = false;
             for (int i = 1; i < points.length; i++) {
                 if (utilizations[i] > 1.0) {
-                    boolean isLocalMax = true;
-                    if (i > 1 && utilizations[i] < utilizations[i - 1]) isLocalMax = false;
-                    if (i < points.length - 1 && utilizations[i] <= utilizations[i + 1]) isLocalMax = false;
+                    boolean isLocalMax = i <= 1 || !(utilizations[i] < utilizations[i - 1]);
+                    if (i < points.length - 1 && utilizations[i] <= utilizations[i + 1])
+                        isLocalMax = false;
 
                     if (isLocalMax) {
                         outputParams[i].setTangentialVel(outputParams[i].getTangentialVel() * 0.90);
@@ -151,9 +155,11 @@ public abstract class BaseProfileGenerator {
         }
 
         for (int i = points.length - 2; i >= 0; i--) {
-            double ds = Math.abs(points[i + 1].getDistanceToEnd_in() - points[i].getDistanceToEnd_in());
+            double ds =
+                    Math.abs(points[i + 1].getDistanceToEnd_in() - points[i].getDistanceToEnd_in());
             double nextVel = lut[i + 1].getTangentialVel();
-            double maxReachableVel = Math.sqrt((nextVel * nextVel) + (2.0 * config.forwardAccelerationLimit.getIn() * ds));
+            double maxReachableVel =
+                    Math.sqrt((nextVel * nextVel) + (2.0 * config.forwardAccelerationLimit.getIn() * ds));
             lut[i].setTangentialVel(Math.min(lut[i].getTangentialVel(), maxReachableVel));
         }
 
@@ -164,9 +170,11 @@ public abstract class BaseProfileGenerator {
         }
 
         for (int i = 1; i < points.length; i++) {
-            double ds = Math.abs(points[i].getDistanceToEnd_in() - points[i - 1].getDistanceToEnd_in());
+            double ds =
+                    Math.abs(points[i].getDistanceToEnd_in() - points[i - 1].getDistanceToEnd_in());
             double prevVel = lut[i - 1].getTangentialVel();
-            double maxReachableVel = Math.sqrt((prevVel * prevVel) + (2.0 * config.forwardAccelerationLimit.getIn() * ds));
+            double maxReachableVel =
+                    Math.sqrt((prevVel * prevVel) + (2.0 * config.forwardAccelerationLimit.getIn() * ds));
 
             double v = Math.min(lut[i].getTangentialVel(), maxReachableVel);
             lut[i].setTangentialVel(v);
@@ -179,8 +187,10 @@ public abstract class BaseProfileGenerator {
             double dKappa = points[i].getCurvatureDerivative();
             Vector finalTangent = path.getParametricPath().getFirstDerivative(1.0);
 
-            double fPrime = path.getInterpolator().getHeadingFirstDerivative(s, kappa, finalTangent);
-            double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa, finalTangent);
+            double fPrime = path.getInterpolator().getHeadingFirstDerivative(s, kappa,
+                    finalTangent);
+            double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa,
+                    finalTangent);
 
             lut[i].setAngularVel(fPrime * v);
             lut[i].setAngularAccel((fDoublePrime * (v * v)) + (fPrime * a_t));
@@ -214,7 +224,8 @@ public abstract class BaseProfileGenerator {
                 }
             }
 
-            double maxVel = calculateMaxTangentialVelocity(points[i], i == 0 ? points[0] : points[i - 1], path, currentMaxAngVel, currentMaxAngAccel);
+            double maxVel = calculateMaxTangentialVelocity(points[i], i == 0 ? points[0] :
+                    points[i - 1], path, currentMaxAngVel, currentMaxAngAccel);
             if (currentMaxVel != Double.MAX_VALUE && currentMaxVel > 0.0) {
                 maxVel = Math.min(maxVel, currentMaxVel);
             }
@@ -235,7 +246,8 @@ public abstract class BaseProfileGenerator {
         PathConstraint[] constraints = path.getConstraints();
 
         for (int i = points.length - 2; i >= 0; i--) {
-            double ds = Math.abs(points[i + 1].getDistanceToEnd_in() - points[i].getDistanceToEnd_in());
+            double ds =
+                    Math.abs(points[i + 1].getDistanceToEnd_in() - points[i].getDistanceToEnd_in());
             double nextVel = lut[i + 1].getTangentialVel();
 
             double pctCompleted = 1.0 - (points[i].getDistanceToEnd_in() / pathLength_in);
@@ -273,7 +285,8 @@ public abstract class BaseProfileGenerator {
         PathConstraint[] constraints = path.getConstraints();
 
         for (int i = 1; i < points.length; i++) {
-            double ds = Math.abs(points[i].getDistanceToEnd_in() - points[i - 1].getDistanceToEnd_in());
+            double ds =
+                    Math.abs(points[i].getDistanceToEnd_in() - points[i - 1].getDistanceToEnd_in());
             double prevVel = lut[i - 1].getTangentialVel();
 
             double pctCompleted = 1.0 - (points[i].getDistanceToEnd_in() / pathLength_in);
@@ -290,7 +303,8 @@ public abstract class BaseProfileGenerator {
                 }
             }
 
-            double dynamicAccel = calculateDynamicMaxAccel(prevVel, points[i], path, currentMaxAngAccel);
+            double dynamicAccel = calculateDynamicMaxAccel(prevVel, points[i], path,
+                    currentMaxAngAccel);
             if (currentMaxAccel != Double.MAX_VALUE && currentMaxAccel > 0.0) {
                 dynamicAccel = Math.min(dynamicAccel, currentMaxAccel);
             }

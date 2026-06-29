@@ -1,17 +1,20 @@
 package core;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+
 import controllers.PDSController.PDSCoefficients;
 import geometry.Angle;
 import geometry.Dist;
-import org.json.JSONObject;
-import java.io.File;
-import java.io.BufferedReader;
-import java.io.FileReader;
 
 /**
  * Apex Pathing FollowerConstants class
  * Internally assigns the coefficient values determined through tuning directly,
  * thereby eliminating the need to manually tune and set the values in the Constants file!
+ *
  * @author Sohum Arora 22985 Paraducks
  */
 public class FollowerConstants {
@@ -82,12 +85,18 @@ public class FollowerConstants {
                 this.headingTolerance = Angle.fromDeg(json.optDouble("headingToleranceDeg", 1.0));
                 this.distanceTolerance = Dist.fromIn(json.optDouble("distanceToleranceIn", 0.5));
 
-                this.forwardVelocityLimit = Dist.fromIn(json.optDouble("forwardVelocityLimitInPerSec", 0));
-                this.forwardAccelerationLimit = Dist.fromIn(json.optDouble("forwardVelocityLimitInPerSec2", 0));
-                this.strafeVelocityLimit = Dist.fromIn(json.optDouble("strafeVelocityLimitInPerSec", 0));
-                this.strafeAccelerationLimit = Dist.fromIn(json.optDouble("strafeAccelerationLimitInPerSec2", 0));
-                this.angularVelocityLimit = Dist.fromIn(json.optDouble("angularVelocityLimitRadPerSec", 0));
-                this.angularAccelerationLimit = Dist.fromIn(json.optDouble("angularAccelerationLimitRadPerSec2", 0));
+                this.forwardVelocityLimit = Dist.fromIn(json.optDouble(
+                        "forwardVelocityLimitInPerSec", 0));
+                this.forwardAccelerationLimit = Dist.fromIn(json.optDouble(
+                        "forwardVelocityLimitInPerSec2", 0));
+                this.strafeVelocityLimit = Dist.fromIn(json.optDouble(
+                        "strafeVelocityLimitInPerSec", 0));
+                this.strafeAccelerationLimit = Dist.fromIn(json.optDouble(
+                        "strafeAccelerationLimitInPerSec2", 0));
+                this.angularVelocityLimit = Dist.fromIn(json.optDouble(
+                        "angularVelocityLimitRadPerSec", 0));
+                this.angularAccelerationLimit = Dist.fromIn(json.optDouble(
+                        "angularAccelerationLimitRadPerSec2", 0));
             } catch (Exception ignored) {
                 // defaults to 0 values everywhere
             }

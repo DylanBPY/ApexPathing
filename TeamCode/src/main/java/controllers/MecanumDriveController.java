@@ -9,7 +9,8 @@ public class MecanumDriveController {
     public final PDSController pds;
     public final Dist tolerance;
 
-    public MecanumDriveController(Dist maxForwardVelocity, Dist maxStrafeVelocity, PDSController.PDSCoefficients pdsCoefficients, Dist tolerance) {
+    public MecanumDriveController(Dist maxForwardVelocity, Dist maxStrafeVelocity,
+                                  PDSController.PDSCoefficients pdsCoefficients, Dist tolerance) {
         this.tolerance = tolerance;
         this.strafePenaltyRatio = maxForwardVelocity.getIn() / maxStrafeVelocity.getIn();
         this.pds = new PDSController(pdsCoefficients);

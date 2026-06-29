@@ -40,11 +40,16 @@ public class FeedforwardLut {
     }
 
     @NonNull
-    private static MotionParameters getFeedforwardParams(MotionParameters params1, double t, MotionParameters params2) {
-        double interpTransVel = params1.getTangentialVel() + t * (params2.getTangentialVel() - params1.getTangentialVel());
-        double interpTransAccel = params1.getTangentialAccel() + t * (params2.getTangentialAccel() - params1.getTangentialAccel());
-        double interpAngVel = params1.getAngularVel() + t * (params2.getAngularVel() - params1.getAngularVel());
-        double interpAngAccel = params1.getAngularAccel() + t * (params2.getAngularAccel() - params1.getAngularAccel());
+    private static MotionParameters getFeedforwardParams(MotionParameters params1, double t,
+                                                         MotionParameters params2) {
+        double interpTransVel =
+                params1.getTangentialVel() + t * (params2.getTangentialVel() - params1.getTangentialVel());
+        double interpTransAccel =
+                params1.getTangentialAccel() + t * (params2.getTangentialAccel() - params1.getTangentialAccel());
+        double interpAngVel =
+                params1.getAngularVel() + t * (params2.getAngularVel() - params1.getAngularVel());
+        double interpAngAccel =
+                params1.getAngularAccel() + t * (params2.getAngularAccel() - params1.getAngularAccel());
 
         return new MotionParameters(
                 interpTransVel,

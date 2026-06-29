@@ -2,12 +2,12 @@ package feedforward.holonomic.mecanum;
 
 import core.FollowerConstants;
 import drivetrains.Mecanum;
+import drivetrains.Mecanum.MecanumDirectionalLut.DirectionalKinematics;
 import feedforward.BaseProfileGenerator;
 import geometry.Angle;
 import geometry.PathPoint;
 import geometry.Vector;
 import paths.movements.Path;
-import drivetrains.Mecanum.MecanumDirectionalLut.DirectionalKinematics;
 
 public class MecanumProfileGenerator extends BaseProfileGenerator {
     private final FollowerConstants config;
@@ -25,7 +25,9 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
     }
 
     @Override
-    protected double calculateMaxTangentialVelocity(PathPoint point, PathPoint lastPoint, Path path, double maxAngVel, double maxAngAccel) {
+    protected double calculateMaxTangentialVelocity(PathPoint point, PathPoint lastPoint,
+                                                    Path path, double maxAngVel,
+                                                    double maxAngAccel) {
         double s = point.getDistanceToEnd_in();
         Vector tangent = point.getFirstDerivative();
         double kappa = point.getSignedCurvature();
@@ -34,13 +36,15 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
 
         Angle headingAtPoint = path.getInterpolator().getHeadingTarg(s, tangent, finalTangent);
         double fPrime = path.getInterpolator().getHeadingFirstDerivative(s, kappa, finalTangent);
-        double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa, finalTangent);
+        double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa,
+                finalTangent);
 
         DirectionalKinematics dirK = limitCalculator.getKinematics(tangent, headingAtPoint);
         double maxPhysicalVel = dirK.maxVel;
 
         double effectiveAngVelLimit = Math.min(config.angularVelocityLimit.getIn(), maxAngVel);
-        double effectiveAngAccelLimit = Math.min(config.angularAccelerationLimit.getIn(), maxAngAccel);
+        double effectiveAngAccelLimit = Math.min(config.angularAccelerationLimit.getIn(),
+                maxAngAccel);
 
         if (Math.abs(fPrime) > 1e-6) {
             double maxVelFromOmega = effectiveAngVelLimit / Math.abs(fPrime);
@@ -69,7 +73,8 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
         return Math.min(min_v, maxPhysicalVel);
     }
 
-    private double evaluatePower(double v, double kappa, double fPrime, double fDoublePrime, DirectionalKinematics dirK) {
+    private double evaluatePower(double v, double kappa, double fPrime, double fDoublePrime,
+                                 DirectionalKinematics dirK) {
         double boostedKV = config.translationalKV * dirK.velMultiplier;
         double transPower = (v * boostedKV) + config.translationalCoeffs.kS;
 
@@ -77,14 +82,17 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
 
         double omega = fPrime * v;
         double alpha = fDoublePrime * (v * v);
-        double headingKs = (Math.abs(omega) > 1e-6) ? (Math.signum(omega) * config.headingCoeffs.kS) : 0.0;
-        double rotPower = Math.abs((omega * config.angularKV) + (alpha * config.angularKA) + headingKs);
+        double headingKs = (Math.abs(omega) > 1e-6) ?
+                (Math.signum(omega) * config.headingCoeffs.kS) : 0.0;
+        double rotPower =
+                Math.abs((omega * config.angularKV) + (alpha * config.angularKA) + headingKs);
 
         return transPower + latPower + rotPower;
     }
 
     @Override
-    protected void evaluatePoint(Path path, PathPoint prev, PathPoint current, double v_prev, double v, double a_t, EvaluationResult outResult) {
+    protected void evaluatePoint(Path path, PathPoint prev, PathPoint current, double v_prev,
+                                 double v, double a_t, EvaluationResult outResult) {
         double s = current.getDistanceToEnd_in();
         double kappa = current.getSignedCurvature();
         double dKappa = current.getCurvatureDerivative();
@@ -93,10 +101,12 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
                 s, current.getFirstDerivative(), finalTangent
         );
 
-        DirectionalKinematics dirK = limitCalculator.getKinematics(current.getFirstDerivative(), robotHeading);
+        DirectionalKinematics dirK = limitCalculator.getKinematics(current.getFirstDerivative(),
+                robotHeading);
 
         double fPrime = path.getInterpolator().getHeadingFirstDerivative(s, kappa, finalTangent);
-        double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa, finalTangent);
+        double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa,
+                finalTangent);
 
         double omega = fPrime * v;
         double alpha = (fDoublePrime * (v * v)) + (fPrime * a_t);
@@ -107,7 +117,8 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
 
         double pLateral = (v * v * kappa) * config.Kcentripetal;
 
-        double headingKs = (Math.abs(omega) > 1e-6) ? (Math.signum(omega) * config.headingCoeffs.kS) : 0.0;
+        double headingKs = (Math.abs(omega) > 1e-6) ?
+                (Math.signum(omega) * config.headingCoeffs.kS) : 0.0;
         double pHeading = (omega * config.angularKV) + (alpha * config.angularKA) + headingKs;
 
         outResult.pForward = Math.abs(pForward);
@@ -119,7 +130,8 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
     }
 
     @Override
-    protected double getMaxTangentialAccel(double currentVel, PathPoint point, Path path, double maxAngAccel) {
+    protected double getMaxTangentialAccel(double currentVel, PathPoint point, Path path,
+                                           double maxAngAccel) {
         double s = point.getDistanceToEnd_in();
         Vector tangent = point.getFirstDerivative();
         Vector finalTangent = path.getParametricPath().getFirstDerivative(1.0);
@@ -127,14 +139,18 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
         double kappa = point.getSignedCurvature();
         double dKappa = point.getCurvatureDerivative();
         double fPrime = path.getInterpolator().getHeadingFirstDerivative(s, kappa, finalTangent);
-        double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa, finalTangent);
+        double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa,
+                finalTangent);
 
         double maxPhysicalDecel = limitCalculator.getKinematics(tangent, robotHeading).maxAccel;
-        double effectiveAngAccelLimit = Math.min(config.angularAccelerationLimit.getIn(), maxAngAccel);
+        double effectiveAngAccelLimit = Math.min(config.angularAccelerationLimit.getIn(),
+                maxAngAccel);
 
         if (Math.abs(fPrime) > 1e-6) {
-            double rotationalTorqueBase = Math.signum(fPrime) * fDoublePrime * (currentVel * currentVel);
-            double maxDecelFromAlpha = (effectiveAngAccelLimit + rotationalTorqueBase) / Math.abs(fPrime);
+            double rotationalTorqueBase =
+                    Math.signum(fPrime) * fDoublePrime * (currentVel * currentVel);
+            double maxDecelFromAlpha =
+                    (effectiveAngAccelLimit + rotationalTorqueBase) / Math.abs(fPrime);
 
             maxPhysicalDecel = Math.min(maxPhysicalDecel, Math.max(0.0, maxDecelFromAlpha));
         }
@@ -143,7 +159,8 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
     }
 
     @Override
-    protected double calculateDynamicMaxAccel(double currentVel, PathPoint point, Path path, double maxAngAccel) {
+    protected double calculateDynamicMaxAccel(double currentVel, PathPoint point, Path path,
+                                              double maxAngAccel) {
         double s = point.getDistanceToEnd_in();
         Vector tangent = point.getFirstDerivative();
         double kappa = point.getSignedCurvature();
@@ -154,7 +171,8 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
         DirectionalKinematics dirK = limitCalculator.getKinematics(tangent, robotHeading);
 
         double fPrime = path.getInterpolator().getHeadingFirstDerivative(s, kappa, finalTangent);
-        double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa, finalTangent);
+        double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa,
+                finalTangent);
 
         double boostedKV = config.translationalKV * dirK.velMultiplier;
         double boostedKA = config.translationalKA * dirK.accelMultiplier;
@@ -165,16 +183,19 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
         double omega = fPrime * currentVel;
         double alphaBase = fDoublePrime * (currentVel * currentVel);
         double headingKs = (Math.abs(omega) > 1e-6) ? config.headingCoeffs.kS : 0.0;
-        double rotConsumed = Math.abs(omega * config.angularKV) + Math.abs(alphaBase * config.angularKA) + headingKs;
+        double rotConsumed =
+                Math.abs(omega * config.angularKV) + Math.abs(alphaBase * config.angularKA) + headingKs;
 
         double vRemaining = Math.max(0.0, 1.0 - (vConsumed + latConsumed + rotConsumed));
         double accelVoltageCost = boostedKA + Math.abs(fPrime * config.angularKA);
 
         double dynamicAlpha = vRemaining / accelVoltageCost;
-        double effectiveAngAccelLimit = Math.min(config.angularAccelerationLimit.getIn(), maxAngAccel);
+        double effectiveAngAccelLimit = Math.min(config.angularAccelerationLimit.getIn(),
+                maxAngAccel);
 
         if (Math.abs(fPrime) > 1e-6) {
-            double rotationalTorqueBase = Math.signum(fPrime) * fDoublePrime * (currentVel * currentVel);
+            double rotationalTorqueBase =
+                    Math.signum(fPrime) * fDoublePrime * (currentVel * currentVel);
             double maxAlpha_at = (effectiveAngAccelLimit - rotationalTorqueBase) / Math.abs(fPrime);
 
             dynamicAlpha = Math.min(dynamicAlpha, Math.max(0.0, maxAlpha_at));

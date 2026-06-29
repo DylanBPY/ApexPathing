@@ -21,7 +21,8 @@ public class MotionParameters {
     /**
      * All-args constructor for immediate full initialization.
      */
-    public MotionParameters(double tangentialVel, double tangentialAccel, double angularVel, double angularAccel, double distAlongCurve) {
+    public MotionParameters(double tangentialVel, double tangentialAccel, double angularVel,
+                            double angularAccel, double distAlongCurve) {
         this.tangentialVel = tangentialVel;
         this.tangentialAccel = tangentialAccel;
         this.angularVel = angularVel;
@@ -29,7 +30,8 @@ public class MotionParameters {
         this.distAlongCurve = distAlongCurve;
     }
 
-    public MotionParameters(double tangentialVel, double tangentialAccel, double angularVel, double angularAccel) {
+    public MotionParameters(double tangentialVel, double tangentialAccel, double angularVel,
+                            double angularAccel) {
         this.tangentialVel = tangentialVel;
         this.tangentialAccel = tangentialAccel;
         this.angularVel = angularVel;

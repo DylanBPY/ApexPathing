@@ -20,11 +20,13 @@ public class PathPoint {
     /**
      * Constructs a precalculated path point.
      *
-     * @param t             The parametric value [0.0, 1.0] representing this point's location on the curve.
+     * @param t             The parametric value [0.0, 1.0] representing this point's location on
+     *                     the curve.
      * @param distanceToEnd The calculated arc length from this point to the end of the segment.
      * @param location      The physical 2D coordinate of the curve at this 't' value.
      */
-    public PathPoint(double t, double distanceToEnd, Vector location, Vector firstDerivative, double curvature, double curvatureDerivative) {
+    public PathPoint(double t, double distanceToEnd, Vector location, Vector firstDerivative,
+                     double curvature, double curvatureDerivative) {
         this.t = t;
         this.distanceToEnd = distanceToEnd;
         this.location = location;
@@ -56,7 +58,7 @@ public class PathPoint {
      *
      * @return The first derivative (tangent) of the point
      */
-    public Vector getFirstDerivative() { return firstDerivative; }
+    public Vector getFirstDerivative() {return firstDerivative;}
 
     /**
      * Retrieves the precalculated arc length from this point to the end of the segment.

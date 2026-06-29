@@ -10,24 +10,26 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import controllers.PDSController.PDSCoefficients;
 import core.ApexConfig;
 import core.Follower;
 import core.FollowerConstants;
-import controllers.PDSController.PDSCoefficients;
 import drivetrains.BaseDrivetrainConfig;
-import localizers.BaseLocalizerConfig;
 import geometry.Angle;
 import geometry.Dist;
 import geometry.Pose;
 import geometry.Vector;
+import localizers.BaseLocalizerConfig;
 import paths.builders.Builder;
 import paths.movements.Path;
 import util.DistUnit;
 
 /**
- * Single unified automatic tuner capable of completely tuning a robot for Apex in minutes in just a single OpMode!
+ * Single unified automatic tuner capable of completely tuning a robot for Apex in minutes in
+ * just a single OpMode!
  * All you have to do is follow the telemetry instructions and press a couple buttons here and there
  * Once you have run this tuner, your robot is fully tuned and ready to go Path its way to the Peaks
+ *
  * @author Sohum Arora 22985 Paraducks
  */
 @Configurable
@@ -71,7 +73,8 @@ public class FollowerTuner extends LinearOpMode {
     private double headingToleranceDeg, distanceToleranceIn;
 
     private double ksMax = 0.2, ksMin = 0.0, ksGuess = 0.0, ksLastGuess = -1.0, ksMaxDeviation;
-    private double stepMaxAccel, stepMaxVel, stepLastVel, stepLastTime, stepStartTime, stepTimeStamp, stepVelAtTimeStamp;
+    private double stepMaxAccel, stepMaxVel, stepLastVel, stepLastTime, stepStartTime,
+            stepTimeStamp, stepVelAtTimeStamp;
     private double accelMaxError;
     private boolean driftDetected;
     private boolean readyToRerun = false;
@@ -96,25 +99,37 @@ public class FollowerTuner extends LinearOpMode {
         velocityFF = defaults.translationalKV;
         headingToleranceDeg = defaults.headingTolerance.getDeg();
         distanceToleranceIn = defaults.distanceTolerance.getIn();
-        maxLateralAccel = defaults.forwardAccelerationLimit.getIn() > 10 ? defaults.forwardAccelerationLimit.getIn() : 40.0;
+        maxLateralAccel = defaults.forwardAccelerationLimit.getIn() > 10 ?
+                defaults.forwardAccelerationLimit.getIn() : 40.0;
 
-        boolean headingRun = defaults.headingCoeffs.kP != 0.0 || defaults.headingCoeffs.kD != 0.0 || defaults.headingCoeffs.kS != 0.0;
-        boolean translationRun = defaults.translationalCoeffs.kP != 0.0 || defaults.translationalCoeffs.kD != 0.0 || defaults.translationalCoeffs.kS != 0.0;
+        boolean headingRun =
+                defaults.headingCoeffs.kP != 0.0 || defaults.headingCoeffs.kD != 0.0 || defaults.headingCoeffs.kS != 0.0;
+        boolean translationRun =
+                defaults.translationalCoeffs.kP != 0.0 || defaults.translationalCoeffs.kD != 0.0 || defaults.translationalCoeffs.kS != 0.0;
         boolean velocityFFRun = defaults.translationalKV != 0.0;
         boolean accelRun = defaults.forwardAccelerationLimit.getIn() > 10.0;
 
         while (opModeInInit()) {
             telemetry.addLine("Robot Initialized");
-            telemetry.addLine("Tuning order:\n 1) Heading PDS \n 2) Translation PDS \n 3) Velocity FF \n 4) Max Lateral Accel");
+            telemetry.addLine("Tuning order:\n 1) Heading PDS \n 2) Translation PDS \n 3) " +
+                    "Velocity FF \n 4) Max Lateral Accel");
             telemetry.addLine("Run the OpMode to proceed with the Heading Tuner");
 
-            if (headingRun) telemetry.addLine("Heading tuner has already been run and values have been saved");
-            if (translationRun) telemetry.addLine("Translation tuner has already been run and values have been saved");
-            if (velocityFFRun) telemetry.addLine("Velocity FF tuner has already been run and values have been saved");
-            if (accelRun) telemetry.addLine("Max Lateral Accel tuner has already been run and values have been saved");
+            if (headingRun)
+                telemetry.addLine("Heading tuner has already been run and values have been saved");
+            if (translationRun)
+                telemetry.addLine("Translation tuner has already been run and values have been " +
+                        "saved");
+            if (velocityFFRun)
+                telemetry.addLine("Velocity FF tuner has already been run and values have been " +
+                        "saved");
+            if (accelRun)
+                telemetry.addLine("Max Lateral Accel tuner has already been run and values have " +
+                        "been saved");
 
             telemetry.addLine("A - Run the Translation Tuner if Heading Tuner has been run. ");
-            telemetry.addLine("B - Run the Velocity FF Tuner if Heading & Translation tuners have been run. ");
+            telemetry.addLine("B - Run the Velocity FF Tuner if Heading & Translation tuners have" +
+                    " been run. ");
             telemetry.addLine("Once all 3 complete, press A to run Max Lateral Accel Tuner. ");
             telemetry.addLine("WARNING: Do NOT run the tuners out of order");
 
@@ -173,7 +188,8 @@ public class FollowerTuner extends LinearOpMode {
                             telemetry.addData("Selected Mode", mode);
 
                             if (gamepad1.a && !lastA) {
-                                mode = (mode == TuningMode.AUTO) ? TuningMode.MANUAL : TuningMode.AUTO;
+                                mode = (mode == TuningMode.AUTO) ? TuningMode.MANUAL :
+                                        TuningMode.AUTO;
                             } else if (gamepad1.b && !lastB) {
                                 if (mode == TuningMode.AUTO) {
                                     resetKsSearch();
@@ -196,7 +212,8 @@ public class FollowerTuner extends LinearOpMode {
                                 break;
                             }
 
-                            follower.setPose(new Pose(new Vector(Dist.of(0, DistUnit.IN), Dist.of(0, DistUnit.IN)), Angle.fromDeg(0)));
+                            follower.setPose(new Pose(new Vector(Dist.of(0, DistUnit.IN),
+                                    Dist.of(0, DistUnit.IN)), Angle.fromDeg(0)));
                             follower.update();
                             ksGuess = (ksMax + ksMin) / 2.0;
                             ksMaxDeviation = 0.0;
@@ -277,7 +294,8 @@ public class FollowerTuner extends LinearOpMode {
 
                                 if (mode == TuningMode.MANUAL) {
                                     telemetry.addLine("--- MANUAL TUNING ---");
-                                    telemetry.addLine("Tune kSGuess via Config Panels. Drive to test.");
+                                    telemetry.addLine("Tune kSGuess via Config Panels. Drive to " +
+                                            "test.");
                                     if (isAngular) headingS = kSGuess;
                                     else translationS = kSGuess;
                                     updateFollowerConfig();
@@ -295,7 +313,8 @@ public class FollowerTuner extends LinearOpMode {
                                 }
 
                                 if (gamepad1.a && !lastA) {
-                                    phase = isAngular ? TuningPhase.TRANSLATION : TuningPhase.VELOCITY_FF;
+                                    phase = isAngular ? TuningPhase.TRANSLATION :
+                                            TuningPhase.VELOCITY_FF;
                                     state = TuningState.AWAIT_CONFIRM;
                                     mode = TuningMode.AUTO;
                                     resetKsSearch();
@@ -308,7 +327,8 @@ public class FollowerTuner extends LinearOpMode {
                                 telemetry.addData("Selected Mode", mode);
 
                                 if (gamepad1.a && !lastA) {
-                                    mode = (mode == TuningMode.AUTO) ? TuningMode.MANUAL : TuningMode.AUTO;
+                                    mode = (mode == TuningMode.AUTO) ? TuningMode.MANUAL :
+                                            TuningMode.AUTO;
                                     if (mode == TuningMode.MANUAL) {
                                         kSGuess = isAngular ? headingS : translationS;
                                     }
@@ -322,7 +342,8 @@ public class FollowerTuner extends LinearOpMode {
                                 }
                             }
 
-                            follower.teleOpDrive(-gamepad1.left_stick_x, gamepad1.left_stick_y, -gamepad1.right_stick_x);
+                            follower.teleOpDrive(-gamepad1.left_stick_x, gamepad1.left_stick_y,
+                                    -gamepad1.right_stick_x);
                             break;
                     }
                     break;
@@ -337,7 +358,8 @@ public class FollowerTuner extends LinearOpMode {
                             telemetry.addData("Selected Mode", mode);
 
                             if (gamepad1.a && !lastA) {
-                                mode = (mode == TuningMode.AUTO) ? TuningMode.MANUAL : TuningMode.AUTO;
+                                mode = (mode == TuningMode.AUTO) ? TuningMode.MANUAL :
+                                        TuningMode.AUTO;
                             } else if (gamepad1.b && !lastB) {
                                 if (mode == TuningMode.AUTO) {
                                     isPaused = false;
@@ -353,7 +375,8 @@ public class FollowerTuner extends LinearOpMode {
                         case VELOCITY_FF:
                             follower.teleOpDrive(0, 1.0, 0);
                             timer.wait(1500);
-                            double maxVel = Math.abs(follower.getVelocity().getVec().getX().getIn());
+                            double maxVel =
+                                    Math.abs(follower.getVelocity().getVec().getX().getIn());
                             velocityFF = 1.0 / maxVel;
                             follower.teleOpDrive(0, 0, 0);
                             timer.wait(500);
@@ -372,7 +395,8 @@ public class FollowerTuner extends LinearOpMode {
 
                                 if (mode == TuningMode.MANUAL) {
                                     telemetry.addLine("--- MANUAL TUNING ---");
-                                    telemetry.addLine("Tune kSGuess (kV) via Config Panels. Drive to test.");
+                                    telemetry.addLine("Tune kSGuess (kV) via Config Panels. Drive" +
+                                            " to test.");
                                     velocityFF = kSGuess;
                                     updateFollowerConfig();
                                     telemetry.addData("Current kV", velocityFF);
@@ -395,7 +419,8 @@ public class FollowerTuner extends LinearOpMode {
                                 telemetry.addData("Selected Mode", mode);
 
                                 if (gamepad1.a && !lastA) {
-                                    mode = (mode == TuningMode.AUTO) ? TuningMode.MANUAL : TuningMode.AUTO;
+                                    mode = (mode == TuningMode.AUTO) ? TuningMode.MANUAL :
+                                            TuningMode.AUTO;
                                     if (mode == TuningMode.MANUAL) kSGuess = velocityFF;
                                 } else if (gamepad1.b && !lastB) {
                                     readyToRerun = false;
@@ -406,7 +431,8 @@ public class FollowerTuner extends LinearOpMode {
                                 }
                             }
 
-                            follower.teleOpDrive(-gamepad1.left_stick_x, gamepad1.left_stick_y, -gamepad1.right_stick_x);
+                            follower.teleOpDrive(-gamepad1.left_stick_x, gamepad1.left_stick_y,
+                                    -gamepad1.right_stick_x);
                             break;
                     }
                     break;
@@ -421,7 +447,8 @@ public class FollowerTuner extends LinearOpMode {
                             telemetry.addData("Selected Mode", mode);
 
                             if (gamepad1.a && !lastA) {
-                                mode = (mode == TuningMode.AUTO) ? TuningMode.MANUAL : TuningMode.AUTO;
+                                mode = (mode == TuningMode.AUTO) ? TuningMode.MANUAL :
+                                        TuningMode.AUTO;
                             } else if (gamepad1.b && !lastB) {
                                 if (mode == TuningMode.AUTO) {
                                     isPaused = false;
@@ -444,14 +471,21 @@ public class FollowerTuner extends LinearOpMode {
                             }
 
                             updateFollowerConfig();
-                            follower.setPose(new Pose(new Vector(Dist.of(0, DistUnit.IN), Dist.of(0, DistUnit.IN)), Angle.fromDeg(0)));
+                            follower.setPose(new Pose(new Vector(Dist.of(0, DistUnit.IN),
+                                    Dist.of(0, DistUnit.IN)), Angle.fromDeg(0)));
 
                             Pose start = follower.getPose();
                             Path testCurve = Builder.holonomicPath(
                                     start,
-                                    new Pose(start.getVec().plus(new Vector(Dist.of(30, DistUnit.IN), Dist.of(0, DistUnit.IN))), start.getHeading()),
-                                    new Pose(start.getVec().plus(new Vector(Dist.of(30, DistUnit.IN), Dist.of(30, DistUnit.IN))), start.getHeading().plus(Angle.fromDeg(90))),
-                                    new Pose(start.getVec().plus(new Vector(Dist.of(0, DistUnit.IN), Dist.of(30, DistUnit.IN))), start.getHeading().plus(Angle.fromDeg(180)))
+                                    new Pose(start.getVec().plus(new Vector(Dist.of(30,
+                                            DistUnit.IN), Dist.of(0, DistUnit.IN))),
+                                            start.getHeading()),
+                                    new Pose(start.getVec().plus(new Vector(Dist.of(30,
+                                            DistUnit.IN), Dist.of(30, DistUnit.IN))),
+                                            start.getHeading().plus(Angle.fromDeg(90))),
+                                    new Pose(start.getVec().plus(new Vector(Dist.of(0,
+                                            DistUnit.IN), Dist.of(30, DistUnit.IN))),
+                                            start.getHeading().plus(Angle.fromDeg(180)))
                             ).quickBuild();
 
                             follower.follow(testCurve);
@@ -486,7 +520,8 @@ public class FollowerTuner extends LinearOpMode {
 
                                 if (mode == TuningMode.MANUAL) {
                                     telemetry.addLine("--- MANUAL TUNING ---");
-                                    telemetry.addLine("Tune kSGuess (Max Lateral Accel) via Config Panels. Drive to test.");
+                                    telemetry.addLine("Tune kSGuess (Max Lateral Accel) via " +
+                                            "Config Panels. Drive to test.");
                                     maxLateralAccel = kSGuess;
                                     updateFollowerConfig();
                                     telemetry.addData("Current Max Lateral Accel", maxLateralAccel);
@@ -505,7 +540,8 @@ public class FollowerTuner extends LinearOpMode {
                                 telemetry.addData("Selected Mode", mode);
 
                                 if (gamepad1.a && !lastA) {
-                                    mode = (mode == TuningMode.AUTO) ? TuningMode.MANUAL : TuningMode.AUTO;
+                                    mode = (mode == TuningMode.AUTO) ? TuningMode.MANUAL :
+                                            TuningMode.AUTO;
                                     if (mode == TuningMode.MANUAL) kSGuess = maxLateralAccel;
                                 } else if (gamepad1.b && !lastB) {
                                     readyToRerun = false;
@@ -517,7 +553,8 @@ public class FollowerTuner extends LinearOpMode {
                                 }
                             }
 
-                            follower.teleOpDrive(-gamepad1.left_stick_x, gamepad1.left_stick_y, -gamepad1.right_stick_x);
+                            follower.teleOpDrive(-gamepad1.left_stick_x, gamepad1.left_stick_y,
+                                    -gamepad1.right_stick_x);
                             break;
 
                         case SAVE:
@@ -560,13 +597,16 @@ public class FollowerTuner extends LinearOpMode {
         stepStartTime = System.nanoTime();
         timer.reset();
 
-        follower.setPose(new Pose(new Vector(Dist.of(0, DistUnit.IN), Dist.of(0, DistUnit.IN)), Angle.fromDeg(0)));
+        follower.setPose(new Pose(new Vector(Dist.of(0, DistUnit.IN), Dist.of(0, DistUnit.IN)),
+                Angle.fromDeg(0)));
     }
 
     private void updateFollowerConfig() {
         followerConstants.headingCoeffs = new PDSCoefficients(headingP, headingD, headingS, 0);
-        followerConstants.translationalCoeffs = new PDSCoefficients(translationP, translationD, translationS, 0);
-        followerConstants.translationalCoeffs = new PDSCoefficients(translationP, translationD, translationS, 0);
+        followerConstants.translationalCoeffs = new PDSCoefficients(translationP, translationD,
+                translationS, 0);
+        followerConstants.translationalCoeffs = new PDSCoefficients(translationP, translationD,
+                translationS, 0);
         followerConstants.translationalKV = velocityFF;
         followerConstants.headingTolerance = Angle.fromDeg(headingToleranceDeg);
         followerConstants.distanceTolerance = Dist.fromIn(distanceToleranceIn);
@@ -575,11 +615,13 @@ public class FollowerTuner extends LinearOpMode {
 
     private final ApexConfig customConfig = new ApexConfig() {
         @Override
-        public BaseDrivetrainConfig<?> drivetrainConfig() { return baseConstants.drivetrainConfig(); }
+        public BaseDrivetrainConfig<?> drivetrainConfig() {return baseConstants.drivetrainConfig();}
+
         @Override
-        public BaseLocalizerConfig<?> localizerConfig() { return baseConstants.localizerConfig(); }
+        public BaseLocalizerConfig<?> localizerConfig() {return baseConstants.localizerConfig();}
+
         @Override
-        public FollowerConstants followerConfig() { return followerConstants; }
+        public FollowerConstants followerConfig() {return followerConstants;}
     };
 
     private void saveConstantsToJson() {
@@ -597,7 +639,8 @@ public class FollowerTuner extends LinearOpMode {
         try {
             File outputFolder = new File("/sdcard/FIRST");
             if (!outputFolder.exists()) outputFolder.mkdirs();
-            FileWriter fileWriter = new FileWriter(new File(outputFolder, "FollowerConstants.json"));
+            FileWriter fileWriter = new FileWriter(new File(outputFolder, "FollowerConstants" +
+                    ".json"));
             fileWriter.write(jsonPayload);
             fileWriter.close();
         } catch (IOException ignored) {

@@ -1,15 +1,14 @@
 package paths;
 
+import geometry.Angle;
+import geometry.Pose;
 import paths.builders.Builder;
 import paths.builders.TankPathBuilder;
+import paths.heading.HolonomicInterpolationStyle;
+import paths.heading.TankInterpolationStyle;
 import paths.movements.FollowerMovement;
 import paths.movements.Path;
 import paths.movements.Turn;
-import paths.heading.HolonomicInterpolationStyle;
-import paths.heading.TankInterpolationStyle;
-
-import geometry.Angle;
-import geometry.Pose;
 import util.AngleUnit;
 import util.DistUnit;
 import util.PoseFactory;
@@ -18,7 +17,7 @@ public class FullAPIShowcase {
     private final DistUnit distUnit = DistUnit.IN;
     private final AngleUnit angleUnit = AngleUnit.DEG;
     public PoseFactory pose = new PoseFactory(distUnit, angleUnit);
-    private Pose startPose;
+    private final Pose startPose;
 
     // Routine movements stored in sequence
     public Path smoothBlendPath;
@@ -38,8 +37,11 @@ public class FullAPIShowcase {
 
     // region Dummy Actions
     public void startIntake() { /* Starts intake motors */ }
+
     public void deployOuttake() { /* Extends slides */ }
+
     public void dropElement() { /* Opens claw */ }
+
     public void finishRoutine() { /* Plays an LED animation */ }
     // endregion
 
@@ -66,7 +68,8 @@ public class FullAPIShowcase {
         constStartPath = Builder.holonomicPath(
                         smoothBlendPath.getEndPose(),
                         pose.of(25, 40),
-                        pose.of(45, 40, 180) // APEX WARNING: The 180 target is ignored due to CONSTANT_START_HEADING
+                        pose.of(45, 40, 180) // APEX WARNING: The 180 target is ignored due to
+                        // CONSTANT_START_HEADING
                 )
                 .interpolateWith(HolonomicInterpolationStyle.CONSTANT_START_HEADING)
                 .addDistanceCallback(0.5, this::startIntake)
@@ -75,11 +78,13 @@ public class FullAPIShowcase {
         // ---------------------------------------------------------
 
         // 3. CONSTANT_END_HEADING
-        // The robot immediately targets the final heading of the segment and holds it for the whole curve.
+        // The robot immediately targets the final heading of the segment and holds it for the
+        // whole curve.
         constEndPath = Builder.holonomicPath(
                         constStartPath.getEndPose(),
                         pose.of(60, 20),
-                        pose.of(60, 0, 270) // The robot will immediately pivot to face 270 while driving
+                        pose.of(60, 0, 270) // The robot will immediately pivot to face 270 while
+                        // driving
                 )
                 .interpolateWith(HolonomicInterpolationStyle.CONSTANT_END_HEADING)
                 .quickBuild(); // Bypasses physics profiling; relies purely on positional error
@@ -92,7 +97,8 @@ public class FullAPIShowcase {
                 .turnTo(Angle.fromDeg(0))
                 // Triggers exactly when the robot sweeps past the 315-degree mark during the spin
                 .addAngularCallback(Angle.fromDeg(315), this::deployOuttake)
-                .quickBuild(); // Quick build is recommended for turns unless dynamic physics are strictly required
+                .quickBuild(); // Quick build is recommended for turns unless dynamic physics are
+        // strictly required
 
         // ---------------------------------------------------------
 
@@ -110,7 +116,8 @@ public class FullAPIShowcase {
 
         // 6. TANGENT_OPTIMAL (TANK KINEMATICS)
         // Uses the TankPathBuilder to demonstrate drivetrain-specific logic.
-        // Points either forward OR backward depending on which requires less physical rotation at the start.
+        // Points either forward OR backward depending on which requires less physical rotation
+        // at the start.
         tankOptimalPath = new TankPathBuilder(
                 tangentForwardPath.getEndPose(),
                 pose.of(120, 20),
@@ -153,10 +160,11 @@ public class FullAPIShowcase {
 
     /**
      * Helper to retrieve the full, pre-compiled routine for the Follower's state machine.
+     *
      * @return An array of sequenced FollowerMovements.
      */
     public FollowerMovement[] getAutoRoutine() {
-        return new FollowerMovement[] {
+        return new FollowerMovement[]{
                 smoothBlendPath,
                 constStartPath,
                 constEndPath,

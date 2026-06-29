@@ -4,7 +4,8 @@ import geometry.Angle;
 import geometry.Vector;
 
 /**
- * Defines the contract for calculating target heading profiles across different drivetrain kinematics.
+ * Defines the contract for calculating target heading profiles across different drivetrain
+ * kinematics.
  */
 public interface HeadingInterpolator {
 

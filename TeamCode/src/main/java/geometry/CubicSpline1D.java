@@ -19,7 +19,8 @@ public class CubicSpline1D {
         double[] h = new double[n];
         for (int i = 0; i < n; i++) {
             h[i] = x[i + 1] - x[i];
-            if (h[i] <= 0) throw new IllegalArgumentException("x values must be strictly increasing.");
+            if (h[i] <= 0)
+                throw new IllegalArgumentException("x values must be strictly increasing.");
         }
 
         double[] alpha = new double[n + 1];

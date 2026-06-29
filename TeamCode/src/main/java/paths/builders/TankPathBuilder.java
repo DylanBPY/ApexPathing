@@ -1,38 +1,40 @@
 package paths.builders;
 
-import core.FollowerConstants;
-import feedforward.FeedforwardLut;
-import feedforward.tank.TankProfileGenerator;
-import geometry.BSpline;
-import geometry.PathSegment;
-import paths.constraint.PathConstraint;
-import paths.heading.TankInterpolator;
-import paths.movements.Path;
-import paths.callbacks.Callback;
-import paths.heading.TankInterpolationStyle;
-import geometry.Angle;
-import geometry.Vector;
-import geometry.ArcPose;
-import geometry.Pose;
-import geometry.Dist;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import core.FollowerConstants;
+import feedforward.FeedforwardLut;
+import feedforward.tank.TankProfileGenerator;
+import geometry.Angle;
+import geometry.ArcPose;
+import geometry.BSpline;
+import geometry.Dist;
+import geometry.PathSegment;
+import geometry.Pose;
+import geometry.Vector;
+import paths.callbacks.Callback;
+import paths.constraint.PathConstraint;
+import paths.heading.TankInterpolationStyle;
+import paths.heading.TankInterpolator;
+import paths.movements.Path;
+
 /**
  * A builder class designed to construct a {@link Path} fluently strictly for Tank drivetrains.
- * Because tank drives cannot strafe, heading interpolation is automatically locked to the path tangent.
+ * Because tank drives cannot strafe, heading interpolation is automatically locked to the path
+ * tangent.
  */
 public class TankPathBuilder {
     public Path path;
-    private Pose[] rawPoses;
+    private final Pose[] rawPoses;
     private TankInterpolationStyle style = TankInterpolationStyle.TANGENT_FORWARD;
     private final List<Runnable> buildTasks = new ArrayList<>();
 
     /**
      * Creates a new TankPathBuilder using the provided poses.
      *
-     * @param poses A sequence of Pose objects defining the path. Must contain at least two poses. Endpoints cannot be ArcPoses.
+     * @param poses A sequence of Pose objects defining the path. Must contain at least two poses
+     *              . Endpoints cannot be ArcPoses.
      */
     public TankPathBuilder(Pose... poses) {
         this.path = new Path(true);
@@ -59,12 +61,13 @@ public class TankPathBuilder {
     /**
      * Adds a kinematic constraint to the path at a specific distance percentage.
      *
-     * @param s The distance percentage along the path in bounds [0, 1].
+     * @param s              The distance percentage along the path in bounds [0, 1].
      * @param constraintType The type of constraint to apply.
-     * @param value The value of the constraint.
+     * @param value          The value of the constraint.
      * @return The current TankPathBuilder instance for method chaining.
      */
-    public TankPathBuilder addConstraint(double s, PathConstraint.ConstraintType constraintType, Dist value) {
+    public TankPathBuilder addConstraint(double s, PathConstraint.ConstraintType constraintType,
+                                         Dist value) {
         if (s >= 1.0 || s < 0.0) {
             s = Math.min(Math.max(s, 0.0), 0.9);
             path.addWarning("s must be within [0, 1] bounds! Normalized to " + s + " for safety.");
@@ -76,7 +79,7 @@ public class TankPathBuilder {
     /**
      * Attaches an executable callback based on the physical distance percentage.
      *
-     * @param s The physical distance percentage [0.0, 1.0].
+     * @param s      The physical distance percentage [0.0, 1.0].
      * @param action The code to execute.
      * @return The current TankPathBuilder instance for method chaining.
      */
@@ -88,7 +91,7 @@ public class TankPathBuilder {
     /**
      * Attaches an executable callback based on the robot reaching a target heading.
      *
-     * @param angle The Angle at which the callback should trigger.
+     * @param angle  The Angle at which the callback should trigger.
      * @param action The code to execute.
      * @return The current TankPathBuilder instance for method chaining.
      */
@@ -98,7 +101,8 @@ public class TankPathBuilder {
     }
 
     /**
-     * Internal method to compile the B-Spline geometry, process arc poses, and initialize the tank interpolator.
+     * Internal method to compile the B-Spline geometry, process arc poses, and initialize the
+     * tank interpolator.
      */
     private void compileGeometry() {
         ArrayList<Pose> processedPoses = new ArrayList<>(rawPoses.length * 2);
@@ -112,7 +116,8 @@ public class TankPathBuilder {
                 double radius = arcPose.getRadius().getIn();
 
                 if (radius < 2.0) {
-                    throw new IllegalArgumentException("ArcPose radius must be at least 2.0 inches.");
+                    throw new IllegalArgumentException("ArcPose radius must be at least 2.0 " +
+                            "inches.");
                 }
 
                 Pose prevPose = rawPoses[i - 1];
@@ -125,7 +130,8 @@ public class TankPathBuilder {
                 double distToNext = vecToNext.getMag().getIn();
 
                 if (radius > distToLast || radius > distToNext) {
-                    throw new IllegalArgumentException("ArcPose radius exceeds distance to adjacent control points.");
+                    throw new IllegalArgumentException("ArcPose radius exceeds distance to " +
+                            "adjacent control points.");
                 }
 
                 Vector p1Vec = arcPose.getVec().plus(vecToLast.times(radius / distToLast));
@@ -154,9 +160,12 @@ public class TankPathBuilder {
 
         if (resolvedStyle == TankInterpolationStyle.TANGENT_OPTIMAL) {
             Angle startHeading = rawPoses[0].getHeading();
-            double fwdError = Math.abs(startHeading.getShortestAngleTo(startTangent.getTheta()).getRad());
-            double bwdError = Math.abs(startHeading.getShortestAngleTo(startTangent.getTheta().plus(Angle.fromRad(Math.PI))).getRad());
-            resolvedStyle = (bwdError < fwdError) ? TankInterpolationStyle.TANGENT_BACKWARD : TankInterpolationStyle.TANGENT_FORWARD;
+            double fwdError =
+                    Math.abs(startHeading.getShortestAngleTo(startTangent.getTheta()).getRad());
+            double bwdError =
+                    Math.abs(startHeading.getShortestAngleTo(startTangent.getTheta().plus(Angle.fromRad(Math.PI))).getRad());
+            resolvedStyle = (bwdError < fwdError) ? TankInterpolationStyle.TANGENT_BACKWARD :
+                    TankInterpolationStyle.TANGENT_FORWARD;
         }
 
         TankInterpolator interpolator = new TankInterpolator(resolvedStyle);
@@ -178,7 +187,8 @@ public class TankPathBuilder {
 
     /**
      * Builds the path geometry and generates a naive trapezoidal profile.
-     * Used to quickly satisfy the mathematical requirements of a Ramsete controller without heavy computation.
+     * Used to quickly satisfy the mathematical requirements of a Ramsete controller without
+     * heavy computation.
      *
      * @return The constructed Path with a basic FeedforwardLut attached.
      */
@@ -188,7 +198,8 @@ public class TankPathBuilder {
         TankProfileGenerator generator = new TankProfileGenerator(config, path);
 
         if (path.getConstraints().length == 0) {
-            path.addWarning("APEX WARNING: quickBuild() called on Tank drive with no constraints! The naive profile will attempt maximum speed through all curves.");
+            path.addWarning("APEX WARNING: quickBuild() called on Tank drive with no constraints!" +
+                    " The naive profile will attempt maximum speed through all curves.");
         }
 
         path.setFeedforwardLut(generator.generateQuick(config));
@@ -196,7 +207,8 @@ public class TankPathBuilder {
     }
 
     /**
-     * Builds the path geometry and solves a complete kinematically constrained feedforward motion profile.
+     * Builds the path geometry and solves a complete kinematically constrained feedforward
+     * motion profile.
      *
      * @return The constructed Path with a fully optimized FeedforwardLut attached.
      */

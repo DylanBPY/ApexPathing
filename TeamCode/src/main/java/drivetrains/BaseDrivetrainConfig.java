@@ -11,7 +11,8 @@ import util.MotorFactory;
  *
  * <p>
  * When creating a drivetrain configuration, you must extend this class and implement the build()
- * method to return an instance of the corresponding drivetrain class using your configuration class.
+ * method to return an instance of the corresponding drivetrain class using your configuration
+ * class.
  * Your constants should have a public scope and be initialized with default values.
  * </p>
  *
@@ -38,7 +39,8 @@ public abstract class BaseDrivetrainConfig<T extends BaseDrivetrainConfig<T>> {
     public boolean robotCentric = true; // Robot or field centric control
 
     /**
-     * Builds and returns an instance of the corresponding drivetrain class using this configuration.
+     * Builds and returns an instance of the corresponding drivetrain class using this
+     * configuration.
      */
     public abstract BaseDrivetrain<?> build(HardwareMap hardwareMap);
 
@@ -47,7 +49,8 @@ public abstract class BaseDrivetrainConfig<T extends BaseDrivetrainConfig<T>> {
      */
     @SuppressWarnings("unchecked")
     public T setLinearVelocityLimit(Dist linearVelocityLimit) {
-        this.linearVelocityLimit = linearVelocityLimit; return (T) this;
+        this.linearVelocityLimit = linearVelocityLimit;
+        return (T) this;
     }
 
     /**
@@ -55,15 +58,18 @@ public abstract class BaseDrivetrainConfig<T extends BaseDrivetrainConfig<T>> {
      */
     @SuppressWarnings("unchecked")
     public T setAngularVelocityLimit(Angle angularVelocityLimit) {
-        this.angularVelocityLimit = angularVelocityLimit; return (T) this;
+        this.angularVelocityLimit = angularVelocityLimit;
+        return (T) this;
     }
 
     /**
-     * Set the linear (X and Y) acceleration limit for the drivetrain. The default is zero (disabled).
+     * Set the linear (X and Y) acceleration limit for the drivetrain. The default is zero
+     * (disabled).
      */
     @SuppressWarnings("unchecked")
     public T setLinearAccelerationLimit(Dist linearAccelerationLimit) {
-        this.linearAccelerationLimit = linearAccelerationLimit; return (T) this;
+        this.linearAccelerationLimit = linearAccelerationLimit;
+        return (T) this;
     }
 
     /**
@@ -71,7 +77,8 @@ public abstract class BaseDrivetrainConfig<T extends BaseDrivetrainConfig<T>> {
      */
     @SuppressWarnings("unchecked")
     public T setAngularAccelerationLimit(Angle angularAccelerationLimit) {
-        this.angularAccelerationLimit = angularAccelerationLimit; return (T) this;
+        this.angularAccelerationLimit = angularAccelerationLimit;
+        return (T) this;
     }
 
     /**
@@ -79,27 +86,38 @@ public abstract class BaseDrivetrainConfig<T extends BaseDrivetrainConfig<T>> {
      */
     @SuppressWarnings("unchecked")
     public T setMaxPower(double maxPower) {
-        this.maxPower = maxPower; return (T) this;
+        this.maxPower = maxPower;
+        return (T) this;
     }
 
     /**
-    * Set whether the drivetrain should use robot-centric controls or field-centric controls in TeleOp.
-    * The default is true (robot-centric).
-    */
+     * Set whether the drivetrain should use robot-centric controls or field-centric controls in
+     * TeleOp.
+     * The default is true (robot-centric).
+     */
     @SuppressWarnings("unchecked")
     public T setRobotCentric(boolean robotCentric) {
-        this.robotCentric = robotCentric; return (T) this;
+        this.robotCentric = robotCentric;
+        return (T) this;
     }
 
-    /** Get the motor configuration for the front left motor. */
-    public MotorFactory getFlMotorConfig() { return flMotorConfig; }
+    /**
+     * Get the motor configuration for the front left motor.
+     */
+    public MotorFactory getFlMotorConfig() {return flMotorConfig;}
 
-    /** Get the motor configuration for the front right motor. */
-    public MotorFactory getFrMotorConfig() { return frMotorConfig; }
+    /**
+     * Get the motor configuration for the front right motor.
+     */
+    public MotorFactory getFrMotorConfig() {return frMotorConfig;}
 
-    /** Get the motor configuration for the back left motor. May be null if not set. */
-    public MotorFactory getBlMotorConfig() { return blMotorConfig; }
+    /**
+     * Get the motor configuration for the back left motor. May be null if not set.
+     */
+    public MotorFactory getBlMotorConfig() {return blMotorConfig;}
 
-    /** Get the motor configuration for the back right motor. May be null if not set. */
-    public MotorFactory getBrMotorConfig() { return brMotorConfig; }
+    /**
+     * Get the motor configuration for the back right motor. May be null if not set.
+     */
+    public MotorFactory getBrMotorConfig() {return brMotorConfig;}
 }

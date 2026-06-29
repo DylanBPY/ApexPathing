@@ -9,7 +9,7 @@ import paths.movements.Turn;
 public class TurnProfileGenerator {
     private double omega_max;
     private double alpha_max;
-    private Constants constants = new Constants();
+    private final Constants constants = new Constants();
 
     public TurnProfileGenerator(double omega_max, double alpha_max) {
         this.omega_max = omega_max;
@@ -23,7 +23,8 @@ public class TurnProfileGenerator {
 
     public FeedforwardLut generate(Turn turn) {
         // Calculate the absolute angular distance of the turn (Assumes radians)
-        double totalAngleRads = Math.abs(turn.getEndPose().getHeading().getShortestAngleTo(turn.getStartPose().getHeading()).getRad());
+        double totalAngleRads =
+                Math.abs(turn.getEndPose().getHeading().getShortestAngleTo(turn.getStartPose().getHeading()).getRad());
 
         // Define structural bounds and target density (~2 degrees per step index)
         double targetRadPerStep = Math.toRadians(2.0);
