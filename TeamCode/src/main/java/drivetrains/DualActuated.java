@@ -18,7 +18,7 @@ import util.MotorFactory;
 public class DualActuated extends BaseDrivetrain<DualActuated.Config> {
 
     public enum DriveState {
-        TRACTION,  // Locked rollers or deployed traction wheels (Tank kinematics)
+        TANK,  // Locked rollers or deployed traction wheels (Tank kinematics)
         HOLONOMIC  // Unlocked rollers or retracted traction wheels (Mecanum kinematics)
     }
 
@@ -47,7 +47,7 @@ public class DualActuated extends BaseDrivetrain<DualActuated.Config> {
 
     @Override
     public void moveWithVectors(double x, double y, double turn) {
-        if (state == DriveState.TRACTION) {
+        if (state == DriveState.TANK) {
             setPowers(x - turn, x + turn,
                     x - turn, x + turn);
         } else {
@@ -59,15 +59,15 @@ public class DualActuated extends BaseDrivetrain<DualActuated.Config> {
 
     @Override
     public boolean isHolonomic() {
-        return state != DriveState.TRACTION;
+        return state != DriveState.TANK;
     }
 
     /**
      * Sets the configuration to the TRACTION state
      */
     public void activateTractionState() {
-        if (this.state != DriveState.TRACTION) {
-            forceApplyState(DriveState.TRACTION);
+        if (this.state != DriveState.TANK) {
+            forceApplyState(DriveState.TANK);
         }
     }
 
@@ -87,7 +87,7 @@ public class DualActuated extends BaseDrivetrain<DualActuated.Config> {
     private void forceApplyState(DriveState newState) {
         this.state = newState;
         for (Actuator actuator : actuators) {
-            actuator.servo.setPosition(state == DriveState.TRACTION ? actuator.tractionPos :
+            actuator.servo.setPosition(state == DriveState.TANK ? actuator.tankPos :
                     actuator.holonomicPos);
         }
         applyStateLimits();
@@ -98,7 +98,7 @@ public class DualActuated extends BaseDrivetrain<DualActuated.Config> {
      * This ensures BaseDrivetrain applies the correct constraints.
      */
     private void applyStateLimits() {
-        BaseDrivetrainConfig<?> activeConfig = (state == DriveState.TRACTION) ?
+        BaseDrivetrainConfig<?> activeConfig = (state == DriveState.TANK) ?
                 config.tractionConfig : config.holonomicConfig;
 
         this.config.maxPower = activeConfig.maxPower;
@@ -114,12 +114,12 @@ public class DualActuated extends BaseDrivetrain<DualActuated.Config> {
      */
     private static class Actuator {
         final Servo servo;
-        final double tractionPos;
+        final double tankPos;
         final double holonomicPos;
 
-        Actuator(Servo servo, double tractionPos, double holonomicPos) {
+        Actuator(Servo servo, double tankPos, double holonomicPos) {
             this.servo = servo;
-            this.tractionPos = tractionPos;
+            this.tankPos = tankPos;
             this.holonomicPos = holonomicPos;
         }
     }

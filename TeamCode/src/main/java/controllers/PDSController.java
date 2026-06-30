@@ -1,7 +1,8 @@
 package controllers;
 
 /**
- * A general purpose controller specifically made for controlling a robot.
+ * A general purpose PD controller with static friction compensation specifically made for
+ * controlling robot movement in a one-dimensional axis.
  *
  * <ul>
  * <li><b>kP</b> - proportional gain (how aggressively the controller responds to error)</li>
@@ -9,7 +10,9 @@ package controllers;
  * <li><b>kS</b> - minimum power (a constant power added in the error's direction to overcome
  * static forces)</li>
  * </ul>
- *
+ * <p>
+ * Special thanks to Wolfpack Machina (18438) for inspiration for this controller <3
+ * </p>
  * @author Dylan B. - 18597 RoboClovers - Delta
  * @author DrPixelCat
  */
@@ -40,12 +43,11 @@ public class PDSController extends Controller {
          */
         public PDSCoefficients() {this(0.0, 0.0, 0.0, 0.0);}
     }
-    // endregion
 
     // region Constructors and getters/setters
 
     /**
-     * Creates a PDFLController.
+     * Creates a PDSController.
      *
      * @param coefficients the {@link PDSCoefficients} to use for the controller
      */
@@ -60,8 +62,6 @@ public class PDSController extends Controller {
      * @return the current {@link PDSCoefficients} being used by the controller
      */
     public PDSCoefficients getCoefficients() {return this.coeffs;}
-    // endregion
-
     @Override
     protected double computeOutput(double error, double lastError, double deltaTime) {
         double proportional = this.coeffs.kP * error;
