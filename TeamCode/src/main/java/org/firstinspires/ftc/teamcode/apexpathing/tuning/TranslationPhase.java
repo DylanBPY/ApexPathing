@@ -37,6 +37,6 @@ public class TranslationPhase extends PdsTuningPhase {
 
     @Override
     protected TuningPhase nextPhase(TunerContext context) {
-        return null;
+        return new VelocityFeedforwardPhase();
     }
 }
