@@ -1,42 +1,42 @@
 package org.firstinspires.ftc.teamcode.apexpathing.tuning;
 
-public class HeadingPhase extends PdsTuningPhase {
-    public HeadingPhase() {
-        super("HEADING", true);
+public class TranslationPhase extends PdsTuningPhase {
+    public TranslationPhase() {
+        super("TRANSLATION", false);
     }
 
     @Override
     protected double getP(TunerContext context) {
-        return context.headingP;
+        return context.translationP;
     }
 
     @Override
     protected void setP(TunerContext context, double value) {
-        context.headingP = value;
+        context.translationP = value;
     }
 
     @Override
     protected double getD(TunerContext context) {
-        return context.headingD;
+        return context.translationD;
     }
 
     @Override
     protected void setD(TunerContext context, double value) {
-        context.headingD = value;
+        context.translationD = value;
     }
 
     @Override
     protected double getS(TunerContext context) {
-        return context.headingS;
+        return context.translationS;
     }
 
     @Override
     protected void setS(TunerContext context, double value) {
-        context.headingS = value;
+        context.translationS = value;
     }
 
     @Override
     protected TuningPhase nextPhase(TunerContext context) {
-        return new TranslationPhase();
+        return null;
     }
 }
