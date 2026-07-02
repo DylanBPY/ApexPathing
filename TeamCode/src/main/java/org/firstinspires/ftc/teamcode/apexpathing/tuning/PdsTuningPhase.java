@@ -4,6 +4,12 @@ public abstract class PdsTuningPhase extends TuningPhase {
     private final boolean angular;
     private KsSearchRoutine ksSearch;
     private StepResponseRoutine stepResponse;
+    enum Phase {
+        HEADING,
+        LATERAL,
+        TRANSLATION,
+        VELOCITY_FF
+    }
 
     protected PdsTuningPhase(String name, boolean angular) {
         super(name);
