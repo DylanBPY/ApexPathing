@@ -19,6 +19,8 @@ import geometry.Dist;
 import geometry.PathPoint;
 import paths.builders.HolonomicPathBuilder;
 import paths.builders.TankPathBuilder;
+import paths.constraint.ConstraintType;
+import paths.constraint.TranslationalConstraint;
 import paths.heading.HolonomicInterpolationStyle;
 import paths.heading.TankInterpolationStyle;
 import paths.movements.Path;
@@ -51,10 +53,11 @@ public class PathProfileConvergenceTest {
 
     Path path = new HolonomicPathBuilder(
             poseFac.of(0, -50, 90),
-            poseFac.of(0, 50, -90))
-//            poseFac.of(100, 50, 0))
-            .addHeadingNode(0.25, Angle.fromDeg(180))
-            .addHeadingNode(0.5, Angle.fromDeg(0))
+            poseFac.arcPoseOf(0, 50, 40),
+            poseFac.of(100, -90))
+            .addHeadingNode(0.33, Angle.fromDeg(180))
+            .addHeadingNode(0.66, Angle.fromDeg(0))
+            .addConstraint(new TranslationalConstraint(0.7, ConstraintType.VELOCITY, Dist.fromIn(30)))
             .profiledBuild();
 
     SwerveProfileGenerator generator = new SwerveProfileGenerator(dummyConstants, path);
@@ -135,7 +138,6 @@ public class PathProfileConvergenceTest {
         transChart.getStyler().setYAxisMax(
                 1, dummyConstants.forwardAccelerationLimit.getIn() * 1.15
         );
-        addSeries(transChart, "Initial velocity", sData, vInit, 0);
         addSeries(transChart, "Optimized velocity", sData, vConv, 0);
         addSeries(transChart, "Forward velocity limit", sData, forwardVelLimit, 0);
         addSeries(transChart, "Optimized tangential accel", sData, aConv, 1);
@@ -172,7 +174,6 @@ public class PathProfileConvergenceTest {
         styleChart(powerChart);
         powerChart.getStyler().setYAxisMin(0.0);
         powerChart.getStyler().setYAxisMax(1.12);
-        addSeries(powerChart, "Initial utilization", sData, pInit, 0);
         addSeries(powerChart, "Optimized utilization", sData, pConv, 0);
         addSeries(powerChart, "Full-power target", sData, fullPower, 0);
 

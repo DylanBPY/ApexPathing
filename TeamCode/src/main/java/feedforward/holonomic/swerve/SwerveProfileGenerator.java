@@ -12,7 +12,7 @@ import paths.movements.Path;
  */
 public class SwerveProfileGenerator extends BaseProfileGenerator {
     private static final double EPSILON = 1e-6;
-    private static final int VELOCITY_SEARCH_ITERATIONS = 10;
+    private static final int VELOCITY_SEARCH_ITERATIONS = 7;
 
     private final FollowerConstants config;
 

@@ -22,7 +22,7 @@ public abstract class BaseProfileGenerator {
     private static final double UTILIZATION_LIMIT = 1.0;
     private static final double UTILIZATION_TOLERANCE = 1e-3;
     private static final double EPSILON = 1e-6;
-    private static final int PIN_SEARCH_ITERATIONS = 24;
+    private static final int PIN_SEARCH_ITERATIONS = 7;
 
     protected FollowerMovement path;
     private DebugReport lastReport;
