@@ -43,6 +43,7 @@ public class SwerveProfileGenerator extends BaseProfileGenerator {
         double min_v = 0.0;
         double max_v = maxPhysicalVel;
 
+        // Solve the velocity ceiling numerically because heading acceleration depends on v^2.
         for (int i = 0; i < VELOCITY_SEARCH_ITERATIONS; i++) {
             double mid_v = (min_v + max_v) / 2.0;
             double omega = fPrime * mid_v;
@@ -121,6 +122,7 @@ public class SwerveProfileGenerator extends BaseProfileGenerator {
                 + (alpha * config.angularKA)
                 + headingKs;
 
+        // Swerve can point the traction vector, so translation combines as vector magnitude.
         outResult.pForward = Math.abs(tanPow);
         outResult.pLateral = Math.abs(normPow);
         outResult.pHeading = Math.abs(heading);
@@ -148,6 +150,7 @@ public class SwerveProfileGenerator extends BaseProfileGenerator {
         double alphaBase = fDoublePrime * currentVel * currentVel;
 
         if (Math.abs(fPrime) < EPSILON) {
+            // Tangential accel cannot help if heading is not changing with path distance.
             return Math.abs(alphaBase) <= effectiveAngAccelLimit + EPSILON
                     ? maxPhysicalAccel : 0.0;
         }

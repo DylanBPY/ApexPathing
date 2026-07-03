@@ -97,6 +97,8 @@ public abstract class BaseProfileGenerator {
             int checkIndex = Math.max(1, profileEval.worstIndex);
             int pinIndex = choosePinIndex(outputParams, checkIndex);
 
+            // Reduce the closest useful velocity sample, then rerun both sweeps so the change
+            // spreads through neighboring accel/decel constraints instead of making a hard notch.
             double previousVelocity = outputParams[pinIndex].getTangentialVel();
             double pinnedVelocity = findPinnedVelocity(
                     outputParams, points, path, pinIndex, checkIndex, previousVelocity
@@ -162,6 +164,7 @@ public abstract class BaseProfileGenerator {
             double fPrime = path.getInterpolator().getHeadingFirstDerivative(s, kappa, finalTangent);
             double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa, finalTangent);
 
+            // theta_dot = dtheta/ds * ds/dt. theta_ddot also carries the path acceleration term.
             lut[i].setAngularVel(fPrime * v);
             lut[i].setAngularAccel((fDoublePrime * (v * v)) + (fPrime * a_t));
 
@@ -252,6 +255,7 @@ public abstract class BaseProfileGenerator {
         PathConstraint[] constraints = path.getConstraints();
 
         for (int i = 0; i < points.length; i++) {
+            // Constraints are stepwise: the latest constraint whose s has been reached is active.
             double pctCompleted = 1.0 - (points[i].getDistanceToEnd_in() / pathLength_in);
             double currentMaxVel = Double.MAX_VALUE;
             double currentMaxAngVel = Double.MAX_VALUE;
@@ -321,6 +325,7 @@ public abstract class BaseProfileGenerator {
             double maxReachableVel = safeReachableVelocity(nextVel, maxAccel, ds);
             double cappedVel = Math.min(lut[i].getTangentialVel(), maxReachableVel);
             if (ds > EPSILON && cappedVel > nextVel + EPSILON) {
+                // The kinematic cap can still overuse power once rotation/lateral load is included.
                 cappedVel = findMaxPreviousVelocity(
                         path, points[i], points[i + 1], nextVel, cappedVel, maxAccel, ds
                 );
@@ -372,6 +377,7 @@ public abstract class BaseProfileGenerator {
             double maxReachableVel = safeReachableVelocity(prevVel, dynamicAccel, ds);
             double cappedVel = Math.min(lut[i].getTangentialVel(), maxReachableVel);
             if (ds > EPSILON && cappedVel > prevVel + EPSILON) {
+                // Re-check the candidate segment against the full drivetrain power equation.
                 cappedVel = findMaxNextVelocity(
                         path, points[i - 1], points[i], prevVel, cappedVel, dynamicAccel, ds
                 );
@@ -381,6 +387,7 @@ public abstract class BaseProfileGenerator {
     }
 
     private int choosePinIndex(MotionParameters[] lut, int worstIndex) {
+        // If the worst point is braking, the velocity before it is usually the useful handle.
         int preferredIndex = worstIndex;
         if (worstIndex > 0 && lut[worstIndex].getTangentialAccel() < -EPSILON) {
             preferredIndex = worstIndex - 1;
@@ -424,6 +431,7 @@ public abstract class BaseProfileGenerator {
             MotionParameters[] trialProfile = copyProfile(currentProfile);
             trialProfile[pinIndex].setTangentialVel(candidate);
 
+            // Test the candidate in-context; a local velocity is only valid after both sweeps settle.
             runBackwardPass(trialProfile, points, path);
             runForwardPass(trialProfile, points, path);
             populateKinematicsAndPower(trialProfile, points, path);
