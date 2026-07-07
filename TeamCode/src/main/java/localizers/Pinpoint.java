@@ -256,8 +256,10 @@ public class Pinpoint extends BaseLocalizer<Pinpoint.Config> {
          * @param reg   the register to write to
          * @param bytes the byte array to write
          */
-        private void writeByteArray(Register reg, byte[] bytes) {deviceClient.write(reg.bVal,
-                bytes);}
+        private void writeByteArray(Register reg, byte[] bytes) {
+            deviceClient.write(reg.bVal,
+                    bytes);
+        }
 
         /**
          * Writes a float to a register on the i2c device
@@ -376,7 +378,7 @@ public class Pinpoint extends BaseLocalizer<Pinpoint.Config> {
          * Can reverse the direction of each encoder.
          *
          * @param xEncoder FORWARD or REVERSED, X (forward) pod should increase when the robot is
-         *                moving forward
+         *                 moving forward
          * @param yEncoder FORWARD or REVERSED, Y (strafe) pod should increase when the robot is
          *                 moving left
          */

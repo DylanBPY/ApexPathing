@@ -14,7 +14,7 @@ import geometry.Pose;
  * </p>
  *
  * @param <T> the type of localizer configuration this drivetrain uses, which must extend
- * {@link BaseLocalizerConfig}
+ *            {@link BaseLocalizerConfig}
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
 public abstract class BaseLocalizer<T extends BaseLocalizerConfig<T>> {
@@ -38,7 +38,7 @@ public abstract class BaseLocalizer<T extends BaseLocalizerConfig<T>> {
      * configuration.
      *
      * @param config your localizer configuration object that is a child of
-     * {@link BaseLocalizerConfig}
+     *               {@link BaseLocalizerConfig}
      */
     public BaseLocalizer(T config) {this.config = config;}
 

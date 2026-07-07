@@ -4,7 +4,7 @@ package paths.constraint;
  * A marker interface for all path-based kinematic constraints.
  */
 public interface PathConstraint {
-    
+
     /**
      * @return The percentage along the path [0.0, 1.0] where this constraint becomes active.
      */

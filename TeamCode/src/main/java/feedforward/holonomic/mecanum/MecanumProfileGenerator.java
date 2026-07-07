@@ -12,14 +12,25 @@ import util.DistUnit;
 
 /**
  * Generates holonomic profiles for mecanum drives, including direction-specific limits.
+ * <p>
+ * Unlike ideal swerve, mecanum does not have equal authority in every robot-relative direction.
+ * The directional LUT scales velocity and acceleration costs so a diagonal/strafe-heavy segment
+ * gets a lower limit than an efficient forward segment.
  */
 public class MecanumProfileGenerator extends BaseProfileGenerator {
+    /** Avoids divide-by-zero and unstable comparisons near flat derivatives. */
     private static final double EPSILON = 1e-6;
-    private static final int VELOCITY_SEARCH_ITERATIONS = 7;
+    /** Number of binary-search steps used for local velocity ceilings. */
+    private static final int VELOCITY_SEARCH_ITERATIONS = 10;
 
+    /** Tuned physical and feedforward limits for the robot. */
     private final FollowerConstants config;
+    /** Direction-aware velocity/acceleration model for mecanum translation. */
     private final Mecanum.MecanumDirectionalLut limitCalculator;
 
+    /**
+     * Creates a mecanum profile generator for a path.
+     */
     public MecanumProfileGenerator(FollowerConstants config, Path path) {
         super.path = path;
         this.config = config;
@@ -56,11 +67,13 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
         double effectiveAngAccelLimit = Math.min(config.angularAccelerationLimit.getRad(),
                 maxAngAccel);
 
+        // Angular velocity limit: |f' * v| <= omega_max.
         if (Math.abs(fPrime) > EPSILON) {
             double maxVelFromOmega = effectiveAngVelLimit / Math.abs(fPrime);
             maxPhysicalVel = Math.min(maxPhysicalVel, maxVelFromOmega);
         }
 
+        // Angular acceleration limit at zero tangential accel: |f'' * v^2| <= alpha_max.
         if (Math.abs(fDoublePrime) > EPSILON) {
             double maxVelFromAlpha = Math.sqrt(effectiveAngAccelLimit / Math.abs(fDoublePrime));
             maxPhysicalVel = Math.min(maxPhysicalVel, maxVelFromAlpha);
@@ -83,6 +96,12 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
         return Math.min(min_v, maxPhysicalVel);
     }
 
+    /**
+     * Estimates normalized mecanum power for a local state.
+     * <p>
+     * Tangential and centripetal terms use different directional multipliers because the robot may
+     * be efficient along the tangent and inefficient along the normal, or vice versa.
+     */
     private double evaluatePower(double v, double a, double kappa, double fPrime,
                                  double fDoublePrime, DirectionalKinematics tangentKinematics,
                                  DirectionalKinematics normalKinematics) {
@@ -106,6 +125,9 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
         return transPower + latPower + rotPower;
     }
 
+    /**
+     * Evaluates drivetrain utilization for the segment ending at {@code current}.
+     */
     @Override
     protected void evaluatePoint(Path path, PathPoint prev, PathPoint current, double v_prev,
                                  double v, double a_t, EvaluationResult outResult) {
@@ -147,18 +169,31 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
         outResult.maxUtilization = outResult.totalPower;
     }
 
+    /**
+     * @return maximum braking acceleration allowed at this path sample
+     */
     @Override
     protected double getMaxTangentialAccel(double currentVel, PathPoint point, Path path,
                                            double maxAngAccel) {
         return calculateAngularLimitedTangentialAccel(currentVel, point, path, maxAngAccel, false);
     }
 
+    /**
+     * @return maximum positive acceleration allowed at this path sample
+     */
     @Override
     protected double calculateDynamicMaxAccel(double currentVel, PathPoint point, Path path,
                                               double maxAngAccel) {
         return calculateAngularLimitedTangentialAccel(currentVel, point, path, maxAngAccel, true);
     }
 
+    /**
+     * Limits tangential acceleration so heading acceleration stays inside angular constraints.
+     * <p>
+     * The same chain-rule relationship applies here:
+     * {@code alpha = f'' * v^2 + f' * a}. Directional mecanum acceleration then clamps the result
+     * further through {@code dirK.maxAccel}.
+     */
     private double calculateAngularLimitedTangentialAccel(double currentVel, PathPoint point,
                                                           Path path, double maxAngAccel,
                                                           boolean positiveAccel) {
@@ -198,6 +233,11 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
         return Math.min(maxPhysicalAccel, Math.max(0.0, angularLimitedAccel));
     }
 
+    /**
+     * Returns a unit-ish normal direction for centripetal acceleration at this point.
+     * <p>
+     * The sign of curvature decides which side of the tangent points toward the curve center.
+     */
     private Vector getNormalVector(PathPoint point) {
         double kappa = point.getSignedCurvature();
         if (Math.abs(kappa) < EPSILON) {
@@ -213,6 +253,9 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
         return Vector.of(-vy, vx, DistUnit.IN);
     }
 
+    /**
+     * Applies static friction in the direction implied by velocity, or acceleration from rest.
+     */
     private double signedStatic(double velocity, double accel, double kS) {
         if (Math.abs(velocity) > EPSILON) {
             return Math.signum(velocity) * kS;

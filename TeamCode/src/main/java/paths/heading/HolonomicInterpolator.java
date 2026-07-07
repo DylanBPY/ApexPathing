@@ -74,7 +74,8 @@ public class HolonomicInterpolator implements HeadingInterpolator {
                 break;
             case SMOOTH_START_TO_END:
                 // Full-path cubic ease-in/ease-out interpolation
-                double smoothU = (3.0 * pctTraveled * pctTraveled) - (2.0 * Math.pow(pctTraveled, 3));
+                double smoothU = (3.0 * pctTraveled * pctTraveled) - (2.0 * Math.pow(pctTraveled,
+                        3));
                 double diffRad = startHeading.getShortestAngleTo(endHeading).getRad();
                 baseHeading = Angle.fromRad(startHeading.getRad() + (diffRad * smoothU));
                 break;
@@ -112,7 +113,8 @@ public class HolonomicInterpolator implements HeadingInterpolator {
         } else if (style == HolonomicInterpolationStyle.SMOOTH_START_TO_END) {
             // Chain rule: d(theta)/ds_traveled = d(theta)/d(pct) * (1 / pathLength)
             double diffRad = startHeading.getShortestAngleTo(endHeading).getRad();
-            basePrime = diffRad * (6.0 * pctTraveled - 6.0 * pctTraveled * pctTraveled) / pathLength;
+            basePrime =
+                    diffRad * (6.0 * pctTraveled - 6.0 * pctTraveled * pctTraveled) / pathLength;
         } else if (style == HolonomicInterpolationStyle.NODE_BASED) {
             basePrime = headingSpline.getFirstDerivative(pctTraveled) * (1.0 / pathLength);
         }
@@ -139,7 +141,8 @@ public class HolonomicInterpolator implements HeadingInterpolator {
             double diffRad = startHeading.getShortestAngleTo(endHeading).getRad();
             baseDoublePrime = diffRad * (6.0 - 12.0 * pctTraveled) / (pathLength * pathLength);
         } else if (style == HolonomicInterpolationStyle.NODE_BASED) {
-            baseDoublePrime = headingSpline.getSecondDerivative(pctTraveled) * (1.0 / (pathLength * pathLength));
+            baseDoublePrime =
+                    headingSpline.getSecondDerivative(pctTraveled) * (1.0 / (pathLength * pathLength));
         }
 
         double u = getBlendU(s);

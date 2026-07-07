@@ -123,8 +123,10 @@ public class Path extends FollowerMovement {
      * the physical route the robot will drive.
      * * @param parametricPath The compiled path segment.
      */
-    public void setParametricPath(PathSegment parametricPath) {this.parametricPath =
-            parametricPath;}
+    public void setParametricPath(PathSegment parametricPath) {
+        this.parametricPath =
+                parametricPath;
+    }
 
     /**
      * Retrieves the geometric curve defining the physical route.
@@ -137,8 +139,10 @@ public class Path extends FollowerMovement {
      * at any point along the curve.
      * * @param interpolator The heading generation strategy.
      */
-    public void setInterpolator(HeadingInterpolator interpolator) {this.interpolator =
-            interpolator;}
+    public void setInterpolator(HeadingInterpolator interpolator) {
+        this.interpolator =
+                interpolator;
+    }
 
     /**
      * Retrieves the heading strategy for this path.
@@ -167,8 +171,10 @@ public class Path extends FollowerMovement {
      *
      * @param feedforwardLut The path's motion profile
      */
-    public void setFeedforwardLut(FeedforwardLut feedforwardLut) {this.feedforwardLut =
-            feedforwardLut;}
+    public void setFeedforwardLut(FeedforwardLut feedforwardLut) {
+        this.feedforwardLut =
+                feedforwardLut;
+    }
 
     /**
      * Determines if this path contains a generated motion profile.

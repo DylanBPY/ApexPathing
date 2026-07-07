@@ -36,7 +36,8 @@ public class PIDController extends Controller {
 
         /**
          * Creates a PIDCoefficients object with the given P and D values, with the I term
-         * set to 0. Check the {@link PIDController controller} documentation for what each coefficient
+         * set to 0. Check the {@link PIDController controller} documentation for what each
+         * coefficient
          * does.
          */
         public PIDCoefficients(double kP, double kD) {
@@ -77,7 +78,7 @@ public class PIDController extends Controller {
     }
 
     /**
-     * Resets the accumulated integral sum to zero. 
+     * Resets the accumulated integral sum to zero.
      * Call this when starting a new movement to prevent integral windup.
      */
     public void resetIntegral() {
@@ -88,17 +89,17 @@ public class PIDController extends Controller {
     protected double computeOutput(double error, double lastError, double deltaTime) {
         // Calculate Proportional
         double proportional = this.coeffs.kP * error;
-        
+
         // Calculate Integral (only accumulate if there's no time anomaly)
         if (!timeAnomalyDetected) {
             this.integralSum += error * deltaTime;
         }
         double integral = this.coeffs.kI * this.integralSum;
-        
+
         // Calculate Derivative
         double derivative = this.coeffs.kD * (timeAnomalyDetected ? 0.0 :
                 (error - lastError) / deltaTime);
-                
+
         return proportional + integral + derivative;
     }
 }

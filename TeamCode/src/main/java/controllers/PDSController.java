@@ -13,6 +13,7 @@ package controllers;
  * <p>
  * Special thanks to Wolfpack Machina (18438) for inspiration for this controller <3
  * </p>
+ *
  * @author Dylan B. - 18597 RoboClovers - Delta
  * @author DrPixelCat
  */
@@ -62,6 +63,7 @@ public class PDSController extends Controller {
      * @return the current {@link PDSCoefficients} being used by the controller
      */
     public PDSCoefficients getCoefficients() {return this.coeffs;}
+
     @Override
     protected double computeOutput(double error, double lastError, double deltaTime) {
         double proportional = this.coeffs.kP * error;

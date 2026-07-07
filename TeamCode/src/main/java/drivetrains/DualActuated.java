@@ -191,7 +191,7 @@ public class DualActuated extends BaseDrivetrain<DualActuated.Config> {
          * * @param name The hardware map name of the servo
          *
          * @param tractionPosition  The physical servo position for the high-traction state (e.g.
-         *                         locked or wheel deployed)
+         *                          locked or wheel deployed)
          * @param holonomicPosition The physical servo position for the holonomic state (e.g.
          *                          unlocked or wheel retracted)
          */

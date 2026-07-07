@@ -7,19 +7,36 @@ import geometry.Vector;
 import paths.movements.Path;
 
 /**
- * Generates path profiles for differential/tonk drives. We love tonk drives.
+ * Generates path profiles for differential/tank drives.
+ * <p>
+ * Tank drives spend the same left/right wheel voltage budget on forward motion and heading
+ * motion. This generator therefore treats forward and angular power as additive normalized
+ * utilization.
  */
 public class TankProfileGenerator extends BaseProfileGenerator {
+    /** Avoids division by zero when heading derivatives are nearly flat. */
     private static final double EPSILON = 1e-6;
-    private static final int VELOCITY_SEARCH_ITERATIONS = 7;
+    /** Number of binary-search steps used for velocity ceilings. */
+    private static final int VELOCITY_SEARCH_ITERATIONS = 10;
 
+    /** Tuned physical and feedforward limits for the robot. */
     private final FollowerConstants config;
 
+    /**
+     * Creates a tank profile generator for a path.
+     */
     public TankProfileGenerator(FollowerConstants config, Path path) {
         super.path = path;
         this.config = config;
     }
 
+    /**
+     * Computes the maximum path speed at one sample.
+     * <p>
+     * The heading interpolator supplies {@code dtheta/ds} and {@code d2theta/ds2}. Those convert
+     * path speed into heading speed and acceleration:
+     * {@code omega = f' * v} and {@code alpha = f'' * v^2} when tangential acceleration is zero.
+     */
     @Override
     protected double calculateMaxTangentialVelocity(PathPoint point,
                                                     Path path, double maxAngVel,
@@ -39,11 +56,13 @@ public class TankProfileGenerator extends BaseProfileGenerator {
         double effectiveAngAccelLimit = Math.min(config.angularAccelerationLimit.getRad(),
                 maxAngAccel);
 
+        // Angular velocity limit: |f' * v| <= omega_max, so v <= omega_max / |f'|.
         if (Math.abs(fPrime) > EPSILON) {
             double maxVelFromOmega = effectiveAngVelLimit / Math.abs(fPrime);
             maxPhysicalVel = Math.min(maxPhysicalVel, maxVelFromOmega);
         }
 
+        // Angular acceleration limit at zero tangential accel: |f'' * v^2| <= alpha_max.
         if (Math.abs(fDoublePrime) > EPSILON) {
             double maxVelFromAlpha = Math.sqrt(effectiveAngAccelLimit / Math.abs(fDoublePrime));
             maxPhysicalVel = Math.min(maxPhysicalVel, maxVelFromAlpha);
@@ -66,6 +85,13 @@ public class TankProfileGenerator extends BaseProfileGenerator {
         return Math.min(min_v, maxPhysicalVel);
     }
 
+    /**
+     * Estimates normalized tank power for a local state.
+     * <p>
+     * Translation uses {@code kV*v + kA*a + kS}. Heading uses the same structure with
+     * {@code omega} and {@code alpha}. The two absolute magnitudes are added because they share
+     * the same motor output budget.
+     */
     private double evaluatePower(double v, double a, double fPrime, double fDoublePrime) {
         double transPower = Math.abs(
                 (v * config.translationalKV)
@@ -83,6 +109,9 @@ public class TankProfileGenerator extends BaseProfileGenerator {
         return transPower + rotPower;
     }
 
+    /**
+     * Evaluates the final power/utilization at a path segment.
+     */
     @Override
     protected void evaluatePoint(Path path, PathPoint prev, PathPoint current, double v_prev,
                                  double v, double a_t, EvaluationResult outResult) {
@@ -115,18 +144,31 @@ public class TankProfileGenerator extends BaseProfileGenerator {
         outResult.maxUtilization = outResult.totalPower;
     }
 
+    /**
+     * @return maximum braking acceleration allowed at this path sample
+     */
     @Override
     protected double getMaxTangentialAccel(double currentVel, PathPoint point, Path path,
                                            double maxAngAccel) {
         return calculateAngularLimitedTangentialAccel(currentVel, point, path, maxAngAccel, false);
     }
 
+    /**
+     * @return maximum positive acceleration allowed at this path sample
+     */
     @Override
     protected double calculateDynamicMaxAccel(double currentVel, PathPoint point, Path path,
                                               double maxAngAccel) {
         return calculateAngularLimitedTangentialAccel(currentVel, point, path, maxAngAccel, true);
     }
 
+    /**
+     * Limits tangential acceleration so heading acceleration stays within bounds.
+     * <p>
+     * Since {@code alpha = f'' * v^2 + f' * a}, solving
+     * {@code -alphaMax <= alpha <= alphaMax} gives an allowed interval for {@code a}. The caller
+     * asks for either the positive side (accelerating) or the negative side (braking).
+     */
     private double calculateAngularLimitedTangentialAccel(double currentVel, PathPoint point,
                                                           Path path, double maxAngAccel,
                                                           boolean positiveAccel) {
@@ -162,6 +204,9 @@ public class TankProfileGenerator extends BaseProfileGenerator {
         return Math.min(maxPhysicalAccel, Math.max(0.0, angularLimitedAccel));
     }
 
+    /**
+     * Applies static friction in the direction that the controller must push.
+     */
     private double signedStatic(double velocity, double accel, double kS) {
         if (Math.abs(velocity) > EPSILON) {
             return Math.signum(velocity) * kS;

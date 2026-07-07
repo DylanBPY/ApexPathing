@@ -9,7 +9,6 @@ import feedforward.tank.TankProfileGenerator;
 import geometry.Angle;
 import geometry.ArcPose;
 import geometry.BSpline;
-import geometry.Dist;
 import geometry.PathSegment;
 import geometry.Pose;
 import geometry.Vector;
