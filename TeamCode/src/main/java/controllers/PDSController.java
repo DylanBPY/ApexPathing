@@ -34,6 +34,11 @@ public class PDSController extends Controller {
          * Creates a PDSCoefficients object with all coefficients set to 0.
          */
         public PDSCoefficients() { this(0.0, 0.0, 0.0, 0.0); }
+
+        public void setkP(double kP) { this.kP = kP; }
+        public void setkD(double kD) { this.kD = kD; }
+        public void setkS(double kS) { this.kS = kS; }
+        public void setkSDeadzone(double kSDeadzone) { this.kSDeadzone = kSDeadzone; }
     }
     // endregion
 
