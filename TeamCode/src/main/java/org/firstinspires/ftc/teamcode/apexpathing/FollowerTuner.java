@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.apexpathing;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -42,9 +43,9 @@ public class FollowerTuner extends LinearOpMode {
         tunerContext.loadFrom(defaults);
 
         boolean headingRun = defaults.headingCoeffs.kP != 0.0 || defaults.headingCoeffs.kD != 0.0 || defaults.headingCoeffs.kS != 0.0;
-        boolean translationRun = defaults.driveCoeffs.kP != 0.0 || defaults.driveCoeffs.kD != 0.0 || defaults.driveCoeffs.kS != 0.0;
-        boolean velocityFFRun = defaults.lateralKV != 0.0;
-        boolean accelRun = defaults.maxLateralAccel > 10.0;
+        boolean translationRun = defaults.translationalCoeffs.kP != 0.0 || defaults.translationalCoeffs.kD != 0.0 || defaults.translationalCoeffs.kS != 0.0;
+        boolean velocityFFRun = defaults.translationalKV != 0.0;
+        boolean accelRun = defaults.strafeAccelerationLimit.getIn() > 10.0;
 
         while (opModeInInit()) {
             telemetry.addLine("Robot Initialized");
