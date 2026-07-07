@@ -9,7 +9,7 @@ import localizers.BaseLocalizerConstants;
  * @author Dylan B. 18597 RoboClovers - Delta
  * @author Sohum Arora 22985 Paraducks
  */
-public abstract class ApexConfig {
+public abstract class ApexConstants {
     public abstract BaseDrivetrainConstants<?> drivetrainConstants();
 
     public abstract BaseLocalizerConstants<?> localizerConstants();

@@ -1,5 +1,6 @@
 package core;
 
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
@@ -23,7 +24,7 @@ import paths.movements.Turn;
  * @author Xander Haemel 31616 404 Not Found
  */
 public class Follower {
-    private final FollowerConstants config;
+    private final FollowerConstants constants;
     private final BaseDrivetrain<?> drivetrain;
     private final BaseLocalizer<?> localizer;
 
@@ -32,10 +33,13 @@ public class Follower {
     private final double velocityLimit; // Inches per second
     private final double velocityS;
 
-    private final PDSController headingController;
-    private final PDSController lateralController;
-    private final PDSController driveController;
-    private final PDSController velocityController;
+    public final PDSController headingController;
+    public final PDSController translationalController;
+    public final PDSController driveController;
+    public final PDSController velocityController;
+    private boolean headingControllerEnabled = true;
+    private boolean translationalControllerEnabled = true;
+    private boolean driveControllerEnabled = true;
 
     private FollowerMovement currentMovement = null;
     private boolean paused = false;
@@ -45,21 +49,21 @@ public class Follower {
     Angle targetHeading;
     Vector targetTurnPoseVec;
 
-    /** Constructs the drivetrain, localizer, and follower from the given {@link ApexConfig}. */
-    public Follower(ApexConfig config, HardwareMap hardwareMap) {
-        this.drivetrain = config.drivetrainConfig().build(hardwareMap);
-        this.localizer = config.localizerConfig().build(hardwareMap);
-        this.config = config.followerConfig();
+    /** Constructs the drivetrain, localizer, and follower from the given {@link ApexConstants}. */
+    public Follower(ApexConstants constants, HardwareMap hardwareMap) {
+        this.drivetrain = constants.drivetrainConstants().build(hardwareMap);
+        this.localizer = constants.localizerConstants().build(hardwareMap);
+        this.constants = new FollowerConstants();
 
-        this.headingTol = this.config.headingTolerance.getRad();
-        this.distanceTol = this.config.distanceTolerance.getIn();
-        this.velocityLimit = this.config.velocityLimit.getIn();
+        this.headingTol = this.constants.headingTolerance.getRad();
+        this.distanceTol = this.constants.distanceTolerance.getIn();
+        this.velocityLimit = this.constants.velocityLimit.getIn();
 
-        this.headingController = new PDSController(this.config.headingCoeffs);
+        this.headingController = new PDSController(this.constants.headingCoeffs);
         this.headingController.setAngularController();
-        this.lateralController = new PDSController(this.config.lateralCoeffs);
-        this.driveController = new PDSController(this.config.driveCoeffs);
-        this.velocityController = new PDSController(this.config.velocityCoeffs);
+        this.translationalController = new PDSController(this.constants.translationalCoeffs);
+        this.driveController = new PDSController(this.constants.driveCoeffs);
+        this.velocityController = new PDSController(this.constants.velocityCoeffs);
 
         this.velocityS = driveController.getCoefficients().kS;
     }
@@ -74,8 +78,10 @@ public class Follower {
         Pose current = getPose();
         Vector currentPos = current.getPos();
         Angle currentHeading = current.getHeading();
+
         double headingError = targetHeading.getShortestAngleTo(currentHeading).getRad();
-        double turnPower = headingController.calculateFromError(headingError);
+        double turnPower = headingControllerEnabled ?
+                headingController.calculateFromError(headingError) : 0;
 
         if (currentMovement instanceof Turn) {
             if (Math.abs(headingError) < headingTol) {
@@ -85,7 +91,7 @@ public class Follower {
             Vector error = targetTurnPoseVec.minus(currentPos);
             double errorMag = error.getMag().getIn();
             if (errorMag > 0) {
-                double lateralPower = lateralController.calculateFromError(errorMag);
+                double lateralPower = translationalController.calculateFromError(errorMag);
                 Vector feedback = error.normalize().times(lateralPower);
                 drivetrain.drive(feedback.getX().getIn(), feedback.getY().getIn(), turnPower);
             } else {
@@ -112,13 +118,16 @@ public class Follower {
 
             // Project field error onto the normal vector to isolate lateral drift
             Vector fieldError = targetPoseVec.minus(currentPos);
-            double crossTrackError = fieldError.dot(normal).getIn();
-            double lateralFeedbackMag = lateralController.calculateFromError(crossTrackError);
+            double lateralFeedbackMag = 0.0;
+            if (translationalControllerEnabled) {
+                double crossTrackError = fieldError.dot(normal).getIn();
+                lateralFeedbackMag = translationalController.calculateFromError(crossTrackError);
+            }
 
             // Required inward acceleration based on ACTUAL current speed
             double radius = PathSegment.calculateRadiusOfCurvature(velVec, accelVec);
             double requiredLateralAccel = (robotVelMag * robotVelMag) / radius;
-            double centripetalMag = requiredLateralAccel / config.maxLateralAccel;
+            double centripetalMag = requiredLateralAccel / constants.maxTranslationalAccel;
 
             // Combine centripetal feedforward and corrective feedback
             double netLateralMag = centripetalMag + lateralFeedbackMag;
@@ -130,7 +139,7 @@ public class Follower {
             // Cap the desired speed if the upcoming curve is too sharp
             double desiredVelocity = velocityLimit;
             if (radius != Double.POSITIVE_INFINITY) {
-                double maxSafeVelocity = Math.sqrt(config.maxLateralAccel * radius);
+                double maxSafeVelocity = Math.sqrt(constants.maxTranslationalAccel * radius);
                 if (desiredVelocity > maxSafeVelocity) {
                     desiredVelocity = maxSafeVelocity;
                 }
@@ -146,35 +155,41 @@ public class Follower {
             Vector unitTangent = velVec.normalize();
 
             double feedforward = 0.0;
-            double tangentFeedbackMag;
-            if (t < 1.0) {
-                feedforward = (config.lateralKV * desiredVelocity) + (config.lateralKA * requiredAccel) + velocityS;
+            double tangentFeedbackMag = 0.0;
+            double totalTangentPower = 0.0;
+            if (driveControllerEnabled) {
+                if (t < 1.0) {
+                    feedforward = (constants.translationalKV * desiredVelocity) +
+                            (constants.translationalKA * requiredAccel) + velocityS;
 
-                double alongTrackError = fieldError.dot(unitTangent).getIn();
-                tangentFeedbackMag = driveController.calculateFromError(alongTrackError);
-            } else { // Infinite line fallback for end of path
-                Vector endPos = segment.getPosition(1.0);
-                Vector endTangent = segment.getFirstDerivative(1.0).normalize();
-                Vector endToRobot = currentPos.minus(endPos);
+                    double alongTrackError = fieldError.dot(unitTangent).getIn();
+                    tangentFeedbackMag = driveController.calculateFromError(alongTrackError);
+                } else { // Infinite line fallback for end of path
+                    Vector endPos = segment.getPosition(1.0);
+                    Vector endTangent = segment.getFirstDerivative(1.0).normalize();
+                    Vector endToRobot = currentPos.minus(endPos);
 
-                double distancePastEnd = endToRobot.dot(endTangent).getIn();
-                tangentFeedbackMag = driveController.calculateFromError(-distancePastEnd);
+                    double distancePastEnd = endToRobot.dot(endTangent).getIn();
+                    tangentFeedbackMag = driveController.calculateFromError(-distancePastEnd);
+                }
+
+                // Calculate the velocity feedback and safely append the Feedforward and kS
+                double velocityFeedback = velocityController.calculateFromError(
+                        desiredVelocity - robotVelMag
+                ) + feedforward;
+
+                // Cap the spatial position request with the velocity ceiling
+                totalTangentPower = Math.abs(velocityFeedback) < Math.abs(tangentFeedbackMag)
+                        ? velocityFeedback : tangentFeedbackMag;
+                totalTangentPower = Range.clip(totalTangentPower, -availableMotorPower, availableMotorPower);
             }
-
-            // Calculate the velocity feedback and safely append the Feedforward and kS
-            double velocityFeedback = velocityController.calculateFromError(desiredVelocity - robotVelMag) + feedforward;
-
-            // Cap the spatial position request with the velocity ceiling
-            double totalTangentPower = Math.abs(velocityFeedback) < Math.abs(tangentFeedbackMag)
-                    ? velocityFeedback : tangentFeedbackMag;
-            totalTangentPower = Range.clip(totalTangentPower, -availableMotorPower, availableMotorPower);
 
             // Apply the power scalar to the purely directional unit tangent
             Vector tangentDriveVec = unitTangent.times(totalTangentPower);
             Vector driveOutput = tangentDriveVec.plus(lateralDriveVec);
 
             double distanceRemaining = segment.getDistanceToEndIn(targetPoseVec, t);
-            if (t >= config.tTolerance && distanceRemaining < distanceTol) {
+            if (t >= constants.tTolerance && distanceRemaining < distanceTol) {
                 this.stop(); return;
             }
 
@@ -216,7 +231,7 @@ public class Follower {
         }
 
         this.headingController.reset();
-        this.lateralController.reset();
+        this.translationalController.reset();
         this.driveController.reset();
         this.velocityController.reset();
     }
@@ -234,6 +249,7 @@ public class Follower {
 
         this.drivetrain.stop();
     }
+
     /** Stops the drivetrain and any ongoing movement. The busy state will remain true. */
     public void pause() {
         this.paused = true;
@@ -250,31 +266,29 @@ public class Follower {
 
     // region TeleOp methods
     /**
-     * Drives the robot using the provided joystick inputs and robot heading. The joystick inputs
-     * are adjusted for field-centric or robot-centric control based on the constants. This method
-     * will stop the current movement if one is in progress, as manual control takes priority over
-     * following a path.
+     * Drives the robot using the provided  inputs. The joystick inputs are adjusted for
+     * field-centric or robot-centric control based on the constants. This method  will stop the
+     * current movement if one is in progress, as manual control takes priority over following a path.
      *
      * @param x the left/right joystick input (positive for right, negative for left)
      * @param y the forward/backward joystick input (positive for forward, negative for backward)
      * @param turn the rotation joystick input (positive for clockwise, negative for counterclockwise)
-     * @param robotHeading the current heading of the robot in radians, not used for robot centric control
      */
-    public void teleOpDrive(double x, double y, double turn, double robotHeading) {
+    public void teleOpDrive(double x, double y, double turn) {
         if (isBusy()) { stop(); }
-        drivetrain.drive(x, y, turn, robotHeading);
+        drivetrain.drive(x, y, turn, this.getPose().getHeading().getRad());
     }
 
     /**
-     * Drives the robot using the provided joystick inputs. Constants are ignored and robot centric
-     * is used because no heading is passed. This method will stop the current movement if one is in
-     * progress.
-     *
-     * @param x the left/right joystick input (positive for right, negative for left)
-     * @param y the forward/backward joystick input (positive for forward, negative for backward)
-     * @param turn the rotation joystick input (positive for clockwise, negative for counterclockwise)
+     * Drives the robot using standard gamepad inputs. The left stick controls translation (x and y),
+     * and the right stick controls rotation (turn). The joystick inputs are adjusted for
+     * field-centric or robot-centric control based on the constants. This method will stop the
+     * current movement if one is in progress, as manual control takes priority over following a path.
+     * @param gamepad the gamepad to read inputs from
      */
-    public void teleOpDrive(double x, double y, double turn) { teleOpDrive(x, y, turn, 0); }
+    public void teleOpDrive(Gamepad gamepad) {
+        teleOpDrive(-gamepad.left_stick_x, -gamepad.left_stick_y, -gamepad.right_stick_x);
+    }
     // endregion
 
     // region Localizer passthrough methods
@@ -299,5 +313,28 @@ public class Follower {
      * @return the robot's current acceleration estimate from the localizer
      */
     public Pose getAcceleration() { return localizer.getAccel(); }
+
+    public void disableHeadingController() { this.headingControllerEnabled = false; }
+    public void disableTranslationalController() { this.translationalControllerEnabled = false; }
+    public void disableDriveController() { this.driveControllerEnabled = false; }
+    public void disableAllControllers() {
+        disableHeadingController();
+        disableTranslationalController();
+        disableDriveController();
+    }
+
+    /**
+     * DO NOT USE THIS METHOD UNLESS YOU KNOW WHAT YOU ARE DOING.
+     * It is intended for internal use only.
+     */
+    public BaseLocalizer<?> getLocalizer() { return localizer; }
+
+    /**
+     * DO NOT USE THIS METHOD UNLESS YOU KNOW WHAT YOU ARE DOING.
+     * It is intended for internal use only.
+     */
+    public BaseDrivetrain<?> getDrivetrain() { return drivetrain; }
+
+    public FollowerConstants getConstants() { return constants; }
     // endregion
 }
