@@ -17,7 +17,7 @@ import util.MotorFactory;
  *
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
-public abstract class BaseDrivetrainConfig<T extends BaseDrivetrainConfig<T>> {
+public abstract class BaseDrivetrainConstants<T extends BaseDrivetrainConstants<T>> {
     // Motors (only 2 motors are guaranteed, others are optional and may be null)
     // Child classes should handle setting these up as needed
     public MotorFactory flMotorConfig = new MotorFactory();

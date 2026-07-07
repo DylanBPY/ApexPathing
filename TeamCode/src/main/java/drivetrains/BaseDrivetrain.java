@@ -15,10 +15,10 @@ import java.util.Objects;
  * translated into motor powers.
  * </p>
  *
- * @param <T> the type of drivetrain configuration this drivetrain uses, which must extend {@link BaseDrivetrainConfig}
+ * @param <T> the type of drivetrain configuration this drivetrain uses, which must extend {@link BaseDrivetrainConstants}
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
-public abstract class BaseDrivetrain<T extends BaseDrivetrainConfig<T>> {
+public abstract class BaseDrivetrain<T extends BaseDrivetrainConstants<T>> {
     protected T config;
 
     // Note: front motors are guaranteed to be non-null, but rear motors may be null if not needed
@@ -34,7 +34,7 @@ public abstract class BaseDrivetrain<T extends BaseDrivetrainConfig<T>> {
     /**
      * Your drivetrain class constructor should call this super constructor to initialize motors and
      * store the configuration.
-     * @param config your drivetrain configuration object that is a child of {@link BaseDrivetrainConfig}
+     * @param config your drivetrain configuration object that is a child of {@link BaseDrivetrainConstants}
      * @param hardwareMap the hardware map to use for initializing motors
      */
     public BaseDrivetrain(T config, HardwareMap hardwareMap) {
@@ -80,13 +80,13 @@ public abstract class BaseDrivetrain<T extends BaseDrivetrainConfig<T>> {
      * @param x the forward/backward joystick input (positive for forward, negative for backward)
      * @param y the left/right joystick input (positive for left, negative for right)
      * @param turn the rotation joystick input (positive for counterclockwise, negative for clockwise)
-     * @param robotHeading the current heading of the robot in radians, not used for robot centric control
+     * @param robotHeadingRad the current heading of the robot in radians, not used for robot centric control
      */
-    public void drive(double x, double y, double turn, double robotHeading) {
+    public void drive(double x, double y, double turn, double robotHeadingRad) {
         double adjX, adjY;
         if (!config.robotCentric) { // Field centric
-            double cos = Math.cos(-robotHeading);
-            double sin = Math.sin(-robotHeading);
+            double cos = Math.cos(-robotHeadingRad);
+            double sin = Math.sin(-robotHeadingRad);
             adjX = x * cos - y * sin;
             adjY = x * sin + y * cos;
         } else { adjX = x; adjY = y; }

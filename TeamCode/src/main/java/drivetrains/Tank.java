@@ -9,8 +9,8 @@ import util.MotorFactory;
  *
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
-public class Tank extends BaseDrivetrain<Tank.Config> {
-    public Tank(Config config, HardwareMap hardwareMap) { super(config, hardwareMap); }
+public class Tank extends BaseDrivetrain<Tank.Constants> {
+    public Tank(Constants config, HardwareMap hardwareMap) { super(config, hardwareMap); }
 
     @Override
     public void moveWithVectors(double x, double y, double turn) {
@@ -21,27 +21,27 @@ public class Tank extends BaseDrivetrain<Tank.Config> {
     }
 
     /** Configuration class for Tank drivetrain. */
-    public static class Config extends BaseDrivetrainConfig<Config> {
+    public static class Constants extends BaseDrivetrainConstants<Constants> {
         @Override
         public Tank build(HardwareMap hardwareMap) { return new Tank(this, hardwareMap); }
 
         /** Sets the front left motor configuration. */
-        public Config setFrontLeftMotor(MotorFactory motorFactory) {
+        public Constants setFrontLeftMotor(MotorFactory motorFactory) {
             this.flMotorConfig = motorFactory; return this;
         }
 
         /** Sets the front right motor configuration. */
-        public Config setFrontRightMotor(MotorFactory motorFactory) {
+        public Constants setFrontRightMotor(MotorFactory motorFactory) {
             this.frMotorConfig = motorFactory; return this;
         }
 
         /** Sets the back left motor configuration. Do not use this for 2 wheel tank */
-        public Config setBackLeftMotor(MotorFactory motorFactory) {
+        public Constants setBackLeftMotor(MotorFactory motorFactory) {
             this.blMotorConfig = motorFactory; return this;
         }
 
         /** Sets the back right motor configuration. Do not use this for 2 wheel tank */
-        public Config setBackRightMotor(MotorFactory motorFactory) {
+        public Constants setBackRightMotor(MotorFactory motorFactory) {
             this.brMotorConfig = motorFactory; return this;
         }
     }

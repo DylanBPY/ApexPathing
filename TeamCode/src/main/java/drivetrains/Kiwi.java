@@ -11,10 +11,10 @@ import util.MotorFactory;
  *
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
-public class Kiwi extends BaseDrivetrain<Kiwi.Config> {
+public class Kiwi extends BaseDrivetrain<Kiwi.Constants> {
     private final double sqrt3over2 = Math.sqrt(3) / 2; // Precompute this constant for efficiency
 
-    public Kiwi(Config config, HardwareMap hardwareMap) {
+    public Kiwi(Constants config, HardwareMap hardwareMap) {
         super(config, hardwareMap);
 
         if (Objects.equals(config.blMotorConfig, null)) {
@@ -36,22 +36,22 @@ public class Kiwi extends BaseDrivetrain<Kiwi.Config> {
     }
 
     /** Configuration class for Kiwi/Killough/Thee-Wheel Omni drivetrain. */
-    public static class Config extends BaseDrivetrainConfig<Config> {
+    public static class Constants extends BaseDrivetrainConstants<Constants> {
         @Override
         public Kiwi build(HardwareMap hardwareMap) { return new Kiwi(this, hardwareMap); }
 
         /** Sets the front left motor configuration. */
-        public Config setFrontLeftMotor(MotorFactory motorFactory) {
+        public Constants setFrontLeftMotor(MotorFactory motorFactory) {
             this.flMotorConfig = motorFactory; return this;
         }
 
         /** Sets the front right motor configuration. */
-        public Config setFrontRightMotor(MotorFactory motorFactory) {
+        public Constants setFrontRightMotor(MotorFactory motorFactory) {
             this.frMotorConfig = motorFactory; return this;
         }
 
         /** Sets the back motor configuration. */
-        public Config setBackMotor(MotorFactory motorFactory) {
+        public Constants setBackMotor(MotorFactory motorFactory) {
             this.blMotorConfig = motorFactory; return this; // Uses the back left motor object
         }
     }

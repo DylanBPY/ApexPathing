@@ -18,7 +18,7 @@ import util.MotorFactory;
  * @author Xander Haemel - 31616 404 Not Found
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
-public class CoaxialSwerve extends BaseDrivetrain<CoaxialSwerve.Config> {
+public class CoaxialSwerve extends BaseDrivetrain<CoaxialSwerve.Constants> {
     private final static double pi2 = 2 * Math.PI;
     private final static double piOver2 = Math.PI / 2;
 
@@ -30,7 +30,7 @@ public class CoaxialSwerve extends BaseDrivetrain<CoaxialSwerve.Config> {
 
     private double lastFlError = 0, lastFrError = 0, lastBlError = 0, lastBrError = 0;
 
-    public CoaxialSwerve(Config config, HardwareMap hardwareMap) {
+    public CoaxialSwerve(Constants config, HardwareMap hardwareMap) {
         super(config, hardwareMap);
 
         // Make sure all motors, servos, and encoders are configured (front motors are checked in super())
@@ -138,7 +138,7 @@ public class CoaxialSwerve extends BaseDrivetrain<CoaxialSwerve.Config> {
     }
 
     /** Configuration class for Mecanum drivetrain. */
-    public static class Config extends BaseDrivetrainConfig<Config> {
+    public static class Constants extends BaseDrivetrainConstants<Constants> {
         public String flServoName, frServoName, blServoName, brServoName = "defaultServoName";
         public String flEncoderName, frEncoderName, blEncoderName, brEncoderName = "defaultEncoderName";
 
@@ -161,54 +161,54 @@ public class CoaxialSwerve extends BaseDrivetrain<CoaxialSwerve.Config> {
         }
 
         /** Sets the front left motor configuration. */
-        public Config setFrontLeftMotor(MotorFactory motorFactory) {
+        public Constants setFrontLeftMotor(MotorFactory motorFactory) {
             this.flMotorConfig = motorFactory; return this;
         }
 
         /** Sets the front right motor configuration. */
-        public Config setFrontRightMotor(MotorFactory motorFactory) {
+        public Constants setFrontRightMotor(MotorFactory motorFactory) {
             this.frMotorConfig = motorFactory; return this;
         }
 
         /** Sets the back left motor configuration. */
-        public Config setBackLeftMotor(MotorFactory motorFactory) {
+        public Constants setBackLeftMotor(MotorFactory motorFactory) {
             this.blMotorConfig = motorFactory; return this;
         }
 
         /** Sets the back right motor configuration. */
-        public Config setBackRightMotor(MotorFactory motorFactory) {
+        public Constants setBackRightMotor(MotorFactory motorFactory) {
             this.brMotorConfig = motorFactory; return this;
         }
 
         /** Sets the names of the steering servos. */
-        public Config setServoNames(String fl, String fr, String bl, String br) {
+        public Constants setServoNames(String fl, String fr, String bl, String br) {
             this.flServoName = fl; this.frServoName = fr;
             this.blServoName = bl; this.brServoName = br; return this;
         }
 
         /** Sets the names of the steering encoders. */
-        public Config setEncoderNames(String fl, String fr, String bl, String br) {
+        public Constants setEncoderNames(String fl, String fr, String bl, String br) {
             this.flEncoderName = fl; this.frEncoderName = fr;
             this.blEncoderName = bl; this.brEncoderName = br; return this;
         }
 
         /** Sets the coefficients for the steering PDS controllers. */
-        public Config setSteeringCoefficients(PDSCoefficients coefficients) {
+        public Constants setSteeringCoefficients(PDSCoefficients coefficients) {
             this.steeringCoefficients = coefficients; return this;
         }
 
         /** Sets the encoders reported angle when the wheel is facing forward. */
-        public Config setOffsetAngle(Angle offsetAngle) {
+        public Constants setOffsetAngle(Angle offsetAngle) {
             this.offsetAngle = offsetAngle; return this;
         }
 
         /** Sets the wheelbase of the chassis (front to back pod wheel spacing). */
-        public Config setWheelbase(Dist wheelbase) {
+        public Constants setWheelbase(Dist wheelbase) {
             this.wheelbase = wheelbase; return this;
         }
 
         /** Sets the track width of the chassis (left to right pod wheel spacing). */
-        public Config setTrackWidth(Dist trackWidth) {
+        public Constants setTrackWidth(Dist trackWidth) {
             this.trackWidth = trackWidth; return this;
         }
     }

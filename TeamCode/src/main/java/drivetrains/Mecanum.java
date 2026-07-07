@@ -11,8 +11,8 @@ import util.MotorFactory;
  *
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
-public class Mecanum extends BaseDrivetrain<Mecanum.Config> {
-    public Mecanum(Config config, HardwareMap hardwareMap) {
+public class Mecanum extends BaseDrivetrain<Mecanum.Constants> {
+    public Mecanum(Constants config, HardwareMap hardwareMap) {
         super(config, hardwareMap);
 
         if (Objects.equals(config.blMotorConfig, null) || Objects.equals(config.brMotorConfig, null)) {
@@ -31,27 +31,27 @@ public class Mecanum extends BaseDrivetrain<Mecanum.Config> {
     }
 
     /** Configuration class for Mecanum drivetrain. */
-    public static class Config extends BaseDrivetrainConfig<Config> {
+    public static class Constants extends BaseDrivetrainConstants<Constants> {
         @Override
         public Mecanum build(HardwareMap hardwareMap) { return new Mecanum(this, hardwareMap); }
 
         /** Sets the front left motor configuration. */
-        public Config setFrontLeftMotor(MotorFactory motorFactory) {
+        public Constants setFrontLeftMotor(MotorFactory motorFactory) {
             this.flMotorConfig = motorFactory; return this;
         }
 
         /** Sets the front right motor configuration. */
-        public Config setFrontRightMotor(MotorFactory motorFactory) {
+        public Constants setFrontRightMotor(MotorFactory motorFactory) {
             this.frMotorConfig = motorFactory; return this;
         }
 
         /** Sets the back left motor configuration. */
-        public Config setBackLeftMotor(MotorFactory motorFactory) {
+        public Constants setBackLeftMotor(MotorFactory motorFactory) {
             this.blMotorConfig = motorFactory; return this;
         }
 
         /** Sets the back right motor configuration. */
-        public Config setBackRightMotor(MotorFactory motorFactory) {
+        public Constants setBackRightMotor(MotorFactory motorFactory) {
             this.brMotorConfig = motorFactory; return this;
         }
     }
