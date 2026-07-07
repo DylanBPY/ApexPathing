@@ -17,9 +17,9 @@ public class MecanumDriveController {
 
     /**
      * @param maxForwardVelocity The maximum forward velocity of the robot
-     * @param maxStrafeVelocity The maximum strafe velocity of the robot
-     * @param PDSCoefficients The coefficients for the PDkS controller
-     * @param tolerance The distance at which power is no longer applied
+     * @param maxStrafeVelocity  The maximum strafe velocity of the robot
+     * @param PDSCoefficients    The coefficients for the PDkS controller
+     * @param tolerance          The distance at which power is no longer applied
      */
     public MecanumDriveController(Dist maxForwardVelocity, Dist maxStrafeVelocity,
                                   PDSController.PDSCoefficients PDSCoefficients, Dist tolerance) {

@@ -9,13 +9,23 @@ import paths.movements.Path;
 /**
  * Generates time-optimal motion profiles for Swerve drivetrains by evaluating
  * continuous voltage saturation constraints algebraically.
+ * <p>
+ * Swerve can point its traction vector, so translational tangent and normal power combine like a
+ * vector. Heading power is still added because steering the robot body consumes the same normalized
+ * power budget.
  */
 public class SwerveProfileGenerator extends BaseProfileGenerator {
+    /** Avoids divide-by-zero and unstable comparisons near flat derivatives. */
     private static final double EPSILON = 1e-6;
+    /** Number of binary-search steps used for local velocity ceilings. */
     private static final int VELOCITY_SEARCH_ITERATIONS = 10;
 
+    /** Tuned physical and feedforward limits for the robot. */
     private final FollowerConstants config;
 
+    /**
+     * Creates a swerve profile generator for a path.
+     */
     public SwerveProfileGenerator(FollowerConstants config, Path path) {
         super.path = path;
         this.config = config;
@@ -44,6 +54,7 @@ public class SwerveProfileGenerator extends BaseProfileGenerator {
         double max_v = maxPhysicalVel;
 
         // Solve the velocity ceiling numerically because heading acceleration depends on v^2.
+        // At zero tangential acceleration, alpha = f'' * v^2.
         for (int i = 0; i < VELOCITY_SEARCH_ITERATIONS; i++) {
             double mid_v = (min_v + max_v) / 2.0;
             double omega = fPrime * mid_v;
@@ -84,6 +95,12 @@ public class SwerveProfileGenerator extends BaseProfileGenerator {
 
     /**
      * Calculates the theoretical total motor power required to execute a given kinematic state.
+     *
+     * @param vel path-relative velocity
+     * @param accel path-relative acceleration
+     * @param path path being sampled
+     * @param point sample to evaluate
+     * @return normalized utilization, where 1.0 is full available power
      */
     protected double calculatePowerUtilization(double vel, double accel, Path path, PathPoint point) {
         EvaluationResult result = new EvaluationResult();
@@ -97,6 +114,14 @@ public class SwerveProfileGenerator extends BaseProfileGenerator {
         evaluateState(path, current, v, a_t, outResult);
     }
 
+    /**
+     * Fills a utilization result for one swerve state.
+     * <p>
+     * Tangential power comes from speed and tangential acceleration. Normal power is the
+     * centripetal term {@code v^2 * kappa}, scaled by the tuned centripetal coefficient. Heading
+     * demand follows the chain-rule formulas {@code omega = f'v} and
+     * {@code alpha = f''v^2 + f'a}.
+     */
     private void evaluateState(Path path, PathPoint point, double vel, double accel,
                                EvaluationResult outResult) {
         double s = point.getDistanceToEnd_in();
@@ -130,6 +155,13 @@ public class SwerveProfileGenerator extends BaseProfileGenerator {
         outResult.maxUtilization = outResult.totalPower;
     }
 
+    /**
+     * Computes the tangential acceleration cap imposed by angular acceleration limits.
+     * <p>
+     * Rearranging {@code alpha = f'' * v^2 + f' * a} gives a legal interval for {@code a}. This
+     * method returns the positive side for acceleration passes or the negative side for braking
+     * passes, always clamped by the physical forward acceleration limit.
+     */
     private double calculateAngularLimitedTangentialAccel(double currentVel, PathPoint point,
                                                           Path path, double maxAngAccel,
                                                           boolean positiveAccel) {
@@ -164,6 +196,9 @@ public class SwerveProfileGenerator extends BaseProfileGenerator {
         return Math.min(maxPhysicalAccel, Math.max(0.0, angularLimitedAccel));
     }
 
+    /**
+     * Applies static friction in the direction implied by velocity, or acceleration from rest.
+     */
     private double signedStatic(double velocity, double accel, double kS) {
         if (Math.abs(velocity) > EPSILON) {
             return Math.signum(velocity) * kS;

@@ -5,7 +5,7 @@ import geometry.Angle;
 public class AngularConstraint implements PathConstraint {
     private double s;
     private final ConstraintType type;
-    
+
     private final double value_rad;
 
     public AngularConstraint(double s, ConstraintType type, Angle value) {
