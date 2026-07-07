@@ -52,6 +52,7 @@ public class TankProfileGenerator extends BaseProfileGenerator {
         double min_v = 0.0;
         double max_v = maxPhysicalVel;
 
+        // Rotation power depends on the path heading derivatives, so search the usable top speed.
         for (int i = 0; i < VELOCITY_SEARCH_ITERATIONS; i++) {
             double mid_v = (min_v + max_v) / 2.0;
 
@@ -94,6 +95,7 @@ public class TankProfileGenerator extends BaseProfileGenerator {
         double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa,
                 finalTangent);
 
+        // Tank translation and rotation share the same drivetrain output budget.
         double omega = fPrime * v;
         double alpha = (fDoublePrime * (v * v)) + (fPrime * a_t);
 
@@ -146,6 +148,7 @@ public class TankProfileGenerator extends BaseProfileGenerator {
 
         double alphaBase = fDoublePrime * currentVel * currentVel;
         if (Math.abs(fPrime) < EPSILON) {
+            // If heading does not depend on distance here, accel cannot trade against alpha.
             return Math.abs(alphaBase) <= effectiveAngAccelLimit + EPSILON
                     ? maxPhysicalAccel : 0.0;
         }

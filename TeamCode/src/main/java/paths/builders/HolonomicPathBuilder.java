@@ -306,6 +306,7 @@ public class HolonomicPathBuilder {
             if (!Double.isFinite(startH.getRad())) {
                 currentStyle = HolonomicInterpolationStyle.TANGENT_FORWARD;
             } else {
+                // Resolve once here so the runtime interpolator only handles concrete headings.
                 Vector startTangent = curve.getFirstDerivative(0.0);
                 double fwdError =
                         Math.abs(startH.getShortestAngleTo(startTangent.getTheta()).getRad());

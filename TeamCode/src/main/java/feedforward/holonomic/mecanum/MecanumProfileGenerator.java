@@ -49,6 +49,7 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
         DirectionalKinematics dirK = limitCalculator.getKinematics(tangent, headingAtPoint);
         DirectionalKinematics normalK = limitCalculator.getKinematics(getNormalVector(point),
                 headingAtPoint);
+        // Mecanum limits depend on robot-relative direction, so tangent and normal loads differ.
         double maxPhysicalVel = dirK.maxVel;
 
         double effectiveAngVelLimit = Math.min(config.angularVelocityLimit.getRad(), maxAngVel);
@@ -68,6 +69,7 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
         double min_v = 0.0;
         double max_v = maxPhysicalVel;
 
+        // Directional multipliers make the closed-form limit messy; binary search is cheap here.
         for (int i = 0; i < VELOCITY_SEARCH_ITERATIONS; i++) {
             double mid_v = (min_v + max_v) / 2.0;
 
@@ -84,6 +86,7 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
     private double evaluatePower(double v, double a, double kappa, double fPrime,
                                  double fDoublePrime, DirectionalKinematics tangentKinematics,
                                  DirectionalKinematics normalKinematics) {
+        // Apply the LUT as power cost multipliers instead of pretending strafe is as efficient.
         double boostedKV = config.translationalKV * tangentKinematics.velMultiplier;
         double boostedKA = config.translationalKA * tangentKinematics.accelMultiplier;
         double transPower = (v * boostedKV)
@@ -181,6 +184,7 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
 
         double alphaBase = fDoublePrime * currentVel * currentVel;
         if (Math.abs(fPrime) < EPSILON) {
+            // With no dtheta/ds term, tangential accel cannot reduce angular acceleration.
             return Math.abs(alphaBase) <= effectiveAngAccelLimit + EPSILON
                     ? maxPhysicalAccel : 0.0;
         }
@@ -200,6 +204,7 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
             return Vector.zero();
         }
 
+        // Normal force points toward the curve center; sign follows signed curvature.
         double vx = point.getFirstDerivative().getX().getIn();
         double vy = point.getFirstDerivative().getY().getIn();
         if (kappa < 0.0) {
