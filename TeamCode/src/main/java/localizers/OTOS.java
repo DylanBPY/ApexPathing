@@ -46,7 +46,7 @@ public class OTOS extends BaseLocalizer<OTOS.Constants> {
         otos.setPosition(newPose);
     }
 
-    /** Configuration class for goBILDA Pinpoint localizer. */
+    /** Configuration class for the Sparkfun OTOS localizer. */
     public static class Constants extends BaseLocalizerConstants<Constants> {
         public String name = "defaultOTOSNName";
         public Pose offset = Pose.zero();
@@ -62,33 +62,43 @@ public class OTOS extends BaseLocalizer<OTOS.Constants> {
         }
 
         /** Sets the name of the OTOS in the hardware map. */
-        public Constants setName(String name) { this.name = name; return this; }
+        public Constants setName(String name) {
+            this.name = name;
+            return this;
+        }
 
         /** Sets the offset of the OTOS from the center of the robot. */
-        public Constants setOffset(Pose offset) { this.offset = offset; return this; }
+        public Constants setOffset(Pose offset) {
+            this.offset = offset;
+            return this;
+        }
 
         /**
          * Sets the linear scalar for the OTOS. This is a multiplier applied to the linear position
          * and velocity estimates from the OTOS to correct for any systematic errors in the sensor.
-         * The value must be between 0.872 and 1.127, which corresponds to a correction of +/- 12.7%.
+         * The value must be between 0.872 and 1.127, which corresponds to a correction
+         * of +/- 12.7%.
          */
         public Constants setLinearScalar(double linearScalar) {
             if (linearScalar < Driver.MIN_SCALAR || linearScalar > Driver.MAX_SCALAR) {
                 throw new IllegalArgumentException("Linear scalar must be between " + Driver.MIN_SCALAR + " and " + Driver.MAX_SCALAR);
             }
-            this.linearScalar = linearScalar; return this;
+            this.linearScalar = linearScalar;
+            return this;
         }
 
         /**
-         * Sets the angular scalar for the OTOS. This is a multiplier applied to the angular position
-         * and velocity estimates from the OTOS to correct for any systematic errors in the sensor.
-         * The value must be between 0.872 and 1.127, which corresponds to a correction of +/- 12.7%.
+         * Sets the angular scalar for the OTOS. This is a multiplier applied to the angular
+         * position and velocity estimates from the OTOS to correct for any systematic errors in the
+         * sensor. The value must be between 0.872 and 1.127, which corresponds to a correction
+         * of +/- 12.7%.
          */
         public Constants setAngularScalar(double angularScalar) {
             if (angularScalar < Driver.MIN_SCALAR || angularScalar > Driver.MAX_SCALAR) {
                 throw new IllegalArgumentException("Angular scalar must be between " + Driver.MIN_SCALAR + " and " + Driver.MAX_SCALAR);
             }
-            this.angularScalar = angularScalar; return this;
+            this.angularScalar = angularScalar;
+            return this;
         }
     }
 
@@ -196,6 +206,7 @@ public class OTOS extends BaseLocalizer<OTOS.Constants> {
          * Calibrates the IMU on the OTOS, which removes the accelerometer and
          * gyroscope offsets. This will do the full 255 samples and wait until
          * he calibration is done, which takes about 612ms as of firmware v1.0)
+         *
          * @return true if the calibration was successful, false otherwise
          */
         public boolean calibrate() {
@@ -203,9 +214,11 @@ public class OTOS extends BaseLocalizer<OTOS.Constants> {
             deviceClient.write8(REG_IMU_CALIB, 255);
 
             // Wait 1 sample period (2.4ms) to ensure the register updates
-            try { Thread.sleep(3);
+            try {
+                Thread.sleep(3);
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); return false;
+                Thread.currentThread().interrupt();
+                return false;
             }
 
             for (int numAttempts = 255; numAttempts > 0; numAttempts--) {
@@ -215,9 +228,11 @@ public class OTOS extends BaseLocalizer<OTOS.Constants> {
                 // Give a short delay between reads. As of firmware v1.0, samples take
                 // 2.4ms each, so 3ms should guarantee the next sample is done. This
                 // also ensures the max attempts is not exceeded in normal operation
-                try { Thread.sleep(3);
+                try {
+                    Thread.sleep(3);
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt(); return false;
+                    Thread.currentThread().interrupt();
+                    return false;
                 }
             }
 
@@ -250,11 +265,12 @@ public class OTOS extends BaseLocalizer<OTOS.Constants> {
         }
 
         /** Calibrates the IMU and resets the tracking frame. */
-        public void calibrateAndReset() { calibrate(); resetTracking(); }
+        public void calibrateAndReset() {
+            calibrate();
+            resetTracking();
+        }
 
-        /**
-         * @param scalar linear scalar, must be between 0.872 and 1.127
-         */
+        /** @param scalar linear scalar, must be between 0.872 and 1.127 */
         public void setLinearScalar(double scalar) {
             if (scalar < MIN_SCALAR || scalar > MAX_SCALAR) { return; }
 
@@ -263,9 +279,7 @@ public class OTOS extends BaseLocalizer<OTOS.Constants> {
             deviceClient.write8(REG_SCALAR_LINEAR, rawScalar);
         }
 
-        /**
-         * @param scalar angular scalar, must be between 0.872 and 1.127
-         */
+        /** @param scalar angular scalar, must be between 0.872 and 1.127 */
         public void setAngularScalar(double scalar) {
             if (scalar < MIN_SCALAR || scalar > MAX_SCALAR) { return; }
 

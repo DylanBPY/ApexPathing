@@ -15,6 +15,7 @@ import geometry.Pose;
 @TeleOp(name = "Apex TeleOp Test", group = "Apex Pathing Tests")
 public class TeleOpTest extends LinearOpMode {
     Constants constants = new Constants();
+
     @Override
     public void runOpMode() {
         Follower follower = new Follower(constants, hardwareMap);
@@ -39,7 +40,7 @@ public class TeleOpTest extends LinearOpMode {
             }
 
             telemetry.addData("X", currentPose.getX());
-            telemetry.addData("Y ",currentPose.getY());
+            telemetry.addData("Y ", currentPose.getY());
             telemetry.addData("Heading", currentPose.getHeading());
             telemetry.update();
         }

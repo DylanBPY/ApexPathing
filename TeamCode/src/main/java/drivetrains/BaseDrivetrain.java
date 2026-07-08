@@ -34,6 +34,7 @@ public abstract class BaseDrivetrain<T extends BaseDrivetrainConstants<T>> {
     /**
      * Your drivetrain class constructor should call this super constructor to initialize motors and
      * store the configuration.
+     *
      * @param config your drivetrain configuration object that is a child of {@link BaseDrivetrainConstants}
      * @param hardwareMap the hardware map to use for initializing motors
      */
@@ -66,7 +67,9 @@ public abstract class BaseDrivetrain<T extends BaseDrivetrainConstants<T>> {
     /**
      * Moves the robot using the provided drive, strafe, and turn vectors.
      * The values are normalized and applied to the motors according to the mecanum drive formulas.
-     * @param x the forward/backward movement vector (positive for forward, negative for backward)
+     *
+     * @param x the forward/backward movement vector (positive for forward, negative for
+     *          backward)
      * @param y the left/right movement vector (positive for left, negative for right)
      * @param turn the rotation vector (positive for counterclockwise, negative for clockwise)
      */
@@ -77,10 +80,11 @@ public abstract class BaseDrivetrain<T extends BaseDrivetrainConstants<T>> {
      * is meant for field-centric control. If you are using robot-centric control, the robotHeading
      * parameter will be ignored, you can use the other drive method that doesn't require the
      * robot's heading.
-     * @param x the forward/backward joystick input (positive for forward, negative for backward)
-     * @param y the left/right joystick input (positive for left, negative for right)
-     * @param turn the rotation joystick input (positive for counterclockwise, negative for clockwise)
-     * @param robotHeadingRad the current heading of the robot in radians, not used for robot centric control
+     *
+     * @param x forward/backward joystick input (positive for forward, negative for backward)
+     * @param y left/right joystick input (positive for left, negative for right)
+     * @param turn rotation joystick input (positive for counterclockwise, negative for clockwise)
+     * @param robotHeadingRad current heading of the robot in radians, only used for field centric
      */
     public void drive(double x, double y, double turn, double robotHeadingRad) {
         double adjX, adjY;
@@ -89,7 +93,10 @@ public abstract class BaseDrivetrain<T extends BaseDrivetrainConstants<T>> {
             double sin = Math.sin(-robotHeadingRad);
             adjX = x * cos - y * sin;
             adjY = x * sin + y * cos;
-        } else { adjX = x; adjY = y; }
+        } else {
+            adjX = x;
+            adjY = y;
+        }
         moveWithVectors(adjX, adjY, turn);
     }
 
@@ -97,11 +104,15 @@ public abstract class BaseDrivetrain<T extends BaseDrivetrainConstants<T>> {
      * Drives the robot with provided joystick inputs. This method is meant for robotic-centric
      * control. If you are using field-centric control, you have to use the other drive method that
      * requires the robot's current heading to be passed in as a parameter.
-     * @param x the forward/backward joystick input (positive for forward, negative for backward)
-     * @param y the left/right joystick input (positive for left, negative for right)
-     * @param turn the rotation joystick input (positive for counterclockwise, negative for clockwise)
+     *
+     * @param x forward/backward joystick input (positive for forward, negative for backward)
+     * @param y left/right joystick input (positive for left, negative for right)
+     * @param turn rotation joystick input (positive for counterclockwise, negative for clockwise)
      */
     public void drive(double x, double y, double turn) { drive(x, y, turn, 0); }
+
+    /** @return Whether the drivetrain is currently in a holonomic state or not */
+    public abstract boolean isHolonomic();
 
     /**
      * Sets the power for each drivetrain motor, applying limits from the configurations. If your
@@ -124,16 +135,20 @@ public abstract class BaseDrivetrain<T extends BaseDrivetrainConstants<T>> {
 
         // Write to motors only if the change exceeds the tolerance
         if (Math.abs(flPower - lastFlPower) > POWER_TOLERANCE) {
-            flMotor.setPower(flPower); lastFlPower = flPower;
+            flMotor.setPower(flPower);
+            lastFlPower = flPower;
         }
         if (Math.abs(frPower - lastFrPower) > POWER_TOLERANCE) {
-            frMotor.setPower(frPower); lastFrPower = frPower;
+            frMotor.setPower(frPower);
+            lastFrPower = frPower;
         }
         if (blMotor != null && Math.abs(blPower - lastBlPower) > POWER_TOLERANCE) {
-            blMotor.setPower(blPower); lastBlPower = blPower;
+            blMotor.setPower(blPower);
+            lastBlPower = blPower;
         }
         if (brMotor != null && Math.abs(brPower - lastBrPower) > POWER_TOLERANCE) {
-            brMotor.setPower(brPower); lastBrPower = brPower;
+            brMotor.setPower(brPower);
+            lastBrPower = brPower;
         }
     }
 

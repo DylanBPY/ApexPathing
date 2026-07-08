@@ -20,6 +20,11 @@ public class Tank extends BaseDrivetrain<Tank.Constants> {
         setPowers(x - turn, x + turn, x - turn, x + turn);
     }
 
+    @Override
+    public boolean isHolonomic() {
+        return false;
+    }
+
     /** Configuration class for Tank drivetrain. */
     public static class Constants extends BaseDrivetrainConstants<Constants> {
         @Override
@@ -27,22 +32,26 @@ public class Tank extends BaseDrivetrain<Tank.Constants> {
 
         /** Sets the front left motor configuration. */
         public Constants setFrontLeftMotor(MotorFactory motorFactory) {
-            this.flMotorConfig = motorFactory; return this;
+            this.flMotorConfig = motorFactory;
+            return this;
         }
 
         /** Sets the front right motor configuration. */
         public Constants setFrontRightMotor(MotorFactory motorFactory) {
-            this.frMotorConfig = motorFactory; return this;
+            this.frMotorConfig = motorFactory;
+            return this;
         }
 
         /** Sets the back left motor configuration. Do not use this for 2 wheel tank */
         public Constants setBackLeftMotor(MotorFactory motorFactory) {
-            this.blMotorConfig = motorFactory; return this;
+            this.blMotorConfig = motorFactory;
+            return this;
         }
 
         /** Sets the back right motor configuration. Do not use this for 2 wheel tank */
         public Constants setBackRightMotor(MotorFactory motorFactory) {
-            this.brMotorConfig = motorFactory; return this;
+            this.brMotorConfig = motorFactory;
+            return this;
         }
     }
 }

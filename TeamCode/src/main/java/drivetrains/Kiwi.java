@@ -35,6 +35,11 @@ public class Kiwi extends BaseDrivetrain<Kiwi.Constants> {
         );
     }
 
+    @Override
+    public boolean isHolonomic() {
+        return true;
+    }
+
     /** Configuration class for Kiwi/Killough/Thee-Wheel Omni drivetrain. */
     public static class Constants extends BaseDrivetrainConstants<Constants> {
         @Override
@@ -42,17 +47,20 @@ public class Kiwi extends BaseDrivetrain<Kiwi.Constants> {
 
         /** Sets the front left motor configuration. */
         public Constants setFrontLeftMotor(MotorFactory motorFactory) {
-            this.flMotorConfig = motorFactory; return this;
+            this.flMotorConfig = motorFactory;
+            return this;
         }
 
         /** Sets the front right motor configuration. */
         public Constants setFrontRightMotor(MotorFactory motorFactory) {
-            this.frMotorConfig = motorFactory; return this;
+            this.frMotorConfig = motorFactory;
+            return this;
         }
 
         /** Sets the back motor configuration. */
         public Constants setBackMotor(MotorFactory motorFactory) {
-            this.blMotorConfig = motorFactory; return this; // Uses the back left motor object
+            this.blMotorConfig = motorFactory;
+            return this; // Uses the back left motor object
         }
     }
 }

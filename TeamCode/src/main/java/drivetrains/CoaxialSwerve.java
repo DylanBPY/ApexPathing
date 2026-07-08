@@ -24,7 +24,8 @@ public class CoaxialSwerve extends BaseDrivetrain<CoaxialSwerve.Constants> {
 
     private final CRServo flServo, frServo, blServo, brServo;
     private final AnalogInput flEncoder, frEncoder, blEncoder, brEncoder;
-    private final PDSController flSteerController, frSteerController, blSteerController, brSteerController;
+    private final PDSController flSteerController, frSteerController, blSteerController,
+            brSteerController;
     private final double voltageToRad; // Radians = voltage * this
     private final double offsetAngleRad; // Radians added to encoder angle to get actual wheel angle
 
@@ -103,44 +104,58 @@ public class CoaxialSwerve extends BaseDrivetrain<CoaxialSwerve.Constants> {
 
         // If the error > 90 degrees, reverse the wheel direction and subtract 180 from the target angle
         if (Math.abs(flError) > piOver2) {
-            flPower *= -1; flError -= Math.copySign(Math.PI, flError);
+            flPower *= -1;
+            flError -= Math.copySign(Math.PI, flError);
         }
         if (Math.abs(frError) > piOver2) {
-            frPower *= -1; frError -= Math.copySign(Math.PI, frError);
+            frPower *= -1;
+            frError -= Math.copySign(Math.PI, frError);
         }
         if (Math.abs(blError) > piOver2) {
-            blPower *= -1; blError -= Math.copySign(Math.PI, blError);
+            blPower *= -1;
+            blError -= Math.copySign(Math.PI, blError);
         }
         if (Math.abs(brError) > piOver2) {
-            brPower *= -1; brError -= Math.copySign(Math.PI, brError);
+            brPower *= -1;
+            brError -= Math.copySign(Math.PI, brError);
         }
 
         if (flError != lastFlError) {
-            flServo.setPower(flSteerController.calculateFromError(flError)); lastFlError = flError;
+            flServo.setPower(flSteerController.calculateFromError(flError));
+            lastFlError = flError;
         }
         if (frError != lastFrError) {
-            frServo.setPower(frSteerController.calculateFromError(frError)); lastFrError = frError;
+            frServo.setPower(frSteerController.calculateFromError(frError));
+            lastFrError = frError;
         }
         if (blError != lastBlError) {
-            blServo.setPower(blSteerController.calculateFromError(blError)); lastBlError = blError;
+            blServo.setPower(blSteerController.calculateFromError(blError));
+            lastBlError = blError;
         }
         if (brError != lastBrError) {
-            brServo.setPower(brSteerController.calculateFromError(brError)); lastBrError = brError;
+            brServo.setPower(brSteerController.calculateFromError(brError));
+            lastBrError = brError;
         }
 
         setPowers(flPower, frPower, blPower, brPower);
     }
 
-    /** @return the error wrapped to the range [-pi, pi] to ensure the shortest path is taken. */
+    @Override
+    public boolean isHolonomic() {
+        return true;
+    }
+
+    /** @return the error wrapped to the range [-pi, pi] to ensure the shortest path is taken */
     private double wrapError(double target, double current) {
         double errorRaw = target - current;
         return errorRaw - (pi2 * Math.round(errorRaw / pi2));
     }
 
-    /** Configuration class for Mecanum drivetrain. */
+    /** Configuration class for Coaxial Swerve drivetrain. */
     public static class Constants extends BaseDrivetrainConstants<Constants> {
         public String flServoName, frServoName, blServoName, brServoName = "defaultServoName";
-        public String flEncoderName, frEncoderName, blEncoderName, brEncoderName = "defaultEncoderName";
+        public String flEncoderName, frEncoderName, blEncoderName, brEncoderName =
+                "defaultEncoderName";
 
         public PDSCoefficients steeringCoefficients = new PDSCoefficients();
 
@@ -162,44 +177,56 @@ public class CoaxialSwerve extends BaseDrivetrain<CoaxialSwerve.Constants> {
 
         /** Sets the front left motor configuration. */
         public Constants setFrontLeftMotor(MotorFactory motorFactory) {
-            this.flMotorConfig = motorFactory; return this;
+            this.flMotorConfig = motorFactory;
+            return this;
         }
 
         /** Sets the front right motor configuration. */
         public Constants setFrontRightMotor(MotorFactory motorFactory) {
-            this.frMotorConfig = motorFactory; return this;
+            this.frMotorConfig = motorFactory;
+            return this;
         }
 
         /** Sets the back left motor configuration. */
         public Constants setBackLeftMotor(MotorFactory motorFactory) {
-            this.blMotorConfig = motorFactory; return this;
+            this.blMotorConfig = motorFactory;
+            return this;
         }
 
         /** Sets the back right motor configuration. */
         public Constants setBackRightMotor(MotorFactory motorFactory) {
-            this.brMotorConfig = motorFactory; return this;
+            this.brMotorConfig = motorFactory;
+            return this;
         }
 
         /** Sets the names of the steering servos. */
         public Constants setServoNames(String fl, String fr, String bl, String br) {
-            this.flServoName = fl; this.frServoName = fr;
-            this.blServoName = bl; this.brServoName = br; return this;
+            this.flServoName = fl;
+            this.frServoName = fr;
+            this.blServoName = bl;
+            this.brServoName = br;
+            return this;
         }
 
         /** Sets the names of the steering encoders. */
         public Constants setEncoderNames(String fl, String fr, String bl, String br) {
-            this.flEncoderName = fl; this.frEncoderName = fr;
-            this.blEncoderName = bl; this.brEncoderName = br; return this;
+            this.flEncoderName = fl;
+            this.frEncoderName = fr;
+            this.blEncoderName = bl;
+            this.brEncoderName = br;
+            return this;
         }
 
         /** Sets the coefficients for the steering PDS controllers. */
         public Constants setSteeringCoefficients(PDSCoefficients coefficients) {
-            this.steeringCoefficients = coefficients; return this;
+            this.steeringCoefficients = coefficients;
+            return this;
         }
 
         /** Sets the encoders reported angle when the wheel is facing forward. */
         public Constants setOffsetAngle(Angle offsetAngle) {
-            this.offsetAngle = offsetAngle; return this;
+            this.offsetAngle = offsetAngle;
+            return this;
         }
 
         /** Sets the wheelbase of the chassis (front to back pod wheel spacing). */

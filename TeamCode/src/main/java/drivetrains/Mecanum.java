@@ -30,6 +30,11 @@ public class Mecanum extends BaseDrivetrain<Mecanum.Constants> {
         );
     }
 
+    @Override
+    public boolean isHolonomic() {
+        return true;
+    }
+
     /** Configuration class for Mecanum drivetrain. */
     public static class Constants extends BaseDrivetrainConstants<Constants> {
         @Override
@@ -37,22 +42,26 @@ public class Mecanum extends BaseDrivetrain<Mecanum.Constants> {
 
         /** Sets the front left motor configuration. */
         public Constants setFrontLeftMotor(MotorFactory motorFactory) {
-            this.flMotorConfig = motorFactory; return this;
+            this.flMotorConfig = motorFactory;
+            return this;
         }
 
         /** Sets the front right motor configuration. */
         public Constants setFrontRightMotor(MotorFactory motorFactory) {
-            this.frMotorConfig = motorFactory; return this;
+            this.frMotorConfig = motorFactory;
+            return this;
         }
 
         /** Sets the back left motor configuration. */
         public Constants setBackLeftMotor(MotorFactory motorFactory) {
-            this.blMotorConfig = motorFactory; return this;
+            this.blMotorConfig = motorFactory;
+            return this;
         }
 
         /** Sets the back right motor configuration. */
         public Constants setBackRightMotor(MotorFactory motorFactory) {
-            this.brMotorConfig = motorFactory; return this;
+            this.brMotorConfig = motorFactory;
+            return this;
         }
     }
 }

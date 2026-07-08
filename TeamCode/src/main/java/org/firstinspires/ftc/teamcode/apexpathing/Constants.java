@@ -32,7 +32,8 @@ public class Constants extends ApexConstants {
         return new Pinpoint.Constants()
                 .setName("pinpoint")
                 .setOffsets(0, 0, DistUnit.IN)
-                .setEncoderDirections(Pinpoint.EncoderDirection.FORWARD, Pinpoint.EncoderDirection.FORWARD)
+                .setEncoderDirections(Pinpoint.EncoderDirection.FORWARD,
+                        Pinpoint.EncoderDirection.FORWARD)
                 .setEncoderResolution(Pinpoint.GoBildaPods.goBILDA_4_BAR_POD);
     }
 }
