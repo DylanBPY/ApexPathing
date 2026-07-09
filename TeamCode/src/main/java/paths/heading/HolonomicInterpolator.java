@@ -51,15 +51,27 @@ public class HolonomicInterpolator implements HeadingInterpolator {
                 style == HolonomicInterpolationStyle.FACING_POINT) && headingSpline != null;
     }
 
-    private double getTerminalErrorRad(Vector finalTangent) {
-        Angle finalBaseHeading;
-        if (style == HolonomicInterpolationStyle.TANGENT_CUSTOM) {
-            finalBaseHeading = finalTangent.getTheta().plus(customOffset);
-        } else if (usesHeadingSpline()) {
-            finalBaseHeading = Angle.fromRad(headingSpline.evaluate(1.0));
-        } else {
-            finalBaseHeading = finalTangent.getTheta();
+    private Angle getBaseHeadingAtEnd(Vector finalTangent) {
+        switch (style) {
+            case CONSTANT_START_HEADING:
+                return startHeading;
+            case CONSTANT_END_HEADING:
+            case SMOOTH_START_TO_END:
+                return endHeading;
+            case TANGENT_FORWARD:
+                return finalTangent.getTheta();
+            case TANGENT_CUSTOM:
+                return finalTangent.getTheta().plus(customOffset);
+            case NODE_BASED:
+            case FACING_POINT:
+                return Angle.fromRad(headingSpline.evaluate(1.0));
+            default:
+                throw new IllegalStateException("Unhandled HolonomicHeadingStyle");
         }
+    }
+
+    private double getTerminalErrorRad(Vector finalTangent) {
+        Angle finalBaseHeading = getBaseHeadingAtEnd(finalTangent);
         return finalBaseHeading.getShortestAngleTo(endHeading).getRad();
     }
 

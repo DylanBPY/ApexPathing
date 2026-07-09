@@ -414,7 +414,6 @@ public class HolonomicPathBuilder {
 
         Angle startH = startPose.getHeading();
         Angle endH = expectedEndPose.getHeading();
-        Pose resolvedEndPose = expectedEndPose;
 
         CubicSpline1D spline = null;
         boolean missingParams =
@@ -475,8 +474,6 @@ public class HolonomicPathBuilder {
             Angle facingOffset = customOffset != null ? customOffset : Angle.zero();
             List<HeadingNode> facingNodes = buildFacingPointNodes(curve, facingPoint, facingOffset);
             spline = buildHeadingSpline(facingNodes, "FACING_POINT");
-            endH = facingNodes.get(facingNodes.size() - 1).target;
-            resolvedEndPose = new Pose(expectedEndPose.getVec(), endH);
         }
 
         HolonomicInterpolator interpolator = new HolonomicInterpolator(currentStyle, startH, endH
@@ -486,7 +483,7 @@ public class HolonomicPathBuilder {
             interpolator.setBlendWindow(blendWindow.getIn());
         }
         path.setInterpolator(interpolator);
-        path.setEndPose(resolvedEndPose);
+        path.setEndPose(expectedEndPose);
 
         for (Runnable task : buildTasks) {
             task.run();
