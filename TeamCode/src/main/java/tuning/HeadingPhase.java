@@ -37,7 +37,10 @@ public class HeadingPhase extends TuningPhase {
     @Override
     protected void reportResults() {
         PDSCoefficients coefficients = context.constants.headingCoeffs;
-        context.getTelemetry().addData("Heading PDS Coefficients", "P: %.3f, D: %.3f, S: %.3f",
-                coefficients.kP, coefficients.kD, coefficients.kS);
+        context.getTelemetry().addData(
+                "Heading PDS Coefficients",
+                "P: %.3f, D: %.3f, S: %.3f",
+                coefficients.kP, coefficients.kD, coefficients.kS
+        );
     }
 }

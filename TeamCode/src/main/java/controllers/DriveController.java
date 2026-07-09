@@ -14,18 +14,15 @@ import geometry.Vector;
 public class DriveController {
     private final double strafePenaltyRatio;
     private final PDSController pds;
-    private final Dist tolerance;
 
     /**
-     * @param maxForwardVelocity The maximum forward velocity of the robot
-     * @param maxStrafeVelocity  The maximum strafe velocity of the robot
+     * @param maxForwardVelIn The maximum forward velocity of the robot in inches per second
+     * @param maxStrafeVelIn The maximum strafe velocity of the robot in inches per second
      * @param coefficients The coefficients for the PDkS controller
-     * @param tolerance The distance at which power is no longer applied
      */
-    public DriveController(Dist maxForwardVelocity, Dist maxStrafeVelocity,
-                                  PDSController.PDSCoefficients coefficients, Dist tolerance) {
-        this.tolerance = tolerance;
-        this.strafePenaltyRatio = maxForwardVelocity.getIn() / maxStrafeVelocity.getIn();
+    public DriveController(double maxForwardVelIn, double maxStrafeVelIn,
+                                  PDSController.PDSCoefficients coefficients) {
+        this.strafePenaltyRatio = maxForwardVelIn / maxStrafeVelIn;
         this.pds = new PDSController(coefficients);
     }
 

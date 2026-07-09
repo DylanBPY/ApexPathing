@@ -177,10 +177,10 @@ public abstract class TuningPhase {
         final double TIME_PER_GUESS_MS = 500;
         final double PD_TUNER_DURATION = 2000;
 
-        private Axis axis;
-        private ElapsedTime timer = new ElapsedTime();
-        private PDSController controller;
-        private BinarySearch kSSearch;
+        private final Axis axis;
+        private final ElapsedTime timer = new ElapsedTime();
+        private final PDSController controller;
+        private final BinarySearch kSSearch;
 
         private boolean tuningKS = true;
         private double startTime = 0;
@@ -193,7 +193,7 @@ public abstract class TuningPhase {
         public PDSRoutine(TunerContext context, Axis axis) {
             this.kSSearch = new BinarySearch(0, 0.4, 0.01);
             this.axis = axis;
-            context.getFollower().disableAllControllers();
+            context.getFollower().disableControllers();
             context.getFollower().setPose(Pose.zero());
 
             this.controller = new PDSController(new PDSCoefficients());

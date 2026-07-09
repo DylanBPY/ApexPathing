@@ -54,6 +54,9 @@ public class Follower {
     private FollowerMovement currentMovement = null;
     private boolean paused = false;
 
+    private boolean headingControllerEnabled = true;
+    private boolean driveControllerEnabled = true;
+
     PathSegment segment;
     Angle targetHeading;
     Vector targetTurnPoseVec;
@@ -76,10 +79,9 @@ public class Follower {
         this.headingController.setAngularController();
 
         this.driveController = new DriveController(
-                this.constants.forwardVelocityLimit,
-                this.constants.strafeVelocityLimit,
-                this.constants.translationalCoeffs,
-                Dist.fromIn(0.25) // TODO: remove this hardcode ??
+                this.constants.forwardVelLimitIn,
+                this.constants.strafeVelLimitIn,
+                this.constants.translationalCoeffs
         );
         velocityFeedbackGain = this.constants.velocityFeedbackGain;
     }
@@ -158,7 +160,6 @@ public class Follower {
         Angle currentHeading = current.getHeading();
 
         double headingError = targetHeading.getShortestAngleTo(currentHeading).getRad();
-        double headingFeedforward = headingController.calculateFromError(headingError);
         long currentNano = System.nanoTime();
 
         // Calculate delta time for velocity feedback
@@ -312,7 +313,7 @@ public class Follower {
                     double percentage = 1.0 - (s / path.getParametricPath().getLengthIn());
                     double percentageClipped = Math.min(Math.max(percentage, 0.0), 1.0);
                     double maxVel = path.getQuickVelocityLimit(percentageClipped,
-                            constants.forwardVelocityLimit.getIn());
+                            constants.forwardVelLimitIn);
                     double velError = maxVel - robotTangentialVel;
                     double accelPower = (maxVel * constants.translationalKV)
                             + (Math.signum(maxVel) * constants.translationalCoeffs.kS)
@@ -391,8 +392,9 @@ public class Follower {
             double w_cmd = omega_d + k * e_theta + b * v_d * sinc * e_y;
 
             // Convert velocity commands to motor power using feedforward constants
-            double totalTangentPower =
-                    (v_cmd * constants.translationalKV) + (a_d * constants.translationalKA) + (Math.signum(v_cmd) * constants.translationalCoeffs.kS);
+            double totalTangentPower = (v_cmd * constants.translationalKV) +
+                    (a_d * constants.translationalKA) + (Math.signum(v_cmd) *
+                    constants.translationalCoeffs.kS);
             double turnPow = (w_cmd * constants.angularKV) + (alpha_d * constants.angularKA);
             turnPow += Math.signum(turnPow) * constants.headingCoeffs.kS;
 
@@ -513,6 +515,17 @@ public class Follower {
         teleOpDrive(-gamepad.left_stick_x, -gamepad.left_stick_y, -gamepad.right_stick_x);
     }
     // endregion
+
+    public void disableHeadingController() {
+        this.headingControllerEnabled = false;
+    }
+    public void disableDriveController() {
+        this.driveControllerEnabled = false;
+    }
+    public void disableControllers() {
+        disableHeadingController();
+        disableDriveController();
+    }
 
     /**
      * Retrieves the robots current pose estimate from the localizer.

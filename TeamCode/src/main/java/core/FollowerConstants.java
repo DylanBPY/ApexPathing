@@ -9,8 +9,6 @@ import java.io.File;
 import java.io.FileReader;
 
 import controllers.PDSController.PDSCoefficients;
-import geometry.Angle;
-import geometry.Dist;
 
 /**
  * Class to hold constants for the Follower class. These constants are loaded from a JSON file
@@ -35,16 +33,14 @@ public class FollowerConstants {
     public double angularKV = 0.0, angularKA = 0.0;
     public double Kcentripetal = 0.0;
 
-    public Dist forwardVelocityLimit = Dist.fromIn(0);
-    public Dist forwardAccelerationLimit = Dist.fromIn(0);
-    public Dist strafeVelocityLimit = Dist.fromIn(0);
-    public Dist strafeAccelerationLimit = Dist.fromIn(0);
-    public Angle angularVelocityLimit = Angle.fromRad(0);
-    public Angle angularAccelerationLimit = Angle.fromRad(0);
+    public double forwardVelLimitIn = 0;
+    public double forwardAccelLimitIn = 0;
+    public double strafeVelLimitIn = 0;
+    public double strafeAccelLimitIn = 0;
+    public double angularVelLimitRad = 0;
+    public double angularAccelLimitRad = 0;
 
-    public FollowerConstants() {
-        loadValues();
-    }
+    public FollowerConstants() { loadValues(); }
 
     private double loadDouble(JSONObject json, String key) {
         try {
@@ -86,18 +82,12 @@ public class FollowerConstants {
             angularKA = loadDouble(json, "angularKA");
             Kcentripetal = loadDouble(json, "Kcentripetal");
 
-            forwardVelocityLimit = Dist.fromIn(loadDouble(
-                    json, "forwardVelocityLimitInPerSec"));
-            forwardAccelerationLimit = Dist.fromIn(loadDouble(
-                    json, "forwardVelocityLimitInPerSec2"));
-            strafeVelocityLimit = Dist.fromIn(loadDouble(
-                    json, "strafeVelocityLimitInPerSec"));
-            strafeAccelerationLimit = Dist.fromIn(loadDouble(
-                    json, "strafeAccelerationLimitInPerSec2"));
-            angularVelocityLimit = Angle.fromRad(loadDouble(
-                    json, "angularVelocityLimitRadPerSec"));
-            angularAccelerationLimit = Angle.fromRad(loadDouble(
-                    json, "angularAccelerationLimitRadPerSec2"));
+            forwardVelLimitIn = loadDouble(json, "forwardVelLimitIn");
+            forwardAccelLimitIn = loadDouble(json, "forwardAccelLimitIn");
+            strafeVelLimitIn = loadDouble(json, "strafeVelLimitIn");
+            strafeAccelLimitIn = loadDouble(json, "strafeAccelLimitIn");
+            angularVelLimitRad = loadDouble(json, "angularVelLimitRad");
+            angularAccelLimitRad = loadDouble(json, "angularAccelLimitRad");
         }
     }
 
@@ -118,12 +108,12 @@ public class FollowerConstants {
             json.put("angularKA", angularKA);
             json.put("Kcentripetal", Kcentripetal);
 
-            json.put("forwardVelocityLimitInPerSec", forwardVelocityLimit.getIn());
-            json.put("forwardVelocityLimitInPerSec2", forwardAccelerationLimit.getIn());
-            json.put("strafeVelocityLimitInPerSec", strafeVelocityLimit.getIn());
-            json.put("strafeAccelerationLimitInPerSec2", strafeAccelerationLimit.getIn());
-            json.put("angularVelocityLimitRadPerSec", angularVelocityLimit.getRad());
-            json.put("angularAccelerationLimitRadPerSec2", angularAccelerationLimit.getRad());
+            json.put("forwardVelLimitIn", forwardVelLimitIn);
+            json.put("forwardAccelLimitIn", forwardAccelLimitIn);
+            json.put("strafeVelLimitIn", strafeVelLimitIn);
+            json.put("strafeAccelLimitIn", strafeAccelLimitIn);
+            json.put("angularVelLimitRad", angularVelLimitRad);
+            json.put("angularAccelLimitRad", angularAccelLimitRad);
         } catch (Exception e) {
             // Handle exception if needed
         }

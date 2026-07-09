@@ -2,14 +2,14 @@ package tuning;
 
 import geometry.Pose;
 import paths.builders.Builder;
-import paths.heading.InterpolationStyle;
+import paths.heading.HolonomicInterpolationStyle;
 import paths.movements.Path;
 import util.AngleUnit;
 import util.DistUnit;
 import util.PoseFactory;
 
 public class MovementLimitsPhase extends TuningPhase {
-    private TuningPhase.BinarySearch binarySearch;
+    private final TuningPhase.BinarySearch binarySearch;
     private boolean forwardPathRunning;
     private double maxLateralError; // Inches
     private double maxLateralAccel; // Inches per second squared
@@ -40,15 +40,16 @@ public class MovementLimitsPhase extends TuningPhase {
         Pose startPose = context.getFollower().getPose();
         Pose midPose = startPose.plus(poseFactory.of(40, 20));
         Pose endPose = startPose.plus(poseFactory.of(60, 0));
-        forwardCurve = Builder.path(startPose, midPose, endPose)
-                .interpolateWith(InterpolationStyle.TANGENT_FORWARD)
-                .build();
-        backwardCurve = Builder.path(endPose, midPose, startPose)
-                .interpolateWith(InterpolationStyle.TANGENT_FORWARD)
-                .build();
+        // TODO: Don't hardcode holonomicPath once the new path builder is implemented
+        forwardCurve = Builder.holonomicPath(startPose, midPose, endPose)
+                .interpolateWith(HolonomicInterpolationStyle.TANGENT_FORWARD)
+                .quickBuild();
+        backwardCurve = Builder.holonomicPath(endPose, midPose, startPose)
+                .interpolateWith(HolonomicInterpolationStyle.TANGENT_FORWARD)
+                .quickBuild();
 
         maxLateralAccel = binarySearch.getGuess();
-        context.getFollower().getConstants().maxTranslationalAccel = maxLateralAccel;
+        context.getFollower().getConstants().strafeAccelLimitIn = maxLateralAccel;
         context.getFollower().follow(forwardCurve);
     }
 
@@ -67,11 +68,11 @@ public class MovementLimitsPhase extends TuningPhase {
                 boolean converged = binarySearch.updateGuess(maxLateralError > 4.0);
                 maxLateralAccel = binarySearch.getGuess();
                 if (converged) {
-                    context.constants.maxTranslationalAccel = maxLateralAccel;
+                    context.constants.strafeAccelLimitIn = maxLateralAccel;
                     return true;
                 }
 
-                context.getFollower().getConstants().maxTranslationalAccel = maxLateralAccel;
+                context.getFollower().getConstants().strafeAccelLimitIn = maxLateralAccel;
                 maxLateralError = 0;
                 context.getFollower().follow(forwardCurve);
             }

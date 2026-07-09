@@ -78,7 +78,7 @@ public class FollowerTuner extends LinearOpMode {
         boolean headingIsTuned = context.constants.headingCoeffs.kP != 0.0;
         boolean translationalIsTuned = context.constants.translationalCoeffs.kP != 0.0;
         boolean velocityFFIsTuned = context.constants.translationalKV != 0.0;
-        boolean movementLimitsIsTuned = context.constants.strafeAccelerationLimit.getIn() != 0.0;
+        boolean movementLimitsIsTuned = context.constants.strafeAccelLimitIn != 0.0;
 
         String headingStatus = headingIsTuned ? "[✓]" : "[ ]"; // Heading is always available to tune first.
         String transStatus = translationalIsTuned ? "[✓]" : (headingIsTuned ? "[ ]" : "[X]");

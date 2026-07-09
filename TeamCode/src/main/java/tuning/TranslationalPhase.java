@@ -37,7 +37,10 @@ public class TranslationalPhase extends TuningPhase {
     @Override
     protected void reportResults() {
         PDSCoefficients coefficients = context.constants.translationalCoeffs;
-        context.getTelemetry().addData("Translational PDS Coefficients", "P: %.3f, D: %.3f, S: %.3f",
-                coefficients.kP, coefficients.kD, coefficients.kS);
+        context.getTelemetry().addData(
+                "Translational PDS Coefficients",
+                "P: %.3f, D: %.3f, S: %.3f",
+                coefficients.kP, coefficients.kD, coefficients.kS
+        );
     }
 }
