@@ -55,6 +55,7 @@ public class PathProfileConvergenceTest {
     Path path = new HolonomicPathBuilder(
             poseFac.of(0, -50, 90),
             poseFac.of(0, 50, 0))
+            .interpolateWith(HolonomicInterpolationStyle.FACING_POINT, poseFac.of(10,0).getVec())
             .profiledBuild();
 
     BaseProfileGenerator generator = createProfileGenerator(dummyConstants, path);
