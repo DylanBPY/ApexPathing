@@ -46,11 +46,16 @@ public class HolonomicInterpolator implements HeadingInterpolator {
         return 1.0 - (s / blendWindow);
     }
 
+    private boolean usesHeadingSpline() {
+        return (style == HolonomicInterpolationStyle.NODE_BASED ||
+                style == HolonomicInterpolationStyle.FACING_POINT) && headingSpline != null;
+    }
+
     private double getTerminalErrorRad(Vector finalTangent) {
         Angle finalBaseHeading;
         if (style == HolonomicInterpolationStyle.TANGENT_CUSTOM) {
             finalBaseHeading = finalTangent.getTheta().plus(customOffset);
-        } else if (style == HolonomicInterpolationStyle.NODE_BASED && headingSpline != null) {
+        } else if (usesHeadingSpline()) {
             finalBaseHeading = Angle.fromRad(headingSpline.evaluate(1.0));
         } else {
             finalBaseHeading = finalTangent.getTheta();
@@ -86,6 +91,7 @@ public class HolonomicInterpolator implements HeadingInterpolator {
                 baseHeading = pathTangent.getTheta().plus(customOffset);
                 break;
             case NODE_BASED:
+            case FACING_POINT:
                 baseHeading = Angle.fromRad(headingSpline.evaluate(pctTraveled));
                 break;
             default:
@@ -115,7 +121,7 @@ public class HolonomicInterpolator implements HeadingInterpolator {
             double diffRad = startHeading.getShortestAngleTo(endHeading).getRad();
             basePrime =
                     diffRad * (6.0 * pctTraveled - 6.0 * pctTraveled * pctTraveled) / pathLength;
-        } else if (style == HolonomicInterpolationStyle.NODE_BASED) {
+        } else if (usesHeadingSpline()) {
             basePrime = headingSpline.getFirstDerivative(pctTraveled) * (1.0 / pathLength);
         }
 
@@ -140,7 +146,7 @@ public class HolonomicInterpolator implements HeadingInterpolator {
             // Chain rule: d2(theta)/ds_traveled2 = d2(theta)/d(pct)2 * (1 / pathLength)^2
             double diffRad = startHeading.getShortestAngleTo(endHeading).getRad();
             baseDoublePrime = diffRad * (6.0 - 12.0 * pctTraveled) / (pathLength * pathLength);
-        } else if (style == HolonomicInterpolationStyle.NODE_BASED) {
+        } else if (usesHeadingSpline()) {
             baseDoublePrime =
                     headingSpline.getSecondDerivative(pctTraveled) * (1.0 / (pathLength * pathLength));
         }
