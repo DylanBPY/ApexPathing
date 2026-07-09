@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
-import controllers.MecanumDriveController;
+import controllers.DriveController;
 import controllers.PDSController;
 import drivetrains.BaseDrivetrain;
 import drivetrains.BaseDrivetrainConstants;
@@ -37,6 +37,9 @@ public class Follower {
     private final BaseDrivetrain<?> drivetrain;
     private final BaseLocalizer<?> localizer;
 
+    boolean isMecanum;
+    boolean isSwerve;
+
     private final double headingTol; // Radians
     private final double distanceTol; // Inches
 
@@ -45,7 +48,7 @@ public class Follower {
     private Angle lastHeading = null; // Tracks heading between ticks for angular callback sweeps
 
     private final PDSController headingController;
-    private final MecanumDriveController mecanumDriveController;
+    private final DriveController driveController;
     private final double velocityFeedbackGain;
 
     private FollowerMovement currentMovement = null;
@@ -63,13 +66,16 @@ public class Follower {
         this.localizer = constants.localizerConstants().build(hardwareMap);
         this.constants = new FollowerConstants();
 
+        this.isMecanum = !(drivetrain instanceof CoaxialSwerve) && !(drivetrain instanceof Tank);
+        this.isSwerve = drivetrain instanceof CoaxialSwerve;
+
         this.headingTol = drivetrainConstants.headingTolerance.getRad();
         this.distanceTol = drivetrainConstants.distanceTolerance.getIn();
 
         this.headingController = new PDSController(this.constants.headingCoeffs);
         this.headingController.setAngularController();
 
-        mecanumDriveController = new MecanumDriveController(
+        this.driveController = new DriveController(
                 this.constants.forwardVelocityLimit,
                 this.constants.strafeVelocityLimit,
                 this.constants.translationalCoeffs,
@@ -189,17 +195,17 @@ public class Follower {
             }
 
             double headingFeedback = headingController.calculateFromError(headingError);
-            double totalTurnPower = Range.clip(headingFeedback + headingFF, -1.0, 1.0);
+            double totalTurnPower = Range.clip(
+                    headingFeedback + headingFF, -1.0, 1.0
+            );
 
             Vector error = targetTurnPoseVec.minus(currentPos);
             double errorMag = error.getMag().getIn();
 
             // Hold xy position actively while turning
             if (errorMag > 0) {
-                Vector feedback = mecanumDriveController.calculatePointToPoint(
-                        targetTurnPoseVec,
-                        currentPos,
-                        currentHeading
+                Vector feedback = driveController.calculatePointToPoint(
+                        targetTurnPoseVec, currentPos, currentHeading
                 );
                 drivetrain.drive(feedback.getX().getIn(), feedback.getY().getIn(), totalTurnPower);
             } else {
@@ -234,10 +240,6 @@ public class Follower {
             MotionParameters targets = isProfiled ?
                     path.getFeedforwardLut().getFeedforwardParams(s) : null;
 
-            boolean isMecanum =
-                    !(drivetrain instanceof CoaxialSwerve) && !(drivetrain instanceof Tank);
-            boolean isSwerve = drivetrain instanceof CoaxialSwerve;
-
             double robotTangentialVel = (deltaT_seconds > 1e-6 && lastS >= 0.0) ?
                     (lastS - s) / deltaT_seconds : 0.0;
             lastS = s;
@@ -251,8 +253,8 @@ public class Follower {
             double headingFF = 0.0;
             if (isProfiled) {
                 double omegaTarget = fPrime * robotTangentialVel;
-                double alphaTarget =
-                        (fDoublePrime * (robotTangentialVel * robotTangentialVel)) + (fPrime * targets.getTangentialAccel());
+                double alphaTarget = (fDoublePrime * (robotTangentialVel * robotTangentialVel)) +
+                        (fPrime * targets.getTangentialAccel());
 
                 headingFF = (omegaTarget * constants.angularKV) + (alphaTarget * constants.angularKA);
                 if (Math.abs(omegaTarget) > 1e-6) {
@@ -260,29 +262,31 @@ public class Follower {
                 }
             }
 
-            double headingFeedback =
-                    headingController.calculateFromError(headingTarg.getRad() - currentHeading.getRad());
+            double headingFeedback =  headingController.calculateFromError(
+                    headingTarg.getRad() - currentHeading.getRad()
+            );
             double turnPow = Range.clip(headingFeedback + headingFF, -1.0, 1.0);
             double availableMotorPower = 1.0 - Math.abs(turnPow);
 
             // Calculate lateral cross track power allocation
             Vector positionalError = targetPoseVec.minus(currentPos);
             double crossTrackError = positionalError.dot(normal).getIn();
-            double lateralFeedbackMag =
-                    mecanumDriveController.pds.calculateFromError(crossTrackError);
+            double lateralFeedbackMag =  driveController.calculate(crossTrackError);
 
             double requiredLateralAccel = (robotTangentialVel * robotTangentialVel) * kappa;
             double centripetalMag = requiredLateralAccel * constants.Kcentripetal;
 
-            double netLateralMag = Range.clip(centripetalMag + lateralFeedbackMag,
-                    -availableMotorPower, availableMotorPower);
+            double netLateralMag = Range.clip(
+                    centripetalMag + lateralFeedbackMag,
+                    -availableMotorPower, availableMotorPower
+            );
             Vector rawLateralDriveVec = normal.times(netLateralMag);
 
             // Calculate tangential forward power allocation
             double tangentBudget;
             if (isSwerve) {
-                tangentBudget =
-                        Math.sqrt((availableMotorPower * availableMotorPower) - (netLateralMag * netLateralMag));
+                tangentBudget = Math.sqrt((availableMotorPower * availableMotorPower) -
+                        (netLateralMag * netLateralMag));
             } else {
                 tangentBudget = availableMotorPower - Math.abs(netLateralMag);
             }
@@ -294,16 +298,17 @@ public class Follower {
                             (constants.translationalKA * targets.getTangentialAccel()) +
                             (Math.signum(targets.getTangentialVel()) * constants.translationalCoeffs.kS);
 
-                    totalTangentPower =
-                            ((targets.getTangentialVel() - robotTangentialVel) * velocityFeedbackGain) + feedforward; //TODO: Verify p only feedback performance, compare to SquID
+                    // TODO: Verify p only feedback performance, compare to SquID
+                    totalTangentPower = ((targets.getTangentialVel() - robotTangentialVel) *
+                            velocityFeedbackGain) + feedforward;
+
                     if (path.isAccelBoosted()) {
                         totalTangentPower = Math.min(
                                 totalTangentPower,
-                                mecanumDriveController.pds.calculateFromError(distanceRemaining));
+                                driveController.calculate(distanceRemaining));
                     }
                 } else {
-                    double decelPower =
-                            mecanumDriveController.pds.calculateFromError(distanceRemaining);
+                    double decelPower = driveController.calculate(distanceRemaining);
                     double percentage = 1.0 - (s / path.getParametricPath().getLengthIn());
                     double percentageClipped = Math.min(Math.max(percentage, 0.0), 1.0);
                     double maxVel = path.getQuickVelocityLimit(percentageClipped,
@@ -317,7 +322,7 @@ public class Follower {
             } else {
                 // Apply reverse feedback if robot drifts past the final point
                 double distancePastEnd = currentPos.minus(targetPoseVec).dot(endTangent).getIn();
-                totalTangentPower = mecanumDriveController.pds.calculateFromError(-distancePastEnd);
+                totalTangentPower = driveController.calculate(-distancePastEnd);
             }
 
             totalTangentPower = Range.clip(totalTangentPower, -tangentBudget, tangentBudget);
@@ -328,21 +333,23 @@ public class Follower {
             Vector finalDriveOutput;
 
             if (isMecanum) {
-                finalDriveOutput =
-                        mecanumDriveController.applyMecanumCorrections(rawTranslationalOutput,
-                                currentHeading);
+                finalDriveOutput = driveController.applyMecanumCorrections(
+                        rawTranslationalOutput, currentHeading
+                );
             } else {
                 finalDriveOutput = rawTranslationalOutput;
             }
 
             // Check stop condition and drive hardware
+            // TODO: Maybe don't hardcode this 25
             if (distanceRemaining < distanceTol && robotVel.getMagSq().getIn() < 25) {
                 stop();
                 return;
             }
 
-            drivetrain.drive(finalDriveOutput.getX().getIn(), finalDriveOutput.getY().getIn(),
-                    turnPow);
+            drivetrain.drive(
+                    finalDriveOutput.getX().getIn(), finalDriveOutput.getY().getIn(), turnPow
+            );
             // region Tank Following
         } else {
             // Process tank driving via Ramsete controller
@@ -442,7 +449,7 @@ public class Follower {
         }
 
         headingController.reset();
-        mecanumDriveController.pds.reset();
+        driveController.reset();
 
         // Reset sweeping tracker for angular callbacks so it doesn't instantly trigger on path
         // start

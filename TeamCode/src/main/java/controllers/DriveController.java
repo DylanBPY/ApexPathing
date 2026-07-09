@@ -6,14 +6,15 @@ import geometry.Vector;
 
 /**
  * A class designed inspired by Wolfpack Machina (18438) to account for mecanum drive inefficiencies
- * and move a robot point-to-point
+ * and move a robot point-to-point.
  *
  * @author DrPixelCat24
+ * @author Dylan B. 18597 RoboClovers - Delta
  */
-public class MecanumDriveController {
+public class DriveController {
     private final double strafePenaltyRatio;
-    public final PDSController pds;
-    public final Dist tolerance;
+    private final PDSController pds;
+    private final Dist tolerance;
 
     /**
      * @param maxForwardVelocity The maximum forward velocity of the robot
@@ -21,11 +22,19 @@ public class MecanumDriveController {
      * @param coefficients The coefficients for the PDkS controller
      * @param tolerance The distance at which power is no longer applied
      */
-    public MecanumDriveController(Dist maxForwardVelocity, Dist maxStrafeVelocity,
+    public DriveController(Dist maxForwardVelocity, Dist maxStrafeVelocity,
                                   PDSController.PDSCoefficients coefficients, Dist tolerance) {
         this.tolerance = tolerance;
         this.strafePenaltyRatio = maxForwardVelocity.getIn() / maxStrafeVelocity.getIn();
         this.pds = new PDSController(coefficients);
+    }
+
+    public double calculate(double error) {
+        return pds.calculateFromError(error);
+    }
+
+    public void reset() {
+        pds.reset();
     }
 
     public Vector calculatePointToPoint(Vector targetPos, Vector currentPos, Angle currentHeading) {
