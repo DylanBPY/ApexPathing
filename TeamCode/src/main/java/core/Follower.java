@@ -3,9 +3,9 @@ package core;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
-import controllers.MecanumDriveController;
+import controllers.movement.MecanumDriveController;
 import controllers.PDSController;
-import controllers.TurnController;
+import controllers.movement.TurnController;
 import drivetrains.BaseDrivetrain;
 import drivetrains.CoaxialSwerve;
 import drivetrains.DualActuated;

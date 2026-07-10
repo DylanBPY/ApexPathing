@@ -1,7 +1,7 @@
 import org.junit.Test;
 
 import controllers.PDSController;
-import controllers.TurnController;
+import controllers.movement.TurnController;
 import feedforward.MotionParameters;
 
 import static org.junit.Assert.assertEquals;

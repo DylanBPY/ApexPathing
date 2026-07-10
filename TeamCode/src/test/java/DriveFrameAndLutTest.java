@@ -1,6 +1,6 @@
 import org.junit.Test;
 
-import controllers.MecanumDriveController;
+import controllers.movement.MecanumDriveController;
 import controllers.PDSController;
 import feedforward.FeedforwardLut;
 import feedforward.MotionParameters;
