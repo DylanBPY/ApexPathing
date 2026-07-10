@@ -6,7 +6,7 @@ import paths.heading.HolonomicInterpolationStyle;
 import paths.movements.Path;
 import util.AngleUnit;
 import util.DistUnit;
-import util.PoseFactory;
+import util.GeometryFactory;
 
 // TODO: We gotta figure out how to measure lateral error and also add stuff for the other axes
 public class MovementLimitsPhase extends TuningPhase {
@@ -37,7 +37,7 @@ public class MovementLimitsPhase extends TuningPhase {
         forwardPathRunning = true;
         maxLateralError = 0;
 
-        PoseFactory poseFactory = new PoseFactory(DistUnit.IN, AngleUnit.DEG);
+        GeometryFactory poseFactory = new GeometryFactory(DistUnit.IN, AngleUnit.DEG);
         Pose startPose = context.getFollower().getPose();
         Pose midPose = startPose.plus(poseFactory.of(40, 20));
         Pose endPose = startPose.plus(poseFactory.of(60, 0));

@@ -13,7 +13,7 @@ import java.util.Objects;
 import geometry.Pose;
 import util.AngleUnit;
 import util.DistUnit;
-import util.PoseFactory;
+import util.GeometryFactory;
 
 /**
  * SparkFun OTOS (Optical Tracking Odometry Sensor) localizer (uses custom driver class)
@@ -118,7 +118,7 @@ public class OTOS extends BaseLocalizer<OTOS.Constants> {
             description = "SparkFun Qwiic Optical Tracking Odometry Sensor, optimized for Apex Pathing"
     )
     private static class Driver extends I2cDeviceSynchDevice<I2cDeviceSynch> {
-        private final PoseFactory pose = new PoseFactory(DistUnit.M, AngleUnit.RAD);
+        private final GeometryFactory pose = new GeometryFactory(DistUnit.M, AngleUnit.RAD);
         private float xPosition = 0;
         private float yPosition = 0;
         private float hOrientation = 0;

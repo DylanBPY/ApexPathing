@@ -21,7 +21,7 @@ import geometry.Pose;
 import geometry.Vector;
 import util.AngleUnit;
 import util.DistUnit;
-import util.PoseFactory;
+import util.GeometryFactory;
 
 /**
  * goBILDA Pinpoint Odometry Computer localizer (uses custom driver class)
@@ -136,7 +136,7 @@ public class Pinpoint extends BaseLocalizer<Pinpoint.Constants> {
                     "Odometry), optimized for Apex Pathing"
     )
     public static class Driver extends I2cDeviceSynchDevice<I2cDeviceSynchSimple> {
-        private final PoseFactory pose = new PoseFactory(DistUnit.MM, AngleUnit.RAD);
+        private final GeometryFactory pose = new GeometryFactory(DistUnit.MM, AngleUnit.RAD);
         private int loopTime = 0;
         private float xPosition = 0;
         private float yPosition = 0;

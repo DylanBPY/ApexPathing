@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import core.Follower;
 import paths.ExampleAutoPath;
-import util.PoseFactory;
+import util.GeometryFactory;
 
 /**
  * Test Auto utilizing {@link ExampleAutoPath}
@@ -17,7 +17,7 @@ import util.PoseFactory;
 @Autonomous(name = "Apex Auto Test", group = "Apex Pathing Tests")
 public class AutoTest extends LinearOpMode {
     Constants constants = new Constants();
-    ExampleAutoPath path = new ExampleAutoPath(PoseFactory.Mirror.NONE);
+    ExampleAutoPath path = new ExampleAutoPath(GeometryFactory.Mirror.NONE);
 
     enum Path {TEST_PATH, TEST_TURN, COMPLETE}
 

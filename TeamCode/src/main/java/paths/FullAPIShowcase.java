@@ -12,12 +12,12 @@ import paths.movements.Path;
 import paths.movements.Turn;
 import util.AngleUnit;
 import util.DistUnit;
-import util.PoseFactory;
+import util.GeometryFactory;
 
 public class FullAPIShowcase {
     private final DistUnit distUnit = DistUnit.IN;
     private final AngleUnit angleUnit = AngleUnit.DEG;
-    public PoseFactory pose = new PoseFactory(distUnit, angleUnit);
+    public GeometryFactory pose = new GeometryFactory(distUnit, angleUnit);
     private final Pose startPose;
 
     // Routine movements stored in sequence
@@ -31,7 +31,7 @@ public class FullAPIShowcase {
     public Path facingPointPath;
     public Path nodeBasedPath;
 
-    public FullAPIShowcase(PoseFactory.Mirror mirror) {
+    public FullAPIShowcase(GeometryFactory.Mirror mirror) {
         pose.setMirror(mirror);
         startPose = Pose.Common.CENTER.get(); // (0, 0, 0)
         buildRoutine();

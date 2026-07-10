@@ -8,18 +8,18 @@ import paths.movements.Path;
 import paths.movements.Turn;
 import util.AngleUnit;
 import util.DistUnit;
-import util.PoseFactory;
+import util.GeometryFactory;
 
 public class ExampleAutoPath {
     private final DistUnit distUnit = DistUnit.IN;
     private final AngleUnit angleUnit = AngleUnit.DEG;
-    public PoseFactory pose = new PoseFactory(distUnit, angleUnit);
+    public GeometryFactory pose = new GeometryFactory(distUnit, angleUnit);
     private final Pose startPose;
 
     public Path testPath;
     public Turn testTurn;
 
-    public ExampleAutoPath(PoseFactory.Mirror mirror) {
+    public ExampleAutoPath(GeometryFactory.Mirror mirror) {
         pose.setMirror(mirror);
         startPose = Pose.Common.CENTER.get(); // (0, 0, 0)
         buildRoutine();

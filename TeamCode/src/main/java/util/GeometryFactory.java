@@ -1,0 +1,102 @@
+package util;
+
+import core.Follower;
+import geometry.Angle;
+import geometry.ArcPose;
+import geometry.Dist;
+import geometry.Pose;
+import geometry.Vector;
+import paths.movements.Path;
+import paths.movements.Turn;
+
+/**
+ * A factory class for creating {@link Pose}, {@link ArcPose}, {@link Path}, {@link Turn},
+ * {@link Vector}, {@link Dist}, and {@link Angle} objects with specified units.
+ *
+ * @author Dylan B. - 18597 RoboClovers - Delta
+ */
+public class GeometryFactory {
+    public enum PoseMirror { NONE, X, Y }
+
+    private boolean isHolonomic;
+    private PoseMirror mirror = PoseMirror.NONE;
+    private DistUnit distUnit = DistUnit.IN;
+    private AngleUnit angleUnit = AngleUnit.DEG;
+
+    // region Constructors
+
+    /** Creates a GeometryFactory with default units/mirroring. */
+    public GeometryFactory(Follower follower) {
+        this.isHolonomic = follower.getDrivetrain().isHolonomic();
+    }
+
+    /** Applies the configured mirroring to a {@link Pose}. */
+    private Pose applyMirror(Pose pose) {
+        if (mirror == PoseMirror.NONE) return pose;
+        return mirror == PoseMirror.X ? pose.mirrorX() : pose.mirrorY();
+    }
+
+    // endregion
+    // region Setters
+
+    /** Sets the pose mirroring configuration. Defaults to {@link PoseMirror#NONE}. */
+    public void setPoseMirror(PoseMirror mirror) { this.mirror = mirror; }
+
+    /** Sets the distance unit used for inputs. Defaults to {@link DistUnit#IN} (inches). */
+    public void setDistUnit(DistUnit distUnit) { this.distUnit = distUnit; }
+
+    /** Sets the angle unit used for inputs. Defaults to {@link AngleUnit#DEG} (degrees). */
+    public void setAngleUnit(AngleUnit angleUnit) { this.angleUnit = angleUnit; }
+
+    /**
+     * Sets the holonomic state for {@link drivetrains.DualActuated} drivetrains that can switch
+     * between holonomic and non-holonomic modes. This is used to determine how paths are built.
+     * Users with drivetrains that are always holonomic or always non-holonomic shouldn't use this
+     * method as the holonomic state is automatically determined from the drivetrain type. Dual
+     * actuated drivetrains use their initial state by default.
+     */
+    public void setHolonomic(boolean isHolonomic) { this.isHolonomic = isHolonomic; }
+
+    // endregion
+    // region Getters
+
+    /** @return the pose mirroring configuration as a {@link PoseMirror}. */
+    public PoseMirror getPoseMirror() { return mirror; }
+
+    /** @return the {@link DistUnit} used for inputs. */
+    public DistUnit getDistUnit() { return distUnit; }
+
+    /** @return the {@link AngleUnit} used for inputs. */
+    public AngleUnit getAngleUnit() { return angleUnit; }
+
+    /** @return whether the factory is making holonomic paths or tank paths. */
+    public boolean isHolonomic() { return isHolonomic; }
+
+    // endregion
+    // region Poses and arc poses
+
+    /**
+     * Creates a Pose from the given (x, y, heading) values in the configured units and mirroring.
+     */
+    public Pose pose(double x, double y, double heading) {
+        Pose pose = new Pose(Vector.of(x, y, distUnit), Angle.of(heading, angleUnit));
+        return applyMirror(pose);
+    }
+
+    /**
+     * Creates a Pose from the given (x, y) values in the configured units and mirroring with a
+     * heading of 0.
+     */
+    public Pose pose(double x, double y) { return pose(x, y, 0); }
+
+    /**
+     * Creates an ArcPose from the given (x, y) and radius values in the configured units and
+     * mirroring.
+     */
+    public ArcPose arcPose(double x, double y, double radius) {
+        ArcPose pose = new ArcPose(Vector.of(x, y, distUnit), Dist.of(radius, distUnit));
+        return (ArcPose) applyMirror(pose); // Will always return an ArcPose, so we can just cast it
+    }
+
+    // endregion
+}
