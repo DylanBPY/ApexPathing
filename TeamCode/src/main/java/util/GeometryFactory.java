@@ -32,7 +32,7 @@ public class GeometryFactory {
 
     /** Applies the configured mirroring to a {@link Pose}. */
     private Pose applyMirror(Pose pose) {
-        if (mirror == PoseMirror.NONE) return pose;
+        if (mirror == PoseMirror.NONE) { return pose; }
         return mirror == PoseMirror.X ? pose.mirrorX() : pose.mirrorY();
     }
 
@@ -89,6 +89,9 @@ public class GeometryFactory {
      */
     public Pose pose(double x, double y) { return pose(x, y, 0); }
 
+    /** Creates a pose with a heading of 0 at the origin. */
+    public Pose pose() { return pose(0, 0, 0); }
+
     /**
      * Creates an ArcPose from the given (x, y) and radius values in the configured units and
      * mirroring.
@@ -99,4 +102,27 @@ public class GeometryFactory {
     }
 
     // endregion
+    // Vectors
+
+    /** Creates a Vector from the given (x, y) values in the configured units. */
+    public Vector vector(double x, double y) { return Vector.of(x, y, distUnit); }
+
+    /** Creates a Vector at the origin. */
+    public Vector vector() { return vector(0, 0); }
+
+    // endregion
+    // Distances and angles
+
+    /** Creates a Dist from the given value in the configured units. */
+    public Dist dist(double value) { return Dist.of(value, distUnit); }
+
+    /** Creates a Dist of 0. */
+    public Dist dist() { return dist(0); }
+
+    /** Creates an Angle from the given value in the configured units. */
+    public Angle angle(double value) { return Angle.of(value, angleUnit); }
+
+    /** Creates an Angle of 0. */
+    public Angle angle() { return angle(0); }
+
 }
