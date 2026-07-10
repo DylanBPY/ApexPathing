@@ -1,7 +1,7 @@
 package core;
 
-import drivetrains.BaseDrivetrainConstants;
-import localizers.BaseLocalizerConstants;
+import drivetrains.BaseDrivetrainConfig;
+import localizers.BaseLocalizerConfig;
 
 /**
  * Abstract base class for your constants
@@ -11,9 +11,9 @@ import localizers.BaseLocalizerConstants;
  * @author Sohum Arora 22985 Paraducks
  */
 public abstract class ApexConfig {
-    public abstract BaseDrivetrainConstants<?> drivetrainConfig();
+    public abstract BaseDrivetrainConfig<?> drivetrainConfig();
 
-    public abstract BaseLocalizerConstants<?> localizerConfig();
+    public abstract BaseLocalizerConfig<?> localizerConfig();
 
     public abstract FollowerConstants followerConfig();
 }

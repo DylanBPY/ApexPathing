@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
  *
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
-public abstract class BaseLocalizerConstants<T extends BaseLocalizerConstants<T>> {
+public abstract class BaseLocalizerConfig<T extends BaseLocalizerConfig<T>> {
     /**
      * Builds and returns an instance of the corresponding localizer class using this configuration.
      */

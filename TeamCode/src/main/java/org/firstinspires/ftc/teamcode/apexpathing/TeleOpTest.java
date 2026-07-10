@@ -35,7 +35,9 @@ public class TeleOpTest extends LinearOpMode {
                 follower.teleOpDrive(
                         -gamepad1.left_stick_y,
                         -gamepad1.left_stick_x,
-                        -gamepad1.right_stick_x
+                        -gamepad1.right_stick_x,
+                        currentPose.getHeading().getRad() // (Can be removed if you never use
+                        // field-centric)
                 );
             }
 

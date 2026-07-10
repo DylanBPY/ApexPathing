@@ -191,15 +191,15 @@ public class TankPathBuilder {
      */
     public Path quickBuild() {
         compileGeometry();
-        FollowerConstants constants = FollowerConstants.getInstance();
-        TankProfileGenerator generator = new TankProfileGenerator(constants, path);
+        FollowerConstants config = new FollowerConstants();
+        TankProfileGenerator generator = new TankProfileGenerator(config, path);
 
         if (path.getConstraints().length == 0) {
             path.addWarning("APEX WARNING: quickBuild() called on Tank drive with no constraints!" +
                     " The naive profile will attempt maximum speed through all curves.");
         }
 
-        path.setFeedforwardLut(generator.generateQuick(constants));
+        path.setFeedforwardLut(generator.generateQuick(config));
         return path;
     }
 
@@ -211,8 +211,8 @@ public class TankPathBuilder {
      */
     public Path profiledBuild() {
         compileGeometry();
-        FollowerConstants constants = FollowerConstants.getInstance();
-        TankProfileGenerator generator = new TankProfileGenerator(constants, path);
+        FollowerConstants config = new FollowerConstants();
+        TankProfileGenerator generator = new TankProfileGenerator(config, path);
 
         path.setFeedforwardLut(new FeedforwardLut(generator.generate()));
         return path;
