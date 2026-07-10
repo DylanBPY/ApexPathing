@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileReader;
 
 import controllers.PDSController.PDSCoefficients;
+import drivetrains.BaseDrivetrain;
 
 /**
  * Class to hold constants for the Follower class. These constants are loaded from a JSON file
@@ -19,12 +20,14 @@ import controllers.PDSController.PDSCoefficients;
  * @author DrPixelCat
  */
 public class FollowerConstants {
+    private static FollowerConstants instance = null;
     /*
      * Note to developers:
      * If you want to add new constants, create the variable here and add it to the loadValues() and
      * toJson() methods. This will ensure that the new constants are loaded from the JSON file and
      * saved back to it.
      */
+    public BaseDrivetrain.DrivetrainType drivetrainType = BaseDrivetrain.DrivetrainType.MECANUM;
     public PDSCoefficients headingCoeffs = new PDSCoefficients();
     public PDSCoefficients translationalCoeffs = new PDSCoefficients();
 
@@ -40,7 +43,15 @@ public class FollowerConstants {
     public double angularVelLimitRad = 0;
     public double angularAccelLimitRad = 0;
 
-    public FollowerConstants() { loadValues(); }
+    // Private constructor to enforce singleton
+    private FollowerConstants() { reload(); }
+
+    public static FollowerConstants getInstance() {
+        if (instance == null) {
+            instance = new FollowerConstants();
+        }
+        return instance;
+    }
 
     private double loadDouble(JSONObject json, String key) {
         try {
@@ -50,7 +61,7 @@ public class FollowerConstants {
         }
     }
 
-    private void loadValues() {
+    public void reload() {
         File file = new File(
                 Environment.getExternalStorageDirectory().getPath() +
                         "/FIRST/ApexPathing/constants.json"
@@ -67,6 +78,10 @@ public class FollowerConstants {
             } catch (Exception e) {
                 return;
             }
+
+            drivetrainType = BaseDrivetrain.DrivetrainType.valueOf(
+                    json.optString("drivetrainType", "MECANUM")
+            );
 
             headingCoeffs.setkP(loadDouble(json, "headingP"));
             headingCoeffs.setkD(loadDouble(json, "headingD"));
@@ -94,6 +109,8 @@ public class FollowerConstants {
     public JSONObject toJson() {
         JSONObject json = new JSONObject();
         try {
+            json.put("drivetrainType", drivetrainType.toString());
+
             json.put("headingP", headingCoeffs.kP);
             json.put("headingD", headingCoeffs.kD);
             json.put("headingS", headingCoeffs.kS);

@@ -13,7 +13,6 @@ import drivetrains.DualActuated;
 import drivetrains.Tank;
 import feedforward.MotionParameters;
 import geometry.Angle;
-import geometry.Dist;
 import geometry.PathSegment;
 import geometry.Pose;
 import geometry.Vector;
@@ -67,7 +66,7 @@ public class Follower {
 
         this.drivetrain = drivetrainConstants.build(hardwareMap);
         this.localizer = constants.localizerConstants().build(hardwareMap);
-        this.constants = new FollowerConstants();
+        this.constants = FollowerConstants.getInstance();
 
         this.isMecanum = !(drivetrain instanceof CoaxialSwerve) && !(drivetrain instanceof Tank);
         this.isSwerve = drivetrain instanceof CoaxialSwerve;
@@ -150,6 +149,8 @@ public class Follower {
      * Must be called continuously during the active OpMode loop to drive the robot along the path.
      */
     public void update() {
+        localizer.update();
+
         // Exit early if nothing is running
         if (currentMovement == null || paused) {
             return;

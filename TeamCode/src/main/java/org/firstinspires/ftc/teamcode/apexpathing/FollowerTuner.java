@@ -68,6 +68,8 @@ public class FollowerTuner extends LinearOpMode {
             boolean complete = runningPhase.update(gamepad1.aWasPressed(), gamepad1.bWasPressed());
             if (complete) {
                 runningPhase = null;
+                context.constants.drivetrainType = context.getFollower().getDrivetrain()
+                        .getDrivetrainType();
                 context.saveConstants();
                 requestOpModeStop();
             }
