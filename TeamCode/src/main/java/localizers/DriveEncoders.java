@@ -15,36 +15,37 @@ import geometry.Vector;
  *
  * @author Topher F. - 23571 alumni
  */
-public class DriveEncoders extends BaseLocalizer<DriveEncoders.Config> {
+public class DriveEncoders extends BaseLocalizer<DriveEncoders.Constants>{
     private final OdometryPod frontLeft, frontRight, backLeft, backRight;
     private final IMU imu;
 
     private double correction = 0.0;
 
-    public DriveEncoders(DriveEncoders.Config config, HardwareMap hardwareMap) {
-        super(config);
+    public DriveEncoders(Constants constants, HardwareMap hardwareMap) {
+        super(constants);
 
-        frontLeft = new OdometryPod(hardwareMap, config.frontLeftName, config.inchConversion);
-        frontRight = new OdometryPod(hardwareMap, config.frontRightName, config.inchConversion);
-        backLeft = new OdometryPod(hardwareMap, config.backLeftName, config.inchConversion);
-        backRight = new OdometryPod(hardwareMap, config.backRightName, config.inchConversion);
+        frontLeft = new OdometryPod(hardwareMap, constants.frontLeftName, config.inchConversion);
+        frontRight = new OdometryPod(hardwareMap, constants.frontRightName, config.inchConversion);
+        backLeft = new OdometryPod(hardwareMap, constants.backLeftName, config.inchConversion);
+        backRight = new OdometryPod(hardwareMap, constants.backRightName, config.inchConversion);
 
-        imu = hardwareMap.get(IMU.class, config.imuName);
-        imu.initialize(new IMU.Parameters(config.hubOrientationOnRobot));
+        imu = hardwareMap.get(IMU.class, constants.imuName);
+        imu.initialize(new IMU.Parameters(constants.hubOrientationOnRobot));
     }
 
     @Override
     public void update() {
-        double deltaY =
-                (frontLeft.getDeltaInches() + frontRight.getDeltaInches() + backLeft.getDeltaInches() + backRight.getDeltaInches()) / 4.0;
-        double deltaX =
-                (-frontLeft.getDeltaInches() + frontRight.getDeltaInches() + backLeft.getDeltaInches() - backRight.getDeltaInches()) / 4.0;
+        double deltaY = (frontLeft.getDeltaInches() + frontRight.getDeltaInches() +
+                backLeft.getDeltaInches() + backRight.getDeltaInches()) / 4.0;
+        double deltaX = (-frontLeft.getDeltaInches() + frontRight.getDeltaInches() +
+                backLeft.getDeltaInches() - backRight.getDeltaInches()) / 4.0;
 
         double oldYaw = pose.getHeading(util.AngleUnit.RAD);
-        double currentYaw =
-                Angle.normalize(imu.getRobotYawPitchRollAngles().getYaw() - correction);
+        double currentYaw = Angle.normalize(
+                imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) - correction
+        );
         double deltaYaw = Angle.normalize(currentYaw - oldYaw);
-        double avgYaw = oldYaw + deltaYaw / 2.0;
+        double avgYaw = oldYaw + deltaYaw/2.0;
 
         pose = new Pose(
                 pose.getVec().plus(
@@ -60,8 +61,8 @@ public class DriveEncoders extends BaseLocalizer<DriveEncoders.Config> {
 
     @Override
     public void setPose(Pose newPose) {
-        correction =
-                imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) - newPose.getHeading(util.AngleUnit.RAD);
+        correction = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) -
+                newPose.getHeading(util.AngleUnit.RAD);
         pose = newPose;
         backLeft.resetEncoder();
         frontLeft.resetEncoder();
@@ -73,7 +74,7 @@ public class DriveEncoders extends BaseLocalizer<DriveEncoders.Config> {
         imu.resetYaw();
     }
 
-    public static class Config extends BaseLocalizerConfig<DriveEncoders.Config> {
+    public static class Constants extends BaseLocalizerConstants<Constants> {
         public String frontLeftName = "fLName";
         public String frontRightName = "fRName";
         public String backLeftName = "bLName";
@@ -83,9 +84,10 @@ public class DriveEncoders extends BaseLocalizer<DriveEncoders.Config> {
 
         public double inchConversion = 1.0;
 
-        public RevHubOrientationOnRobot hubOrientationOnRobot =
-                new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.FORWARD
-                        , RevHubOrientationOnRobot.UsbFacingDirection.UP);
+        public RevHubOrientationOnRobot hubOrientationOnRobot = new RevHubOrientationOnRobot(
+                        RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
+                        RevHubOrientationOnRobot.UsbFacingDirection.UP
+                );
 
         @Override
         public BaseLocalizer<?> build(HardwareMap hardwareMap) {
