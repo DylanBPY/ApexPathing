@@ -21,14 +21,14 @@ public class SwerveProfileGenerator extends BaseProfileGenerator {
     private static final int VELOCITY_SEARCH_ITERATIONS = 8;
 
     /** Tuned physical and feedforward limits for the robot. */
-    private final FollowerConstants constants;
+    private final FollowerConstants config;
 
     /**
      * Creates a swerve profile generator for a path.
      */
-    public SwerveProfileGenerator(FollowerConstants constants, Path path) {
+    public SwerveProfileGenerator(FollowerConstants config, Path path) {
         super.path = path;
-        this.constants = constants;
+        this.config = config;
     }
 
     // region Base Pass (Velocity Ceiling)
@@ -45,9 +45,9 @@ public class SwerveProfileGenerator extends BaseProfileGenerator {
         double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa,
                 finalTangent);
 
-        double maxPhysicalVel = constants.forwardVelLimitIn;
-        double effectiveAngVelLimit = Math.min(constants.angularVelLimitRad, maxAngVel);
-        double effectiveAngAccelLimit = Math.min(constants.angularAccelLimitRad,
+        double maxPhysicalVel = config.forwardVelocityLimit.getIn();
+        double effectiveAngVelLimit = Math.min(config.angularVelocityLimit.getRad(), maxAngVel);
+        double effectiveAngAccelLimit = Math.min(config.angularAccelerationLimit.getRad(),
                 maxAngAccel);
 
         double min_v = 0.0;
@@ -132,19 +132,19 @@ public class SwerveProfileGenerator extends BaseProfileGenerator {
         double fPrime = path.getInterpolator().getHeadingFirstDerivative(s, kappa, finalTangent);
         double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa, finalTangent);
 
-        double tanPow = (vel * constants.translationalKV)
-                + (accel * constants.translationalKA)
-                + signedStatic(vel, accel, constants.translationalCoeffs.kS);
+        double tanPow = (vel * config.translationalKV)
+                + (accel * config.translationalKA)
+                + signedStatic(vel, accel, config.translationalCoeffs.kS);
 
-        double normPow = (vel * vel * kappa) * constants.Kcentripetal;
+        double normPow = (vel * vel * kappa) * config.Kcentripetal;
 
         double omega = fPrime * vel;
         double alpha = (fDoublePrime * (vel * vel)) + (fPrime * accel);
 
-        double headingKs = signedStatic(omega, alpha, constants.headingCoeffs.kS);
+        double headingKs = signedStatic(omega, alpha, config.headingCoeffs.kS);
 
-        double heading = (omega * constants.angularKV)
-                + (alpha * constants.angularKA)
+        double heading = (omega * config.angularKV)
+                + (alpha * config.angularKA)
                 + headingKs;
 
         // Swerve can point the traction vector, so translation combines as vector magnitude.
@@ -165,8 +165,8 @@ public class SwerveProfileGenerator extends BaseProfileGenerator {
     private double calculateAngularLimitedTangentialAccel(double currentVel, PathPoint point,
                                                           Path path, double maxAngAccel,
                                                           boolean positiveAccel) {
-        double maxPhysicalAccel = constants.forwardAccelLimitIn;
-        double effectiveAngAccelLimit = Math.min(constants.angularAccelLimitRad,
+        double maxPhysicalAccel = config.forwardAccelerationLimit.getIn();
+        double effectiveAngAccelLimit = Math.min(config.angularAccelerationLimit.getRad(),
                 maxAngAccel);
         if (effectiveAngAccelLimit < EPSILON) {
             return 0.0;

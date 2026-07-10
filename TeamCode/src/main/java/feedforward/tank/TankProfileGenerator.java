@@ -50,10 +50,10 @@ public class TankProfileGenerator extends BaseProfileGenerator {
         double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa,
                 finalTangent);
 
-        double maxPhysicalVel = config.forwardVelLimitIn;
+        double maxPhysicalVel = config.forwardVelocityLimit.getIn();
 
-        double effectiveAngVelLimit = Math.min(config.angularVelLimitRad, maxAngVel);
-        double effectiveAngAccelLimit = Math.min(config.angularAccelLimitRad,
+        double effectiveAngVelLimit = Math.min(config.angularVelocityLimit.getRad(), maxAngVel);
+        double effectiveAngAccelLimit = Math.min(config.angularAccelerationLimit.getRad(),
                 maxAngAccel);
 
         // Angular velocity limit: |f' * v| <= omega_max, so v <= omega_max / |f'|.
@@ -181,8 +181,8 @@ public class TankProfileGenerator extends BaseProfileGenerator {
         double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa,
                 finalTangent);
 
-        double maxPhysicalAccel = config.forwardAccelLimitIn;
-        double effectiveAngAccelLimit = Math.min(config.angularAccelLimitRad,
+        double maxPhysicalAccel = config.forwardAccelerationLimit.getIn();
+        double effectiveAngAccelLimit = Math.min(config.angularAccelerationLimit.getRad(),
                 maxAngAccel);
         if (effectiveAngAccelLimit < EPSILON) {
             return 0.0;

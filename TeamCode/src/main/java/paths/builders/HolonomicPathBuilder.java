@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.function.Function;
 
 import core.FollowerConstants;
-import drivetrains.BaseDrivetrain;
 import feedforward.FeedforwardLut;
 import feedforward.holonomic.mecanum.MecanumProfileGenerator;
 import feedforward.holonomic.swerve.SwerveProfileGenerator;
@@ -32,6 +31,7 @@ import paths.movements.Path;
  *
  * @author DrPixelCat
  * @author Dylan B. - 18597 RoboClovers - Delta
+ * @author
  */
 public class HolonomicPathBuilder {
     public Path path;
@@ -356,13 +356,13 @@ public class HolonomicPathBuilder {
      */
     public Path profiledBuild() {
         compileGeometry();
-        FollowerConstants constants = FollowerConstants.getInstance();
+        FollowerConstants config = new FollowerConstants();
 
-        if (constants.drivetrainType == BaseDrivetrain.DrivetrainType.COAXIAL_SWERVE) {
-            SwerveProfileGenerator generator = new SwerveProfileGenerator(constants, path);
+        if (config.drivetrainType == FollowerConstants.DrivetrainType.COAXIAL_SWERVE) {
+            SwerveProfileGenerator generator = new SwerveProfileGenerator(config, path);
             path.setFeedforwardLut(new FeedforwardLut(generator.generate()));
         } else {
-            MecanumProfileGenerator generator = new MecanumProfileGenerator(constants, path);
+            MecanumProfileGenerator generator = new MecanumProfileGenerator(config, path);
             path.setFeedforwardLut(new FeedforwardLut(generator.generate()));
         }
 
