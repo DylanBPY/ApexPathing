@@ -42,7 +42,8 @@ public abstract class BaseDrivetrainConstants<T extends BaseDrivetrainConstants<
     /** Set the maximum motor output limit for the drivetrain. The default is 1.0. */
     @SuppressWarnings("unchecked")
     public T setMaxPower(double maxPower) {
-        this.maxPower = Math.max(Math.min(0.0, maxPower), 1.0); return (T) this;
+        this.maxPower = Math.max(Math.min(0.0, maxPower), 1.0);
+        return (T) this;
     }
 
     /**
