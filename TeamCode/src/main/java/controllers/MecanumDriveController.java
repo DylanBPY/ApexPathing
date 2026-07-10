@@ -12,7 +12,9 @@ import geometry.Vector;
  */
 public class MecanumDriveController {
     private final double strafePenaltyRatio;
-    public final PDSController pds;
+    private final PDSController crossTrackPds;
+    private final PDSController endDistancePds;
+    private final PDSController turnPositionPds;
     public final Dist tolerance;
 
     /**
@@ -23,29 +25,73 @@ public class MecanumDriveController {
      */
     public MecanumDriveController(Dist maxForwardVelocity, Dist maxStrafeVelocity,
                                   PDSController.PDSCoefficients PDSCoefficients, Dist tolerance) {
+        this(maxForwardVelocity, maxStrafeVelocity, PDSCoefficients, tolerance, true);
+    }
+
+    public MecanumDriveController(Dist maxForwardVelocity, Dist maxStrafeVelocity,
+                                  PDSController.PDSCoefficients PDSCoefficients, Dist tolerance,
+                                  boolean requireMecanumLimits) {
         this.tolerance = tolerance;
-        this.strafePenaltyRatio = maxForwardVelocity.getIn() / maxStrafeVelocity.getIn();
-        this.pds = new PDSController(PDSCoefficients);
+        double forwardVelocity = maxForwardVelocity.getIn();
+        double strafeVelocity = maxStrafeVelocity.getIn();
+        boolean invalidLimits = !Double.isFinite(forwardVelocity) || forwardVelocity <= 0.0 ||
+                !Double.isFinite(strafeVelocity) || strafeVelocity <= 0.0;
+        if (requireMecanumLimits && invalidLimits) {
+            throw new IllegalArgumentException(
+                    "Forward and strafe velocity limits must both be positive."
+            );
+        }
+
+        this.strafePenaltyRatio = invalidLimits ? 1.0 : forwardVelocity / strafeVelocity;
+        this.crossTrackPds = new PDSController(PDSCoefficients);
+        this.endDistancePds = new PDSController(PDSCoefficients);
+        this.turnPositionPds = new PDSController(PDSCoefficients);
     }
 
-    public Vector calculatePointToPoint(Vector targetPos, Vector currentPos, Angle currentHeading) {
+    /** Returns a field-centric correction toward a fixed position. */
+    public Vector calculatePointToPoint(Vector targetPos, Vector currentPos) {
         Vector fieldError = targetPos.minus(currentPos);
-        if (fieldError.getMag().getIn() < 0.01) return Vector.zero();
+        if (fieldError.getMag().getIn() < tolerance.getIn()) return Vector.zero();
 
-        double basePower = pds.calculateFromError(fieldError.getMag().getIn());
-        Vector rawFieldVector = Vector.fromPolar(Dist.fromIn(basePower), fieldError.getTheta());
-
-        return applyMecanumCorrections(rawFieldVector, currentHeading);
+        double basePower = turnPositionPds.calculateFromError(fieldError.getMag().getIn());
+        return Vector.fromPolar(Dist.fromIn(basePower), fieldError.getTheta());
     }
 
-    public Vector applyMecanumCorrections(Vector rawFieldCentricPower, Angle currentHeading) {
-        Vector localVector = rawFieldCentricPower.rotate(currentHeading.times(-1.0));
+    public double calculateCrossTrack(double error) {
+        return crossTrackPds.calculateFromError(error);
+    }
 
-        Vector correctedLocalVector = new Vector(
-                Dist.fromIn(localVector.getX().getIn() * strafePenaltyRatio),
-                localVector.getY()
+    public double calculateEndDistance(double error) {
+        return endDistancePds.calculateFromError(error);
+    }
+
+    /** Converts a field-centric vector into the robot's local coordinate frame. */
+    public static Vector fieldToRobotCentric(Vector fieldVector, Angle currentHeading) {
+        return fieldVector.rotate(currentHeading.times(-1.0));
+    }
+
+    /**
+     * Applies robot-relative mecanum strafe compensation while preserving the turn power budget.
+     */
+    public Vector applyMecanumCorrections(Vector robotCentricPower, double turnPower) {
+        Vector corrected = new Vector(
+                robotCentricPower.getX(),
+                Dist.fromIn(robotCentricPower.getY().getIn() * strafePenaltyRatio)
         );
 
-        return correctedLocalVector.rotate(currentHeading);
+        double availableTranslationPower = Math.max(0.0, 1.0 - Math.abs(turnPower));
+        double wheelDemand = Math.abs(corrected.getX().getIn())
+                + Math.abs(corrected.getY().getIn());
+        if (wheelDemand > availableTranslationPower && wheelDemand > 1e-9) {
+            corrected = corrected.times(availableTranslationPower / wheelDemand);
+        }
+
+        return corrected;
+    }
+
+    public void reset() {
+        crossTrackPds.reset();
+        endDistancePds.reset();
+        turnPositionPds.reset();
     }
 }

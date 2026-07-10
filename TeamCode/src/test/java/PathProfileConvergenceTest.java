@@ -441,6 +441,23 @@ public class PathProfileConvergenceTest {
                 Math.abs(aboveBoundary.maxAccel - belowBoundary.maxAccel) < 0.01);
     }
 
+    @Test
+    public void testProfileProgressionUsesDistanceTraveled() {
+        MotionParameters[] profile = generator.generate();
+        PathPoint[] points = path.getGeneratedPoints();
+        double pathLength = path.getParametricPath().getLengthIn();
+
+        Assert.assertEquals(points.length, profile.length);
+        for (int i = 0; i < profile.length; i++) {
+            double expected = pathLength - points[i].getDistanceToEnd_in();
+            Assert.assertEquals(expected, profile[i].getProgression(), 1e-6);
+            if (i > 0) {
+                Assert.assertTrue(profile[i].getProgression() >=
+                        profile[i - 1].getProgression());
+            }
+        }
+    }
+
     private MotionParameters[] generateStraightMecanumProfile(double headingDeg) {
         Path straightPath = new HolonomicPathBuilder(
                 poseFac.of(0, -50, headingDeg),
