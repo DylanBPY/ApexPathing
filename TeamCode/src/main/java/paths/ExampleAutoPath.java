@@ -2,7 +2,6 @@ package paths;
 
 import geometry.Angle;
 import geometry.Pose;
-import paths.builders.Builder;
 import paths.movements.FollowerMovement;
 import paths.movements.Path;
 import paths.movements.Turn;

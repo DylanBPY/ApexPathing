@@ -1,7 +1,6 @@
 package tuning;
 
 import geometry.Pose;
-import paths.builders.Builder;
 import paths.heading.HolonomicInterpolationStyle;
 import paths.movements.Path;
 import util.AngleUnit;

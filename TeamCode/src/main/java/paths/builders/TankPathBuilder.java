@@ -22,8 +22,10 @@ import paths.movements.Path;
  * A builder class designed to construct a {@link Path} fluently strictly for Tank drivetrains.
  * Because tank drives cannot strafe, heading interpolation is automatically locked to the path
  * tangent.
+ *
+ * @author DrPixelCat
  */
-public class TankPathBuilder {
+public class TankPathBuilder implements PathBuilder {
     public Path path;
     private final Pose[] rawPoses;
     private TankInterpolationStyle style = TankInterpolationStyle.TANGENT_FORWARD;

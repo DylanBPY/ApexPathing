@@ -3,7 +3,6 @@ package paths;
 import geometry.Angle;
 import geometry.Pose;
 import geometry.Vector;
-import paths.builders.Builder;
 import paths.builders.TankPathBuilder;
 import paths.heading.HolonomicInterpolationStyle;
 import paths.heading.TankInterpolationStyle;

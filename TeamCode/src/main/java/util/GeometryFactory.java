@@ -6,6 +6,10 @@ import geometry.ArcPose;
 import geometry.Dist;
 import geometry.Pose;
 import geometry.Vector;
+import paths.builders.HolonomicPathBuilder;
+import paths.builders.PathBuilder;
+import paths.builders.TankPathBuilder;
+import paths.builders.TurnBuilder;
 import paths.movements.Path;
 import paths.movements.Turn;
 
@@ -14,6 +18,7 @@ import paths.movements.Turn;
  * {@link Vector}, {@link Dist}, and {@link Angle} objects with specified units.
  *
  * @author Dylan B. - 18597 RoboClovers - Delta
+ * @author DrPixelCat
  */
 public class GeometryFactory {
     public enum PoseMirror { NONE, X, Y }
@@ -102,6 +107,21 @@ public class GeometryFactory {
     }
 
     // endregion
+    // region Paths and turns
+
+    public PathBuilder path(Pose... poses) {
+        if (isHolonomic) {
+            return new HolonomicPathBuilder(poses);
+        } else {
+            return new TankPathBuilder(poses);
+        }
+    }
+
+    public TurnBuilder turn(Pose startPose) {
+        return new TurnBuilder(startPose);
+    }
+
+    // endregion
     // Vectors
 
     /** Creates a Vector from the given (x, y) values in the configured units. */
@@ -124,5 +144,4 @@ public class GeometryFactory {
 
     /** Creates an Angle of 0. */
     public Angle angle() { return angle(0); }
-
 }

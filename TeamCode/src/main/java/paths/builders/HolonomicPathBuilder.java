@@ -34,7 +34,7 @@ import paths.movements.Path;
  * @author DrPixelCat
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
-public class HolonomicPathBuilder {
+public class HolonomicPathBuilder implements PathBuilder {
     private static final double EPSILON = 1e-6;
 
     public Path path;
