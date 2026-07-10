@@ -20,7 +20,7 @@ import paths.movements.Turn;
 public class TurnBuilder {
     private final Pose startPose;
     private Angle targetHeading = null;
-    private final FollowerConstants config;
+    private final FollowerConstants constants;
 
     private double angularVelLimitRad;
     private double angularAccelLimitRad;
@@ -34,9 +34,9 @@ public class TurnBuilder {
      */
     public TurnBuilder(Pose startPose) {
         this.startPose = startPose;
-        this.config = new FollowerConstants();
-        this.angularVelLimitRad = config.angularVelocityLimit.getRad();
-        this.angularAccelLimitRad = config.angularAccelerationLimit.getRad();
+        this.constants = FollowerConstants.getInstance();
+        this.angularVelLimitRad = constants.angularVelLimitRad;
+        this.angularAccelLimitRad = constants.angularAccelLimitRad;
     }
 
     /**
@@ -89,7 +89,7 @@ public class TurnBuilder {
      * @return The current TurnBuilder instance for method chaining.
      */
     public TurnBuilder setAngularVelocityLimit(Angle limit) {
-        if (limit.getRad() > config.angularVelocityLimit.getRad()) {
+        if (limit.getRad() > constants.angularVelLimitRad) {
             throw new IllegalStateException("The angular velocity limit must be <= the " +
                     "drivetrain's max angular velocity constraint!");
         }
@@ -104,7 +104,7 @@ public class TurnBuilder {
      * @return The current TurnBuilder instance for method chaining.
      */
     public TurnBuilder setAngularAccelerationLimit(Angle limit) {
-        if (limit.getRad() > config.angularAccelerationLimit.getRad()) {
+        if (limit.getRad() > constants.angularAccelLimitRad) {
             throw new IllegalStateException("The angular acceleration limit must be <= the " +
                     "drivetrain's max angular acceleration constraint!");
         }
@@ -154,7 +154,7 @@ public class TurnBuilder {
         TurnProfileGenerator motionGen = new TurnProfileGenerator(
                 angularVelLimitRad,
                 angularAccelLimitRad,
-                config
+                constants
         );
 
         // Ensure TurnProfileGenerator generates a compatible LUT for the Turn object

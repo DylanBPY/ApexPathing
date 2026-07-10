@@ -30,7 +30,7 @@ public class TurnProfileGenerator {
      * @param alpha_max maximum angular acceleration
      */
     public TurnProfileGenerator(double omega_max, double alpha_max) {
-        this(omega_max, alpha_max, new FollowerConstants());
+        this(omega_max, alpha_max, FollowerConstants.getInstance());
     }
 
     /** Creates a generator from one explicit follower-configuration source. */

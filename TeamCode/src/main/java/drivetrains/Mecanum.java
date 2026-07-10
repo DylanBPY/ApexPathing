@@ -12,16 +12,16 @@ import util.MotorFactory;
  * Mecanum drivetrain controller
  *
  * @author Dylan B. - 18597 RoboClovers - Delta
+ * @author DrPixelCat
  */
-public class Mecanum extends BaseDrivetrain<Mecanum.Config> {
-    public Mecanum(Config config, HardwareMap hardwareMap) {
-        super(config, hardwareMap);
+public class Mecanum extends BaseDrivetrain<Mecanum.Constants> {
+    public Mecanum(Constants constants, HardwareMap hardwareMap) {
+        super(constants, hardwareMap, DrivetrainType.MECANUM);
 
-        if (Objects.equals(config.blMotorConfig, null) || Objects.equals(config.brMotorConfig,
-                null)) {
+        if (Objects.equals(constants.blMotorConfig, null) ||
+                Objects.equals(constants.brMotorConfig, null)) {
             throw new IllegalArgumentException(
-                    "Back left and right motor configurations must be provided for a mecanum " +
-                            "drivetrain"
+                    "Back left and right motor configurations must be provided for a mecanum drivetrain"
             );
         }
     }
@@ -34,55 +34,37 @@ public class Mecanum extends BaseDrivetrain<Mecanum.Config> {
         );
     }
 
-    @Override
-    public boolean isHolonomic() {
-        return true;
-    }
-
-    /**
-     * Configuration class for Mecanum drivetrain.
-     */
-    public static class Config extends BaseDrivetrainConfig<Config> {
+    /** Configuration class for Mecanum drivetrain. */
+    public static class Constants extends BaseDrivetrainConstants<Constants> {
         @Override
-        public Mecanum build(HardwareMap hardwareMap) {
-            return new Mecanum(this, hardwareMap);
-        }
+        public Mecanum build(HardwareMap hardwareMap) { return new Mecanum(this, hardwareMap); }
 
-        /**
-         * Sets the front left motor configuration.
-         */
-        public Config setFrontLeftMotor(MotorFactory motorFactory) {
+        /** Sets the front left motor configuration. */
+        public Constants setFrontLeftMotor(MotorFactory motorFactory) {
             this.flMotorConfig = motorFactory;
             return this;
         }
 
-        /**
-         * Sets the front right motor configuration.
-         */
-        public Config setFrontRightMotor(MotorFactory motorFactory) {
+        /** Sets the front right motor configuration. */
+        public Constants setFrontRightMotor(MotorFactory motorFactory) {
             this.frMotorConfig = motorFactory;
             return this;
         }
 
-        /**
-         * Sets the back left motor configuration.
-         */
-        public Config setBackLeftMotor(MotorFactory motorFactory) {
+        /** Sets the back left motor configuration. */
+        public Constants setBackLeftMotor(MotorFactory motorFactory) {
             this.blMotorConfig = motorFactory;
             return this;
         }
 
-        /**
-         * Sets the back right motor configuration.
-         */
-        public Config setBackRightMotor(MotorFactory motorFactory) {
+        /** Sets the back right motor configuration. */
+        public Constants setBackRightMotor(MotorFactory motorFactory) {
             this.brMotorConfig = motorFactory;
             return this;
         }
     }
 
-    public static class MecanumDirectionalLut {
-
+    public static class DirectionalLut {
         public static class DirectionalKinematics {
             public final double maxVel;
             public final double maxAccel;
@@ -103,26 +85,22 @@ public class Mecanum extends BaseDrivetrain<Mecanum.Config> {
         /**
          * Precomputes the entire 360-degree kinematic capability of the mecanum drive.
          *
-         * @param maxFwdVel   Absolute maximum forward velocity (in/s)
+         * @param maxFwdVel Absolute maximum forward velocity (in/s)
          * @param maxFwdAccel Absolute maximum forward acceleration (in/s^2)
-         * @param maxSfeVel   Absolute maximum strafing velocity (in/s)
+         * @param maxSfeVel Absolute maximum strafing velocity (in/s)
          * @param maxSfeAccel Absolute maximum strafing acceleration (in/s^2)
          */
-        public MecanumDirectionalLut(double maxFwdVel, double maxFwdAccel, double maxSfeVel,
+        public DirectionalLut(double maxFwdVel, double maxFwdAccel, double maxSfeVel,
                                      double maxSfeAccel) {
-
             for (int i = 0; i < 360; i++) {
                 double theta = Math.toRadians(i);
 
-                // Local X matches forward drive power in moveWithVectors; local Y is strafe.
                 double absForward = Math.abs(Math.cos(theta));
                 double absStrafe = Math.abs(Math.sin(theta));
 
-                // Absolute physical velocity caps
                 double maxVel = 1.0 / ((absForward / maxFwdVel) + (absStrafe / maxSfeVel));
                 double maxAccel = 1.0 / ((absForward / maxFwdAccel) + (absStrafe / maxSfeAccel));
 
-                // Calculate the boost factors relative to pure forward motion
                 double velMultiplier = maxFwdVel / maxVel;
                 double accelMultiplier = maxFwdAccel / maxAccel;
 

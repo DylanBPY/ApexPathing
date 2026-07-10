@@ -255,7 +255,7 @@ public abstract class BaseProfileGenerator {
         // Base pass: Max velocity everywhere
         for (int i = 0; i < points.length; i++) {
             lut[i] = new MotionParameters();
-            lut[i].setTangentialVel(config.forwardVelocityLimit.getIn());
+            lut[i].setTangentialVel(config.forwardVelLimitIn);
             lut[i].setDistAlongCurve(
                     path.getParametricPath().getLengthIn() - points[i].getDistanceToEnd_in()
             );
@@ -272,7 +272,7 @@ public abstract class BaseProfileGenerator {
                     Math.abs(points[i + 1].getDistanceToEnd_in() - points[i].getDistanceToEnd_in());
             double nextVel = lut[i + 1].getTangentialVel();
             double maxReachableVel =
-                    Math.sqrt((nextVel * nextVel) + (2.0 * config.forwardAccelerationLimit.getIn() * ds));
+                    Math.sqrt((nextVel * nextVel) + (2.0 * config.forwardAccelLimitIn * ds));
             lut[i].setTangentialVel(Math.min(lut[i].getTangentialVel(), maxReachableVel));
         }
 
@@ -288,7 +288,7 @@ public abstract class BaseProfileGenerator {
                     Math.abs(points[i].getDistanceToEnd_in() - points[i - 1].getDistanceToEnd_in());
             double prevVel = lut[i - 1].getTangentialVel();
             double maxReachableVel =
-                    Math.sqrt((prevVel * prevVel) + (2.0 * config.forwardAccelerationLimit.getIn() * ds));
+                    Math.sqrt((prevVel * prevVel) + (2.0 * config.forwardAccelLimitIn * ds));
 
             double v = Math.min(lut[i].getTangentialVel(), maxReachableVel);
             lut[i].setTangentialVel(v);
