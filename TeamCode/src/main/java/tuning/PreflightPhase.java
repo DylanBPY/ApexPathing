@@ -23,8 +23,6 @@ public class PreflightPhase extends TuningPhase {
     @Override protected String getPhaseName() { return "Hardware / Localizer Preflight"; }
     @Override protected boolean manualTuneIsPossible() { return true; }
     @Override protected boolean autoTuneIsPossible() { return true; }
-    @Override protected boolean manualUpdate() { return false; }
-
     @Override
     protected void init() {
         axes = context.getFollower().getDrivetrain().isHolonomic()

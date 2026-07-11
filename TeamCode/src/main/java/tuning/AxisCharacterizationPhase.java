@@ -50,8 +50,6 @@ public abstract class AxisCharacterizationPhase extends TuningPhase {
     @Override protected String getPhaseName() { return axis.displayName() + " Characterization"; }
     @Override protected boolean manualTuneIsPossible() { return true; }
     @Override protected boolean autoTuneIsPossible() { return true; }
-    @Override protected boolean manualUpdate() { return false; }
-
     @Override
     protected void init() {
         context.getFollower().disableControllers();
