@@ -18,7 +18,7 @@ import paths.movements.Turn;
  * {@link Vector}, {@link Dist}, and {@link Angle} objects with specified units.
  *
  * @author Dylan B. - 18597 RoboClovers - Delta
- * @author DrPixelCat
+ * @author DrPixelCat - 7842 Alum
  */
 public class GeometryFactory {
     public enum PoseMirror { NONE, X, Y }
@@ -35,6 +35,14 @@ public class GeometryFactory {
         this.isHolonomic = follower.getDrivetrain().isHolonomic();
     }
 
+    public GeometryFactory(boolean isHolonomic) {
+        this.isHolonomic = isHolonomic;
+    }
+
+    public GeometryFactory() {
+        this.isHolonomic = true;
+    }
+
     /** Applies the configured mirroring to a {@link Pose}. */
     private Pose applyMirror(Pose pose) {
         if (mirror == PoseMirror.NONE) { return pose; }
@@ -45,13 +53,22 @@ public class GeometryFactory {
     // region Setters
 
     /** Sets the pose mirroring configuration. Defaults to {@link PoseMirror#NONE}. */
-    public void setPoseMirror(PoseMirror mirror) { this.mirror = mirror; }
+    public GeometryFactory setPoseMirror(PoseMirror mirror) {
+        this.mirror = mirror;
+        return this;
+    }
 
     /** Sets the distance unit used for inputs. Defaults to {@link DistUnit#IN} (inches). */
-    public void setDistUnit(DistUnit distUnit) { this.distUnit = distUnit; }
+    public GeometryFactory setDistUnit(DistUnit distUnit) {
+        this.distUnit = distUnit;
+        return this;
+    }
 
     /** Sets the angle unit used for inputs. Defaults to {@link AngleUnit#DEG} (degrees). */
-    public void setAngleUnit(AngleUnit angleUnit) { this.angleUnit = angleUnit; }
+    public GeometryFactory setAngleUnit(AngleUnit angleUnit) {
+        this.angleUnit = angleUnit;
+        return this;
+    }
 
     /**
      * Sets the holonomic state for {@link drivetrains.DualActuated} drivetrains that can switch
@@ -60,7 +77,10 @@ public class GeometryFactory {
      * method as the holonomic state is automatically determined from the drivetrain type. Dual
      * actuated drivetrains use their initial state by default.
      */
-    public void setHolonomic(boolean isHolonomic) { this.isHolonomic = isHolonomic; }
+    public GeometryFactory setHolonomic(boolean isHolonomic) {
+        this.isHolonomic = isHolonomic;
+        return this;
+    }
 
     // endregion
     // region Getters
