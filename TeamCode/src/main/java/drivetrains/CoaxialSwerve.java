@@ -65,7 +65,7 @@ public class CoaxialSwerve extends BaseDrivetrain<CoaxialSwerve.Constants> {
         blSteerController = new PDSController(constants.steeringCoefficients);
         brSteerController = new PDSController(constants.steeringCoefficients);
 
-        voltageToRad = (2 * Math.PI) / flEncoder.getMaxVoltage();
+        voltageToRad = (pi2) / flEncoder.getMaxVoltage();
         offsetAnglesRad = new double[]{
                 constants.flOffsetAngle.getRad(), constants.frOffsetAngle.getRad(),
                 constants.blOffsetAngle.getRad(), constants.brOffsetAngle.getRad()
@@ -122,8 +122,6 @@ public class CoaxialSwerve extends BaseDrivetrain<CoaxialSwerve.Constants> {
             brError -= Math.copySign(Math.PI, brError);
         }
 
-        // Steering controllers need a fresh update every loop even when the sampled error happens
-        // to be identical. Skipping an update leaves stale CRServo power applied indefinitely.
         flServo.setPower(flSteerController.calculateFromError(flError));
         frServo.setPower(frSteerController.calculateFromError(frError));
         blServo.setPower(blSteerController.calculateFromError(blError));

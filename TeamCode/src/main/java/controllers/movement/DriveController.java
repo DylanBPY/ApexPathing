@@ -37,8 +37,7 @@ public class DriveController {
     private final Dist tolerance;
 
     public DriveController(Dist maxForwardVelocity, Dist maxStrafeVelocity,
-                           PDSController.PDSCoefficients axialCoefficients,
-                           PDSController.PDSCoefficients lateralCoefficients,
+                           PDSController.PDSCoefficients coefficients,
                            Dist tolerance, boolean requireMecanumLimits) {
         this.tolerance = tolerance;
 
@@ -53,18 +52,11 @@ public class DriveController {
         }
 
         strafePenaltyRatio = invalidLimits ? 1.0 : forwardVelocity / strafeVelocity;
-        crossTrackPds = new PDSController(lateralCoefficients);
-        endDistancePds = new PDSController(axialCoefficients);
-        turnPositionPds = new PDSController(axialCoefficients);
+        crossTrackPds = new PDSController(coefficients);
+        endDistancePds = new PDSController(coefficients);
+        turnPositionPds = new PDSController(coefficients);
     }
 
-    /** Backwards-compatible constructor for callers that intentionally use one gain set. */
-    public DriveController(Dist maxForwardVelocity, Dist maxStrafeVelocity,
-                           PDSController.PDSCoefficients coefficients, Dist tolerance,
-                           boolean requireMecanumLimits) {
-        this(maxForwardVelocity, maxStrafeVelocity, coefficients, coefficients, tolerance,
-                requireMecanumLimits);
-    }
 
     /** Returns an unallocated field-centric correction toward a fixed position. */
     public Vector calculatePointToPoint(Vector targetPos, Vector currentPos) {

@@ -65,9 +65,6 @@ public class FollowerTuner extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            if (phase == null) {
-                continue; // OpMode stop was requested already, do nothing
-            }
             telemetry.clearAll();
             context.getFollower().update();
             boolean complete = phase.update(gamepad1.aWasPressed(), gamepad1.bWasPressed());

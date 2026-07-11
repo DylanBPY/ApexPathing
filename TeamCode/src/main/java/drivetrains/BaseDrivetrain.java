@@ -74,12 +74,7 @@ public abstract class BaseDrivetrain<T extends BaseDrivetrainConstants<T>> {
         this.constants = constants;
         this.drivetrainType = drivetrainType;
         this.isHolonomic = drivetrainType != DrivetrainType.TANK;
-        for (VoltageSensor candidate : hardwareMap.voltageSensor) {
-            if (candidate.getVoltage() > 1.0) {
-                voltageSensor = candidate;
-                break;
-            }
-        }
+        this.voltageSensor = hardwareMap.get(VoltageSensor.class, "Control Hub");
     }
 
     /**
@@ -144,16 +139,15 @@ public abstract class BaseDrivetrain<T extends BaseDrivetrainConstants<T>> {
      * drivetrain class does not use all 4 motors, just pass 0 for the motors you don't use.
      */
     public void setPowers(double flPower, double frPower, double blPower, double brPower) {
-        if (constants.voltageCompensationEnabled && voltageSensor != null) {
-            double batteryVoltage = voltageSensor.getVoltage();
-            if (Double.isFinite(batteryVoltage) && batteryVoltage > 1.0) {
-                double correction = constants.nominalVoltage / batteryVoltage;
-                flPower *= correction;
-                frPower *= correction;
-                blPower *= correction;
-                brPower *= correction;
-            }
-        }
+
+        double batteryVoltage = voltageSensor.getVoltage();
+
+        double correction = constants.nominalVoltage / batteryVoltage;
+        flPower *= correction;
+        frPower *= correction;
+        blPower *= correction;
+        brPower *= correction;
+
 
         // Motor power limiting
         double max = Math.max(0, Math.abs(flPower));

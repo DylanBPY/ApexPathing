@@ -1,7 +1,5 @@
 package feedforward.angular;
 
-import java.util.ArrayList;
-
 import core.FollowerConstants;
 import feedforward.FeedforwardLut;
 import feedforward.MotionParameters;
@@ -85,9 +83,7 @@ public class TurnProfileGenerator {
         if (turnLengthRads < 1e-9) {
             MotionParameters stationary = new MotionParameters();
             stationary.setDistAlongCurve(0.0);
-            ArrayList<MotionParameters> stationaryLut = new ArrayList<>(1);
-            stationaryLut.add(stationary);
-            return new FeedforwardLut(stationaryLut);
+            return new FeedforwardLut(new MotionParameters[]{stationary});
         }
 
         // Define structural bounds and target density (~2 degrees per step index)
@@ -102,51 +98,50 @@ public class TurnProfileGenerator {
         // The profile's independent variable is angular arc length s, not time or the signed
         // heading itself. Its LUT keys span s = 0 at the authored start through turnLengthRads.
         double ds = turnLengthRads / (steps - 1);
-        ArrayList<MotionParameters> lut = new ArrayList<>(steps);
+        MotionParameters[] lut = new MotionParameters[steps];
         double profileVelocityLimit = getPowerLimitedVelocity(omega_max);
 
         // Base pass: cap speed by both the configured kinematic limit and back-EMF power.
         for (int i = 0; i < steps; i++) {
-            MotionParameters parameters = new MotionParameters();
-            parameters.setAngularVel(profileVelocityLimit);
-            parameters.setTangentialVel(0.0); // No forward movement
+            lut[i] = new MotionParameters();
+            lut[i].setAngularVel(profileVelocityLimit);
+            lut[i].setTangentialVel(0.0); // No forward movement
             double s = i * ds;
-            parameters.setDistAlongCurve(s);
-            lut.add(parameters);
+            lut[i].setDistAlongCurve(s);
         }
 
         // Backward pass: w^2 = w_next^2 + 2 * alpha * ds limits how fast we may enter
         // each remaining slice and still brake to zero by the end.
-        lut.get(steps - 1).setAngularVel(0.0);
+        lut[steps - 1].setAngularVel(0.0);
         for (int i = steps - 2; i >= 0; i--) {
-            double nextW = lut.get(i + 1).getAngularVel();
+            double nextW = lut[i + 1].getAngularVel();
             double maxReachableW = getMaxPreviousVelocity(
                     nextW, ds, profileVelocityLimit);
-            lut.get(i).setAngularVel(Math.min(lut.get(i).getAngularVel(), maxReachableW));
+            lut[i].setAngularVel(Math.min(lut[i].getAngularVel(), maxReachableW));
         }
 
         // Forward pass: reserve voltage for back EMF and static friction before accelerating.
-        lut.get(0).setAngularVel(0.0);
+        lut[0].setAngularVel(0.0);
         for (int i = 1; i < steps; i++) {
-            double prevW = lut.get(i - 1).getAngularVel();
+            double prevW = lut[i - 1].getAngularVel();
             double availableAcceleration = getMaxForwardAcceleration(prevW);
             double maxReachableW =
                     Math.sqrt((prevW * prevW) + (2.0 * availableAcceleration * ds));
-            lut.get(i).setAngularVel(Math.min(lut.get(i).getAngularVel(), maxReachableW));
+            lut[i].setAngularVel(Math.min(lut[i].getAngularVel(), maxReachableW));
         }
 
         // Convert the scalar profile into signed angular states. Acceleration belongs to the
         // segment beginning at each sample so the first row can command the turn from rest.
         for (int i = 0; i < steps - 1; i++) {
-            double currentW = lut.get(i).getAngularVel();
-            double nextW = lut.get(i + 1).getAngularVel();
+            double currentW = lut[i].getAngularVel();
+            double nextW = lut[i + 1].getAngularVel();
             double acceleration = ((nextW * nextW) - (currentW * currentW)) /
                     (2.0 * ds);
-            lut.get(i).setAngularVel(direction * currentW);
-            lut.get(i).setAngularAccel(direction * acceleration);
+            lut[i].setAngularVel(direction * currentW);
+            lut[i].setAngularAccel(direction * acceleration);
         }
-        lut.get(steps - 1).setAngularVel(0.0);
-        lut.get(steps - 1).setAngularAccel(0.0);
+        lut[steps - 1].setAngularVel(0.0);
+        lut[steps - 1].setAngularAccel(0.0);
 
         return new FeedforwardLut(lut);
     }

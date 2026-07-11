@@ -93,7 +93,7 @@ public abstract class BaseProfileGenerator {
      * Useful for comparing the raw constraint sweep against {@link #generate()}.
      */
     public MotionParameters[] generateInitialProfile() {
-        Path path = this.path.toPath();
+        Path path = (Path) this.path;
         PathPoint[] points = path.getGeneratedPoints();
 
         MotionParameters[] outputParams = generateBasePass(points, path);
@@ -117,7 +117,7 @@ public abstract class BaseProfileGenerator {
             throw new IllegalArgumentException("BaseFeedforwardGen only handles Path movements.");
         }
 
-        Path path = this.path.toPath();
+        Path path = (Path) this.path;
         PathPoint[] points = path.getGeneratedPoints();
         if (points == null || points.length == 0) {
             throw new IllegalStateException("Points must be set before generating.");
@@ -248,56 +248,53 @@ public abstract class BaseProfileGenerator {
      * @return quick feedforward lookup table
      */
     public FeedforwardLut generateQuick(FollowerConstants config) {
-        Path path = this.path.toPath();
+        Path path = (Path) this.path;
         PathPoint[] points = path.getGeneratedPoints();
-        ArrayList<MotionParameters> lut = new ArrayList<>(points.length);
+        MotionParameters[] lut = new MotionParameters[points.length];
 
         // Base pass: Max velocity everywhere
         for (int i = 0; i < points.length; i++) {
-            MotionParameters parameters = new MotionParameters();
-            parameters.setTangentialVel(config.forwardVelLimitIn);
-            parameters.setDistAlongCurve(
+            lut[i] = new MotionParameters();
+            lut[i].setTangentialVel(config.forwardVelLimitIn);
+            lut[i].setDistAlongCurve(
                     path.getParametricPath().getLengthIn() - points[i].getDistanceToEnd_in()
             );
-            lut.add(parameters);
         }
 
         // Backward pass: Naive deceleration
         // If boosted, relax the boundary condition so the path ends at cruising speed
         if (!path.isAccelBoosted()) {
-            lut.get(points.length - 1).setTangentialVel(0.0);
+            lut[points.length - 1].setTangentialVel(0.0);
         }
 
         for (int i = points.length - 2; i >= 0; i--) {
             double ds =
                     Math.abs(points[i + 1].getDistanceToEnd_in() - points[i].getDistanceToEnd_in());
-            double nextVel = lut.get(i + 1).getTangentialVel();
+            double nextVel = lut[i + 1].getTangentialVel();
             double maxReachableVel =
                     Math.sqrt((nextVel * nextVel) + (2.0 * config.forwardAccelLimitIn * ds));
-            lut.get(i).setTangentialVel(
-                    Math.min(lut.get(i).getTangentialVel(), maxReachableVel)
-            );
+            lut[i].setTangentialVel(Math.min(lut[i].getTangentialVel(), maxReachableVel));
         }
 
         // Forward pass: Naive acceleration and populate angular targets
         // If boosted, relax the boundary condition so the path begins at cruising speed
         if (!path.isAccelBoosted()) {
-            lut.get(0).setTangentialVel(0.0);
+            lut[0].setTangentialVel(0.0);
         }
         Vector finalTangent = path.getParametricPath().getFirstDerivative(1.0);
 
         for (int i = 1; i < points.length; i++) {
             double ds =
                     Math.abs(points[i].getDistanceToEnd_in() - points[i - 1].getDistanceToEnd_in());
-            double prevVel = lut.get(i - 1).getTangentialVel();
+            double prevVel = lut[i - 1].getTangentialVel();
             double maxReachableVel =
                     Math.sqrt((prevVel * prevVel) + (2.0 * config.forwardAccelLimitIn * ds));
 
-            double v = Math.min(lut.get(i).getTangentialVel(), maxReachableVel);
-            lut.get(i).setTangentialVel(v);
+            double v = Math.min(lut[i].getTangentialVel(), maxReachableVel);
+            lut[i].setTangentialVel(v);
 
             double a_t = (ds < EPSILON) ? 0.0 : ((v * v) - (prevVel * prevVel)) / (2.0 * ds);
-            lut.get(i).setTangentialAccel(a_t);
+            lut[i].setTangentialAccel(a_t);
 
             double s = points[i].getDistanceToEnd_in();
             double kappa = points[i].getSignedCurvature();
@@ -308,8 +305,8 @@ public abstract class BaseProfileGenerator {
             double fDoublePrime = path.getInterpolator().getHeadingSecondDerivative(s, dKappa,
                     finalTangent);
 
-            lut.get(i).setAngularVel(fPrime * v);
-            lut.get(i).setAngularAccel((fDoublePrime * (v * v)) + (fPrime * a_t));
+            lut[i].setAngularVel(fPrime * v);
+            lut[i].setAngularAccel((fDoublePrime * (v * v)) + (fPrime * a_t));
         }
 
         return new FeedforwardLut(lut);

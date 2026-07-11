@@ -44,20 +44,14 @@ public abstract class BaseDrivetrainConstants<T extends BaseDrivetrainConstants<
     /** Set the maximum motor output limit for the drivetrain. The default is 1.0. */
     @SuppressWarnings("unchecked")
     public T setMaxPower(double maxPower) {
-        if (!Double.isFinite(maxPower)) {
-            throw new IllegalArgumentException("Maximum power must be finite.");
-        }
         this.maxPower = Math.max(0.0, Math.min(maxPower, 1.0));
         return (T) this;
     }
 
     @SuppressWarnings("unchecked")
     public T setVoltageCompensation(boolean enabled, double nominalVoltage) {
-        if (!Double.isFinite(nominalVoltage) || nominalVoltage <= 0.0) {
-            throw new IllegalArgumentException("Nominal voltage must be positive and finite.");
-        }
         this.voltageCompensationEnabled = enabled;
-        this.nominalVoltage = nominalVoltage;
+        this.nominalVoltage = Math.max(8, Math.min(nominalVoltage, 15));
         return (T) this;
     }
 
