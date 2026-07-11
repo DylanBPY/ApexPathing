@@ -19,9 +19,9 @@ import java.util.Objects;
 import geometry.Dist;
 import geometry.Pose;
 import geometry.Vector;
-import util.AngleUnit;
-import util.DistUnit;
-import util.GeometryFactory;
+import geometry.AngleUnit;
+import geometry.DistUnit;
+import geometry.GeometryFactory;
 
 /**
  * goBILDA Pinpoint Odometry Computer localizer (uses custom driver class)

@@ -5,7 +5,7 @@ import drivetrains.BaseDrivetrainConstants;
 import drivetrains.Mecanum;
 import localizers.BaseLocalizerConstants;
 import localizers.Pinpoint;
-import util.DistUnit;
+import geometry.DistUnit;
 import util.MotorFactory;
 
 /**

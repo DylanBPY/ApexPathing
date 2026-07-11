@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import core.Follower;
 import paths.ExampleAutoPath;
-import util.GeometryFactory;
+import geometry.GeometryFactory;
 
 /**
  * Test Auto utilizing {@link ExampleAutoPath}

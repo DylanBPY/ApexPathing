@@ -4,10 +4,6 @@ import android.annotation.SuppressLint;
 
 import androidx.annotation.NonNull;
 
-import util.AngleUnit;
-import util.DistUnit;
-import util.GeometryFactory;
-
 /**
  * A class representing a 2D position, which consists of a position Vector and a heading Angle.
  * You should consider using a {@link GeometryFactory} to create Pose objects instead of using

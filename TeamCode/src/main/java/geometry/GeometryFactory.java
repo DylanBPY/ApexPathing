@@ -1,11 +1,6 @@
-package util;
+package geometry;
 
 import core.Follower;
-import geometry.Angle;
-import geometry.ArcPose;
-import geometry.Dist;
-import geometry.Pose;
-import geometry.Vector;
 import paths.builders.HolonomicPathBuilder;
 import paths.builders.PathBuilder;
 import paths.builders.TankPathBuilder;

@@ -4,8 +4,6 @@ import android.annotation.SuppressLint;
 
 import androidx.annotation.NonNull;
 
-import util.DistUnit;
-
 /**
  * A class representing a 2D vector or point using {@link Dist} objects.
  *

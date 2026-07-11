@@ -3,9 +3,9 @@ package tuning;
 import geometry.Pose;
 import paths.heading.HolonomicInterpolationStyle;
 import paths.movements.Path;
-import util.AngleUnit;
-import util.DistUnit;
-import util.GeometryFactory;
+import geometry.AngleUnit;
+import geometry.DistUnit;
+import geometry.GeometryFactory;
 
 // TODO: We gotta figure out how to measure lateral error and also add stuff for the other axes
 public class MovementLimitsPhase extends TuningPhase {

@@ -11,9 +11,9 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 import geometry.Pose;
-import util.AngleUnit;
-import util.DistUnit;
-import util.GeometryFactory;
+import geometry.AngleUnit;
+import geometry.DistUnit;
+import geometry.GeometryFactory;
 
 /**
  * SparkFun OTOS (Optical Tracking Odometry Sensor) localizer (uses custom driver class)

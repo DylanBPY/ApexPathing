@@ -1,7 +1,5 @@
 package geometry;
 
-import util.DistUnit;
-
 /**
  * Represents a Uniform Cubic B-Spline.
  * <p>

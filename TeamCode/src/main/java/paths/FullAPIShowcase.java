@@ -8,9 +8,9 @@ import paths.heading.HolonomicInterpolationStyle;
 import paths.movements.FollowerMovement;
 import paths.movements.Path;
 import paths.movements.Turn;
-import util.AngleUnit;
-import util.DistUnit;
-import util.GeometryFactory;
+import geometry.AngleUnit;
+import geometry.DistUnit;
+import geometry.GeometryFactory;
 
 public class FullAPIShowcase {
     private final DistUnit distUnit = DistUnit.IN;

@@ -4,8 +4,6 @@ import android.annotation.SuppressLint;
 
 import androidx.annotation.NonNull;
 
-import util.AngleUnit;
-
 /**
  * A class representing an angle that can be easily converted between {@link AngleUnit}s.
  *
