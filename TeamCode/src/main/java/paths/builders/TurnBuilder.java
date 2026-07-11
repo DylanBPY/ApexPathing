@@ -153,13 +153,12 @@ public class TurnBuilder {
 
         TurnProfileGenerator motionGen = new TurnProfileGenerator(
                 angularVelLimitRad,
-                angularAccelLimitRad
+                angularAccelLimitRad,
+                constants
         );
 
         // Ensure TurnProfileGenerator generates a compatible LUT for the Turn object
-        finalTurn.setFeedforwardLut(motionGen.generate(
-                finalTurn, constants.headingCoeffs.kS, constants.angularKV, constants.angularKA
-        ));
+        finalTurn.setFeedforwardLut(motionGen.generate(finalTurn));
 
         return finalTurn;
     }
