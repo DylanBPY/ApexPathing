@@ -51,7 +51,7 @@ public class FullAPIShowcase {
     private void buildRoutine() {
 
         // 1. SMOOTH_START_TO_END
-        // Blends the heading linearly from the start pose to the end pose.
+        // Blends the heading linearly from the start factory to the end factory.
         smoothBlendPath = Builder.holonomicPath(
                         startPose,
                         pose.of(15, 0),

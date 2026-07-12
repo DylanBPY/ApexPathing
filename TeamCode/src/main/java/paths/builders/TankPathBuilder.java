@@ -1,7 +1,6 @@
 package paths.builders;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import core.FollowerConstants;
 import feedforward.FeedforwardLut;
@@ -13,7 +12,6 @@ import geometry.PathSegment;
 import geometry.Pose;
 import geometry.Vector;
 import paths.callbacks.Callback;
-import paths.constraint.PathConstraint;
 import paths.heading.InterpolationStyle;
 import paths.heading.TankInterpolator;
 import paths.movements.Path;
@@ -25,7 +23,7 @@ import paths.movements.Path;
  *
  * @author DrPixelCat
  */
-public class TankPathBuilder extends PathBuilder {
+public class TankPathBuilder extends PathBuilder<TankPathBuilder> {
 
     /**
      * Creates a new TankPathBuilder using the provided poses.
@@ -33,18 +31,9 @@ public class TankPathBuilder extends PathBuilder {
      * @param poses A sequence of Pose objects defining the path. Must contain at least two poses.
      *              Endpoints cannot be ArcPoses.
      */
-    public TankPathBuilder(Pose... poses) {
-        super(Path.PathType.TANK, poses);
-    }
+    public TankPathBuilder(Pose... poses) { super(Path.PathType.TANK, poses); }
 
-    /**
-     * Overrides the default (TANGENT_FORWARD) interpolation with a different
-     * {@link InterpolationStyle}. Tank drives can only use tangent-based interpolation styles, so
-     * this method will throw an IllegalArgumentException if a non-tangent style is provided.
-     *
-     * @param style The InterpolationStyle to apply.
-     * @return The current TankPathBuilder instance for method chaining.
-     */
+    @Override
     public TankPathBuilder interpolateWith(InterpolationStyle style) throws IllegalArgumentException {
         if (!style.supportsTank()) {
             throw new IllegalArgumentException(
@@ -57,36 +46,7 @@ public class TankPathBuilder extends PathBuilder {
         return this;
     }
 
-    /**
-     * Adds a kinematic constraint to the path at a specific distance percentage.
-     *
-     * @param constraint The {@link PathConstraint} to be added to the path
-     * @return The current TankPathBuilder instance for method chaining.
-     */
-    public TankPathBuilder addConstraint(PathConstraint constraint) {
-        super.addConstraintInternal(constraint);
-        return this;
-    }
-
-    /**
-     * Attaches an executable callback based on the physical distance percentage.
-     *
-     * @param s The physical distance percentage [0.0, 1.0].
-     * @param action The method to execute when the robot reaches the specified distance.
-     * @return The current TankPathBuilder instance for method chaining.
-     */
-    public TankPathBuilder addDistanceCallback(double s, Runnable action) {
-        super.addDistanceCallbackInternal(s, action);
-        return this;
-    }
-
-    /**
-     * Attaches an executable callback based on the robot reaching a target heading.
-     *
-     * @param angle The Angle at which the callback should trigger.
-     * @param action The method to execute when the robot reaches the specified heading.
-     * @return The current TankPathBuilder instance for method chaining.
-     */
+    @Override
     public TankPathBuilder addAngularCallback(Angle angle, Runnable action) {
         this.buildTasks.add(() -> path.addCallback(new Callback(angle, action)));
         return this;
@@ -177,13 +137,7 @@ public class TankPathBuilder extends PathBuilder {
         }
     }
 
-    /**
-     * Builds the path geometry and generates a naive trapezoidal profile.
-     * Used to quickly satisfy the mathematical requirements of a Ramsete controller without
-     * heavy computation.
-     *
-     * @return The constructed Path with a basic FeedforwardLut attached.
-     */
+    @Override
     public Path quickBuild() {
         compileGeometry();
         FollowerConstants constants = FollowerConstants.getInstance();
@@ -198,12 +152,7 @@ public class TankPathBuilder extends PathBuilder {
         return path;
     }
 
-    /**
-     * Builds the path geometry and solves a complete kinematically constrained feedforward
-     * motion profile.
-     *
-     * @return The constructed Path with a fully optimized FeedforwardLut attached.
-     */
+    @Override
     public Path profiledBuild() {
         compileGeometry();
         FollowerConstants constants = FollowerConstants.getInstance();

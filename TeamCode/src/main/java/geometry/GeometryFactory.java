@@ -47,7 +47,7 @@ public class GeometryFactory {
     // endregion
     // region Setters
 
-    /** Sets the pose mirroring configuration. Defaults to {@link PoseMirror#NONE}. */
+    /** Sets the factory mirroring configuration. Defaults to {@link PoseMirror#NONE}. */
     public GeometryFactory setPoseMirror(PoseMirror mirror) {
         this.mirror = mirror;
         return this;
@@ -80,7 +80,7 @@ public class GeometryFactory {
     // endregion
     // region Getters
 
-    /** @return the pose mirroring configuration as a {@link PoseMirror}. */
+    /** @return the factory mirroring configuration as a {@link PoseMirror}. */
     public PoseMirror getPoseMirror() { return mirror; }
 
     /** @return the {@link DistUnit} used for inputs. */
@@ -109,7 +109,7 @@ public class GeometryFactory {
      */
     public Pose pose(double x, double y) { return pose(x, y, 0); }
 
-    /** Creates a pose with a heading of 0 at the origin. */
+    /** Creates a factory with a heading of 0 at the origin. */
     public Pose pose() { return pose(0, 0, 0); }
 
     /**
@@ -124,7 +124,7 @@ public class GeometryFactory {
     // endregion
     // region Paths and turns
 
-    public PathBuilder path(Pose... poses) {
+    public PathBuilder<?> path(Pose... poses) {
         if (isHolonomic) {
             return new HolonomicPathBuilder(poses);
         } else {
@@ -132,9 +132,7 @@ public class GeometryFactory {
         }
     }
 
-    public TurnBuilder turn(Pose startPose) {
-        return new TurnBuilder(startPose);
-    }
+    public TurnBuilder turn(Pose startPose) { return new TurnBuilder(startPose); }
 
     // endregion
     // Vectors

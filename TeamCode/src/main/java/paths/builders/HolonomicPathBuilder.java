@@ -19,7 +19,6 @@ import geometry.PathSegment;
 import geometry.Pose;
 import geometry.Vector;
 import paths.callbacks.Callback;
-import paths.constraint.PathConstraint;
 import paths.heading.HeadingNode;
 import paths.heading.InterpolationStyle;
 import paths.heading.HolonomicInterpolator;
@@ -33,7 +32,7 @@ import paths.movements.Path;
  * @author DrPixelCat
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
-public class HolonomicPathBuilder extends PathBuilder {
+public class HolonomicPathBuilder extends PathBuilder<HolonomicPathBuilder> {
     private static final double EPSILON = 1e-6;
 
     private final Pose startPose;
@@ -58,53 +57,25 @@ public class HolonomicPathBuilder extends PathBuilder {
         this.expectedEndPose = poses[poses.length - 1];
     }
 
-    /**
-     * Overrides the default (SMOOTH_START_TO_END) interpolation with a different
-     * {@link InterpolationStyle}.
-     *
-     * @param style The interpolation style to apply.
-     * @return The current HolonomicPathBuilder instance for method chaining.
-     */
+    @Override
     public HolonomicPathBuilder interpolateWith(InterpolationStyle style) {
         this.style = style;
         return this;
     }
 
-    /**
-     * Overrides the interpolation style, providing a custom angular offset.
-     * Used primarily for {@link InterpolationStyle#TANGENT_CUSTOM}.
-     *
-     * @param style The interpolation style to apply.
-     * @param angleOffset The fixed angle to offset the calculation by.
-     * @return The current HolonomicPathBuilder instance for method chaining.
-     */
+    @Override
     public HolonomicPathBuilder interpolateWith(InterpolationStyle style, Angle angleOffset) {
         this.style = style;
         this.customOffset = angleOffset;
         return this;
     }
 
-    /**
-     * Overrides the interpolation style, providing a fixed field point to face.
-     * Used primarily for {@link InterpolationStyle#FACING_POINT}.
-     *
-     * @param style The interpolation style to apply.
-     * @param pointToFace The field coordinate the robot should face.
-     * @return The current HolonomicPathBuilder instance for method chaining.
-     */
+    @Override
     public HolonomicPathBuilder interpolateWith(InterpolationStyle style, Vector pointToFace) {
         return interpolateWith(style, pointToFace, Angle.zero());
     }
 
-    /**
-     * Overrides the interpolation style, providing a fixed field point and angular offset.
-     * Used primarily for {@link InterpolationStyle#FACING_POINT}.
-     *
-     * @param style The interpolation style to apply.
-     * @param pointToFace The field coordinate the robot should face.
-     * @param angleOffset The fixed angle to offset the facing direction by.
-     * @return The current HolonomicPathBuilder instance for method chaining.
-     */
+    @Override
     public HolonomicPathBuilder interpolateWith(InterpolationStyle style, Vector pointToFace,
                                                 Angle angleOffset) {
         this.style = style;
@@ -113,63 +84,20 @@ public class HolonomicPathBuilder extends PathBuilder {
         return this;
     }
 
-    /**
-     * Adds a heading node for NODE_BASED interpolation.
-     * Automatically sets the interpolation style to NODE_BASED.
-     *
-     * @param pct The distance percentage [0.0, 1.0].
-     * @param target The target Angle at this point.
-     * @return The current HolonomicPathBuilder instance for method chaining.
-     */
+    @Override
     public HolonomicPathBuilder addHeadingNode(double pct, Angle target) {
         this.style = InterpolationStyle.NODE_BASED;
         this.headingNodes.add(new HeadingNode(pct, target));
         return this;
     }
 
-    /**
-     * Sets how far from the end of the path the robot should start rotating to face its final
-     * target direction.
-     *
-     * @param distanceFromEnd The distance away from the end of the path.
-     * @return The current HolonomicPathBuilder instance for method chaining.
-     */
+    @Override
     public HolonomicPathBuilder setDistanceToStartFinalTurn(Dist distanceFromEnd) {
         this.blendWindow = distanceFromEnd;
         return this;
     }
 
-    /**
-     * Adds a kinematic constraint to the path at a specific distance percentage from 0 to 1.
-     * <p><strong> NOTE: Only velocity can be limited on a quickBuild </strong></p>
-     *
-     * @param constraint The {@link PathConstraint} to apply
-     * @return The current HolonomicPathBuilder instance for method chaining.
-     */
-    public HolonomicPathBuilder addConstraint(PathConstraint constraint) {
-        super.addConstraintInternal(constraint);
-        return this;
-    }
-
-    /**
-     * Attaches an executable callback based on the physical distance percentage.
-     *
-     * @param s The physical distance percentage [0.0, 1.0].
-     * @param action The method to execute when the robot reaches the specified distance.
-     * @return The current HolonomicPathBuilder instance for method chaining.
-     */
-    public HolonomicPathBuilder addDistanceCallback(double s, Runnable action) {
-        super.addDistanceCallbackInternal(s, action);
-        return this;
-    }
-
-    /**
-     * Attaches an executable callback based on the robot reaching a target heading.
-     *
-     * @param angle The Angle at which the callback should trigger.
-     * @param action The code to execute.
-     * @return The current HolonomicPathBuilder instance for method chaining.
-     */
+    @Override
     public HolonomicPathBuilder addAngularCallback(Angle angle, Runnable action) {
         buildTasks.add(() -> {
             if (style == InterpolationStyle.SMOOTH_START_TO_END) {
@@ -314,7 +242,7 @@ public class HolonomicPathBuilder extends PathBuilder {
             if (!intermediateWarningSent && Double.isFinite(currentPose.getHeading().getRad())) {
                 String headingSource = style == InterpolationStyle.FACING_POINT ?
                         "FACING_POINT derives headings from the point to face." :
-                        "Only the final pose heading controls the end heading.";
+                        "Only the final factory heading controls the end heading.";
                 path.addWarning("APEX WARNING: Intermediate B-Spline headings are currently " +
                         "ignored! " + headingSource);
                 intermediateWarningSent = true;
@@ -443,24 +371,14 @@ public class HolonomicPathBuilder extends PathBuilder {
         }
     }
 
-    /**
-     * Builds the path geometry without generating a physical motion profile.
-     * The follower will automatically use dynamic velocity-bounded feedback.
-     *
-     * @return The constructed Path.
-     */
+    @Override
     public Path quickBuild() {
         compileGeometry();
         path.setFeedforwardLut(null);
         return path;
     }
 
-    /**
-     * Builds the path geometry and solves a complete kinematically constrained feedforward
-     * motion profile.
-     *
-     * @return The constructed Path with an attached FeedforwardLut.
-     */
+    @Override
     public Path profiledBuild() {
         compileGeometry();
         FollowerConstants constants = FollowerConstants.getInstance();

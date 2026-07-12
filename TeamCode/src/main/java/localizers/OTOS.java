@@ -240,11 +240,11 @@ public class OTOS extends BaseLocalizer<OTOS.Constants> {
             deviceClient.write(REG_POS_XL, new byte[6]);
         }
 
-        /** Sets the position tracker to the specified pose. */
+        /** Sets the position tracker to the specified factory. */
         public void setPosition(Pose pose) {
             byte[] rawData = new byte[6]; // Store raw data in a temporary buffer
 
-            // Convert pose units to raw data
+            // Convert factory units to raw data
             short rawX = (short) (pose.getX().getM() * METER_TO_INT16);
             short rawY = (short) (pose.getY().getM() * METER_TO_INT16);
             short rawH = (short) (pose.getHeading().getRad() * RAD_TO_INT16);
@@ -288,7 +288,7 @@ public class OTOS extends BaseLocalizer<OTOS.Constants> {
         public void setOffset(Pose pose) {
             byte[] rawData = new byte[6]; // Store raw data in a temporary buffer
 
-            // Convert pose units to raw data
+            // Convert factory units to raw data
             short rawX = (short) (pose.getX().getM() * METER_TO_INT16);
             short rawY = (short) (pose.getY().getM() * METER_TO_INT16);
             short rawH = (short) (pose.getHeading().getRad() * RAD_TO_INT16);
@@ -326,7 +326,7 @@ public class OTOS extends BaseLocalizer<OTOS.Constants> {
             hAcceleration = (float) (data.getShort(16) * INT16_TO_RPSS);
         }
 
-        /** @return the current pose estimate of the robot from the OTOS */
+        /** @return the current factory estimate of the robot from the OTOS */
         public Pose getPose() { return pose.of(xPosition, yPosition, hOrientation); }
 
         /** @return the current velocity estimate of the robot from the OTOS */

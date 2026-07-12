@@ -1,5 +1,6 @@
 package paths;
 
+import core.Follower;
 import geometry.Angle;
 import geometry.Pose;
 import paths.movements.FollowerMovement;
@@ -12,15 +13,19 @@ import geometry.GeometryFactory;
 public class ExampleAutoPath {
     private final DistUnit distUnit = DistUnit.IN;
     private final AngleUnit angleUnit = AngleUnit.DEG;
-    public GeometryFactory pose = new GeometryFactory(distUnit, angleUnit);
-    private final Pose startPose;
+    public GeometryFactory factory;
+
+    private static final Pose startPose = Pose.Common.CENTER.get();
 
     public Path testPath;
     public Turn testTurn;
 
-    public ExampleAutoPath(GeometryFactory.Mirror mirror) {
-        pose.setMirror(mirror);
-        startPose = Pose.Common.CENTER.get(); // (0, 0, 0)
+    public ExampleAutoPath(Follower follower, GeometryFactory.PoseMirror mirror) {
+        factory = new GeometryFactory(follower)
+                .setDistUnit(distUnit)
+                .setAngleUnit(angleUnit)
+                .setPoseMirror(mirror);
+
         buildRoutine();
     }
 
@@ -35,20 +40,13 @@ public class ExampleAutoPath {
 
         // 1. THE CORE B-SPLINE
         // Demonstrating standard routing, auto-tightening, and educational warnings
-        testPath = Builder.holonomicPath(
+        testPath = factory.path(
                         startPose,
-                        pose.of(15, 0), // Standard waypoint
-                        pose.of(25, 0, 90), // INTENTIONAL WARNING: Apex will ignore this
-                        // intermediate heading and warn the user!
-                        pose.arcPoseOf(25, 25, 10), // ArcEnforcement: Forces large, relaxed
-                        // curves into a sharper turn with a 10in radius while maintaining C2
-                        // continuity
-                        pose.of(45, 25, 45) // The final waypoint dictates the target heading for
-                        // the end of this curve
+                        factory.pose(15, 0),
+                        factory.pose(25, 0, 90),
+                        factory.arcPose(25, 25, 10),
+                        factory.pose(45, 25, 45)
                 )
-
-                // 2. DISTANCE CALLBACK: Triggers our custom function exactly halfway (s=0.5)
-                // down the curve
                 .addDistanceCallback(0.5, this::exampleCallback)
 
                 // 3. ANGULAR CALLBACK: Triggers precisely when the robot rotates past the
@@ -73,7 +71,7 @@ public class ExampleAutoPath {
 
         // 6. THE TURN BUILDER
         // Seamlessly starts EXACTLY where the last path ended using .getEndPose()
-        testTurn = Builder.turn(testPath.getEndPose())
+        testTurn = g.turn(testPath.getEndPose())
                 // Defines the final heading the robot should rotate to
                 .turnTo(Angle.fromRad(Math.PI / 2))
 
