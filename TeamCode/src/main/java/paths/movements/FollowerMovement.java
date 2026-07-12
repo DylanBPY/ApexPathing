@@ -12,7 +12,6 @@ import geometry.Pose;
 public abstract class FollowerMovement {
     private boolean started = false;
     private boolean ended = false;
-    FollowerMovement movement;
 
     /**
      * Gets the expected final pose of the robot after this movement is completed.
