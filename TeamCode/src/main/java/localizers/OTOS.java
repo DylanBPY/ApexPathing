@@ -8,7 +8,6 @@ import com.qualcomm.robotcore.hardware.configuration.annotations.DevicePropertie
 import com.qualcomm.robotcore.hardware.configuration.annotations.I2cDeviceType;
 
 import java.nio.ByteBuffer;
-import java.util.Objects;
 
 import geometry.Pose;
 import geometry.AngleUnit;
@@ -16,7 +15,8 @@ import geometry.DistUnit;
 import geometry.GeometryFactory;
 
 /**
- * SparkFun OTOS (Optical Tracking Odometry Sensor) localizer (uses custom driver class)
+ * SparkFun OTOS (Optical Tracking Odometry Sensor) localizer with a custom driver class
+ * optimized for Apex Pathing.
  *
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
@@ -46,14 +46,14 @@ public class OTOS extends BaseLocalizer<OTOS.Constants> {
 
     /** Configuration class for the Sparkfun OTOS localizer. */
     public static class Constants extends BaseLocalizerConstants<Constants> {
-        public String name = "defaultOTOSNName";
+        public String name = null;
         public Pose offset = Pose.zero();
         public double linearScalar = 1.0;
         public double angularScalar = 1.0;
 
         @Override
         public OTOS build(HardwareMap hardwareMap) {
-            if (Objects.equals(this.name, "defaultOTOSName")) {
+            if (this.name == null) {
                 throw new IllegalArgumentException("OTOS name is not set in the localizer constants.");
             }
             return new OTOS(this, hardwareMap);
@@ -93,7 +93,8 @@ public class OTOS extends BaseLocalizer<OTOS.Constants> {
          */
         public Constants setAngularScalar(double angularScalar) {
             if (angularScalar < Driver.MIN_SCALAR || angularScalar > Driver.MAX_SCALAR) {
-                throw new IllegalArgumentException("Angular scalar must be between " + Driver.MIN_SCALAR + " and " + Driver.MAX_SCALAR);
+                throw new IllegalArgumentException("Angular scalar must be between " +
+                        Driver.MIN_SCALAR + " and " + Driver.MAX_SCALAR);
             }
             this.angularScalar = angularScalar;
             return this;
