@@ -6,7 +6,6 @@ import controllers.PDSController.PDSCoefficients;
 
 public class HeadingPhase extends TuningPhase {
     private PDSRoutine routine;
-    subPhase currentSubPhase = subPhase.PRE_TUNE_PHASE;
 
     public HeadingPhase(TunerContext context) { super(context); }
 
