@@ -2,17 +2,10 @@ package tuning;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 public abstract class TuningPhase {
-    enum TuningAxis {
-        DRIVE,
-        STRAFE,
-        HEADING
-    }
-
-    enum PDSState {
-        TUNING_KS,
-        SETTLING_BETWEEN_KS,
-        SETTLING_FOR_PD,
-        TUNING_PD
+    enum TuningState {
+        SELECT_MODE,
+        TUNING,
+        RESULTS
     }
     protected final TunerContext context;
     protected LinearOpMode opMode;
