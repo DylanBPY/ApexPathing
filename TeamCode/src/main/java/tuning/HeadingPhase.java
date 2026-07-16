@@ -4,6 +4,9 @@ import geometry.Angle;
 import geometry.GeometryFactory;
 import paths.movements.Turn;
 
+/**
+ * @author Sohum Arora - 22985 Paraducks
+ */
 public class HeadingPhase extends TuningPhase {
     private final TuningValues values;
     private PDSRoutine routine;
@@ -62,22 +65,21 @@ public class HeadingPhase extends TuningPhase {
 
     @Override
     protected void manualTuned() {
-        if (opMode.gamepad1.dpadLeftWasPressed()) {
+        if (opMode.gamepad1.leftBumperWasPressed()) {
             selected = (selected + 2) % 3;
         }
-        if (opMode.gamepad1.dpadRightWasPressed()) {
+        if (opMode.gamepad1.rightBumperWasPressed()) {
             selected = (selected + 1) % 3;
         }
 
-        double direction = opMode.gamepad1.dpadUpWasPressed() ? 1.0 :
-                opMode.gamepad1.dpadDownWasPressed() ? -1.0 : 0.0;
-        if (direction != 0.0) {
+        double change = manualChange();
+        if (change != 0.0) {
             if (selected == 0) {
-                values.heading.kP = Math.max(0.0, values.heading.kP + direction * 0.01);
+                values.heading.kP = Math.max(0.0, values.heading.kP + change);
             } else if (selected == 1) {
-                values.heading.kD = Math.max(0.0, values.heading.kD + direction * 0.001);
+                values.heading.kD = Math.max(0.0, values.heading.kD + change);
             } else {
-                values.heading.kS = Math.max(0.0, values.heading.kS + direction * 0.005);
+                values.heading.kS = Math.max(0.0, values.heading.kS + change);
             }
             context.getFollower().setHeadingTuning(values.heading);
         }
@@ -90,13 +92,14 @@ public class HeadingPhase extends TuningPhase {
         }
 
         context.getTelemetry().addData("Selected", selected == 0 ? "P" : selected == 1 ? "D" : "S");
-        context.getTelemetry().addData("P", values.heading.kP);
-        context.getTelemetry().addData("D", values.heading.kD);
-        context.getTelemetry().addData("S", values.heading.kS);
-        context.getTelemetry().addLine("Left/Right selects a value.");
-        context.getTelemetry().addLine("Up/Down changes the value.");
-        context.getTelemetry().addLine("X runs a test turn.");
-        context.getTelemetry().addLine("A accepts the values.");
+        context.getTelemetry().addData("P / D / S", "%.6f / %.6f / %.6f", values.heading.kP,
+                values.heading.kD, values.heading.kS);
+        context.getTelemetry().addData("Increment", increment);
+        context.getTelemetry().addLine("Up/Down: change value");
+        context.getTelemetry().addLine("Left/Right: change increment");
+        context.getTelemetry().addLine("LB/RB: select value");
+        context.getTelemetry().addLine("X: test turn");
+        context.getTelemetry().addLine("A: save");
         context.getTelemetry().update();
 
         if (opMode.gamepad1.aWasPressed()) {

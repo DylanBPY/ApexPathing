@@ -3,6 +3,9 @@ package tuning;
 import controllers.PDSController.PDSCoefficients;
 import core.FollowerConstants;
 
+/**
+ * @author Sohum Arora - 22985 Paraducks
+ */
 public class TuningValues {
     PDSCoefficients heading;
     PDSCoefficients translation;

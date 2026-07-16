@@ -9,6 +9,9 @@ import geometry.Vector;
 import paths.heading.InterpolationStyle;
 import paths.movements.Path;
 
+/**
+ * @author Sohum Arora - 22985 Paraducks
+ */
 public class CentripetalPhase extends TuningPhase {
     private static final double ERROR_TARGET = 0.15;
 
@@ -19,7 +22,6 @@ public class CentripetalPhase extends TuningPhase {
     private double errorSum;
     private int samples;
     private double meanError;
-    private double manualStep;
     private boolean complete;
 
     public CentripetalPhase(TunerContext context, TuningValues values) {
@@ -67,7 +69,6 @@ public class CentripetalPhase extends TuningPhase {
         double upper = Math.max(seed * 2.0, 2.0 / fullStrafeAcceleration);
         search = new BinarySearch(0.0, upper, upper / 64.0);
         values.centripetal = manualMode ? seed : search.getGuess();
-        manualStep = Math.max(seed * 0.05, 0.00001);
         context.getFollower().setCentripetalTuning(values.centripetal);
         context.getFollower().setDriveControllerEnabled(false);
         startTrial();
@@ -146,21 +147,9 @@ public class CentripetalPhase extends TuningPhase {
 
     @Override
     protected void manualTuned() {
-        boolean changed = false;
-        if (opMode.gamepad1.dpadUpWasPressed()) {
-            values.centripetal += manualStep;
-            changed = true;
-        }
-        if (opMode.gamepad1.dpadDownWasPressed()) {
-            values.centripetal = Math.max(0.0, values.centripetal - manualStep);
-            changed = true;
-        }
-        if (opMode.gamepad1.dpadRightWasPressed()) {
-            manualStep *= 2.0;
-        }
-        if (opMode.gamepad1.dpadLeftWasPressed()) {
-            manualStep = Math.max(manualStep / 2.0, 0.000001);
-        }
+        double change = manualChange();
+        boolean changed = change != 0.0;
+        values.centripetal = Math.max(0.0, values.centripetal + change);
 
         if (changed) {
             context.getFollower().setCentripetalTuning(values.centripetal);
@@ -171,10 +160,10 @@ public class CentripetalPhase extends TuningPhase {
 
         context.getTelemetry().addData("Centripetal", values.centripetal);
         context.getTelemetry().addData("Mean signed error", meanError);
-        context.getTelemetry().addData("Step", manualStep);
-        context.getTelemetry().addLine("Up/Down changes the gain.");
-        context.getTelemetry().addLine("Left/Right changes the step.");
-        context.getTelemetry().addLine("A accepts the value.");
+        context.getTelemetry().addData("Increment", increment);
+        context.getTelemetry().addLine("Up/Down: change value");
+        context.getTelemetry().addLine("Left/Right: change increment");
+        context.getTelemetry().addLine("A: save");
         context.getTelemetry().update();
 
         if (opMode.gamepad1.aWasPressed()) {

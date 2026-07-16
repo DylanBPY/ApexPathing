@@ -6,6 +6,9 @@ import controllers.PDSController;
 import geometry.Angle;
 import geometry.Pose;
 
+/**
+ * @author Sohum Arora - 22985 Paraducks
+ */
 public class LimitsPhase extends TuningPhase {
     enum LimitStage {
         TRANSLATION,
@@ -238,26 +241,38 @@ public class LimitsPhase extends TuningPhase {
             return;
         }
 
-        if (opMode.gamepad1.dpadLeftWasPressed()) {
+        if (opMode.gamepad1.leftBumperWasPressed()) {
             selected = (selected + 12) % 13;
         }
-        if (opMode.gamepad1.dpadRightWasPressed()) {
+        if (opMode.gamepad1.rightBumperWasPressed()) {
             selected = (selected + 1) % 13;
         }
 
-        double direction = opMode.gamepad1.dpadUpWasPressed() ? 1.0 :
-                opMode.gamepad1.dpadDownWasPressed() ? -1.0 : 0.0;
-        if (direction != 0.0) {
-            adjustSelected(direction);
+        double change = manualChange();
+        if (change != 0.0) {
+            adjustSelected(change);
             context.getFollower().setMovementTuning(values.translation, values.translationKV, values.translationKA,
                     values.angularKV, values.angularKA, values.forwardVelocity, values.strafeVelocity);
         }
 
         context.getTelemetry().addData("Selected", selectedName());
         context.getTelemetry().addData("Value", selectedValue());
-        context.getTelemetry().addLine("Left/Right selects a value.");
-        context.getTelemetry().addLine("Up/Down changes the value.");
-        context.getTelemetry().addLine("A accepts the values.");
+        context.getTelemetry().addData("Increment", increment);
+        context.getTelemetry().addData("Translation P / D / S", "%.6f / %.6f / %.6f", values.translation.kP,
+                values.translation.kD, values.translation.kS);
+        context.getTelemetry().addData("Forward vel / accel", "%.6f / %.6f", values.forwardVelocity,
+                values.forwardAcceleration);
+        context.getTelemetry().addData("Strafe vel / accel", "%.6f / %.6f", values.strafeVelocity,
+                values.strafeAcceleration);
+        context.getTelemetry().addData("Angular vel / accel", "%.6f / %.6f", values.angularVelocity,
+                values.angularAcceleration);
+        context.getTelemetry().addData("Translation kV / kA", "%.6f / %.6f", values.translationKV,
+                values.translationKA);
+        context.getTelemetry().addData("Angular kV / kA", "%.6f / %.6f", values.angularKV, values.angularKA);
+        context.getTelemetry().addLine("Up/Down: change value");
+        context.getTelemetry().addLine("Left/Right: change increment");
+        context.getTelemetry().addLine("LB/RB: select value");
+        context.getTelemetry().addLine("A: save");
         context.getTelemetry().update();
 
         if (opMode.gamepad1.aWasPressed()) {
@@ -281,46 +296,46 @@ public class LimitsPhase extends TuningPhase {
         return currentValues[selected];
     }
 
-    private void adjustSelected(double direction) {
+    private void adjustSelected(double change) {
         switch (selected) {
             case 0:
-                values.translation.kP = Math.max(0.0, values.translation.kP + direction * 0.01);
+                values.translation.kP = Math.max(0.0, values.translation.kP + change);
                 break;
             case 1:
-                values.translation.kD = Math.max(0.0, values.translation.kD + direction * 0.001);
+                values.translation.kD = Math.max(0.0, values.translation.kD + change);
                 break;
             case 2:
-                values.translation.kS = Math.max(0.0, values.translation.kS + direction * 0.005);
+                values.translation.kS = Math.max(0.0, values.translation.kS + change);
                 break;
             case 3:
-                values.forwardVelocity = Math.max(0.0, values.forwardVelocity + direction);
+                values.forwardVelocity = Math.max(0.0, values.forwardVelocity + change);
                 break;
             case 4:
-                values.forwardAcceleration = Math.max(0.0, values.forwardAcceleration + direction * 2.0);
+                values.forwardAcceleration = Math.max(0.0, values.forwardAcceleration + change);
                 break;
             case 5:
-                values.strafeVelocity = Math.max(0.0, values.strafeVelocity + direction);
+                values.strafeVelocity = Math.max(0.0, values.strafeVelocity + change);
                 break;
             case 6:
-                values.strafeAcceleration = Math.max(0.0, values.strafeAcceleration + direction * 2.0);
+                values.strafeAcceleration = Math.max(0.0, values.strafeAcceleration + change);
                 break;
             case 7:
-                values.angularVelocity = Math.max(0.0, values.angularVelocity + direction * 0.1);
+                values.angularVelocity = Math.max(0.0, values.angularVelocity + change);
                 break;
             case 8:
-                values.angularAcceleration = Math.max(0.0, values.angularAcceleration + direction * 0.2);
+                values.angularAcceleration = Math.max(0.0, values.angularAcceleration + change);
                 break;
             case 9:
-                values.translationKV = Math.max(0.0, values.translationKV + direction * 0.001);
+                values.translationKV = Math.max(0.0, values.translationKV + change);
                 break;
             case 10:
-                values.translationKA = Math.max(0.0, values.translationKA + direction * 0.0005);
+                values.translationKA = Math.max(0.0, values.translationKA + change);
                 break;
             case 11:
-                values.angularKV = Math.max(0.0, values.angularKV + direction * 0.005);
+                values.angularKV = Math.max(0.0, values.angularKV + change);
                 break;
             case 12:
-                values.angularKA = Math.max(0.0, values.angularKA + direction * 0.002);
+                values.angularKA = Math.max(0.0, values.angularKA + change);
                 break;
         }
     }

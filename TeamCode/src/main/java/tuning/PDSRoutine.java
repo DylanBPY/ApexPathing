@@ -6,6 +6,9 @@ import controllers.PDSController;
 import controllers.PDSController.PDSCoefficients;
 import geometry.Pose;
 
+/**
+ * @author Sohum Arora - 22985 Paraducks
+ */
 public class PDSRoutine {
     enum TuningAxis {
         DRIVE,

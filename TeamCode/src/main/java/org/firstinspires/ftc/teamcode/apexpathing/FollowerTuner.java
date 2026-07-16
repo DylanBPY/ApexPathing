@@ -13,6 +13,9 @@ import tuning.TuningPhase;
 import tuning.TuningValues;
 import tuning.VelocityFeedbackPhase;
 
+/**
+ * @author Sohum Arora - 22985 Paraducks
+ */
 @TeleOp(name = "Follower Tuner", group = "Apex Pathing Tuning")
 public class FollowerTuner extends LinearOpMode {
     enum TunerPhase {

@@ -1,6 +1,10 @@
 package tuning;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
+/**
+ * @author Sohum Arora - 22985 Paraducks
+ */
 public abstract class TuningPhase {
     enum TuningState {
         SELECT_MODE,
@@ -10,6 +14,7 @@ public abstract class TuningPhase {
     protected final TunerContext context;
     protected LinearOpMode opMode;
     protected boolean manualMode;
+    protected double increment;
     private TuningState state = TuningState.SELECT_MODE;
 
     protected TuningPhase(TunerContext context) {
@@ -19,6 +24,7 @@ public abstract class TuningPhase {
     public void run(LinearOpMode opMode) {
         this.opMode = opMode;
         manualMode = false;
+        increment = 0.001;
         state = TuningState.SELECT_MODE;
 
         while (opMode.opModeIsActive()) {
@@ -76,6 +82,22 @@ public abstract class TuningPhase {
         reportResults();
         context.getTelemetry().addLine("Press B to continue.");
         context.getTelemetry().update();
+    }
+
+    protected double manualChange() {
+        if (opMode.gamepad1.dpadLeftWasPressed()) {
+            increment = Math.max(increment / 10.0, 0.000001);
+        }
+        if (opMode.gamepad1.dpadRightWasPressed()) {
+            increment *= 10.0;
+        }
+        if (opMode.gamepad1.dpadUpWasPressed()) {
+            return increment;
+        }
+        if (opMode.gamepad1.dpadDownWasPressed()) {
+            return -increment;
+        }
+        return 0.0;
     }
 
     protected abstract String getPhaseName();

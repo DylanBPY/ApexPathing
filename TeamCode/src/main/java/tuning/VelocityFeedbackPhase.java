@@ -16,6 +16,9 @@ enum FeedbackAxis {
     ANGULAR
 }
 
+/**
+ * @author Sohum Arora - 22985 Paraducks
+ */
 public class VelocityFeedbackPhase extends TuningPhase {
     private static final int SEARCH_ROUNDS = 4;
 
@@ -249,22 +252,17 @@ public class VelocityFeedbackPhase extends TuningPhase {
 
     @Override
     protected void manualTuned() {
-        if (opMode.gamepad1.dpadLeftWasPressed() || opMode.gamepad1.dpadRightWasPressed()) {
+        if (opMode.gamepad1.leftBumperWasPressed() || opMode.gamepad1.rightBumperWasPressed()) {
             axis = axis == FeedbackAxis.TRANSLATION ? FeedbackAxis.ANGULAR : FeedbackAxis.TRANSLATION;
             startTest();
         }
 
-        double direction = opMode.gamepad1.dpadUpWasPressed() ? 1.0 :
-                opMode.gamepad1.dpadDownWasPressed() ? -1.0 : 0.0;
-        if (direction != 0.0) {
-            double base = axis == FeedbackAxis.TRANSLATION ?
-                    Math.max(values.translation.kD, values.translationKV) :
-                    Math.max(values.heading.kD, values.angularKV);
-            double adjustment = Math.max(base * 0.05, 0.00001);
+        double change = manualChange();
+        if (change != 0.0) {
             if (axis == FeedbackAxis.TRANSLATION) {
-                values.translationFeedback = Math.max(0.0, values.translationFeedback + direction * adjustment);
+                values.translationFeedback = Math.max(0.0, values.translationFeedback + change);
             } else {
-                values.angularFeedback = Math.max(0.0, values.angularFeedback + direction * adjustment);
+                values.angularFeedback = Math.max(0.0, values.angularFeedback + change);
             }
             context.getFollower().setVelocityFeedbackTuning(values.translationFeedback, values.angularFeedback);
             startTest();
@@ -284,10 +282,12 @@ public class VelocityFeedbackPhase extends TuningPhase {
         context.getTelemetry().addData("Angular feedback", values.angularFeedback);
         context.getTelemetry().addData("Translation RMS error", translationScore);
         context.getTelemetry().addData("Angular RMS error", angularScore);
-        context.getTelemetry().addLine("Left/Right selects a gain.");
-        context.getTelemetry().addLine("Up/Down changes the gain.");
-        context.getTelemetry().addLine("X restarts the current test.");
-        context.getTelemetry().addLine("A accepts both gains.");
+        context.getTelemetry().addData("Increment", increment);
+        context.getTelemetry().addLine("Up/Down: change value");
+        context.getTelemetry().addLine("Left/Right: change increment");
+        context.getTelemetry().addLine("LB/RB: select value");
+        context.getTelemetry().addLine("X: restart test");
+        context.getTelemetry().addLine("A: save");
         context.getTelemetry().update();
 
         if (opMode.gamepad1.aWasPressed()) {
