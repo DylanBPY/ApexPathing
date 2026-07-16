@@ -1,6 +1,6 @@
 package tuning;
 
-class BinarySearch {
+public class BinarySearch {
     private double maximum;
     private double minimum;
     private final double threshold;
