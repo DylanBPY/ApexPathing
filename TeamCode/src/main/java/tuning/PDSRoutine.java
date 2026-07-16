@@ -6,20 +6,19 @@ import controllers.PDSController;
 import controllers.PDSController.PDSCoefficients;
 import geometry.Pose;
 
-enum TuningAxis {
-    DRIVE,
-    STRAFE,
-    HEADING
-}
+public class PDSRoutine {
+    enum TuningAxis {
+        DRIVE,
+        STRAFE,
+        HEADING
+    }
 
-enum PDSState {
-    TUNING_KS,
-    SETTLING_BETWEEN_KS,
-    SETTLING_FOR_PD,
-    TUNING_PD
-}
-
-class PDSRoutine {
+    enum PDSState {
+        TUNING_KS,
+        SETTLING_BETWEEN_KS,
+        SETTLING_FOR_PD,
+        TUNING_PD
+    }
     private final double movementThreshold = 0.05;
     private final double headingThreshold = 0.02;
     private final double guessTime = 1500.0;

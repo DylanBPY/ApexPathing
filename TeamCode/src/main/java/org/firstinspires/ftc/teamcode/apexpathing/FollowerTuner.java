@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.apexpathing;
 
-import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -14,16 +13,14 @@ import tuning.TuningPhase;
 import tuning.TuningValues;
 import tuning.VelocityFeedbackPhase;
 
-enum TunerPhase {
-    HEADING,
-    MOVEMENT_LIMITS,
-    CENTRIPETAL,
-    VELOCITY_FEEDBACK
-}
-
-@Configurable
 @TeleOp(name = "Follower Tuner", group = "Apex Pathing Tuning")
 public class FollowerTuner extends LinearOpMode {
+    enum TunerPhase {
+        HEADING,
+        MOVEMENT_LIMITS,
+        CENTRIPETAL,
+        VELOCITY_FEEDBACK
+    }
     private TunerContext context;
     private TuningPhase[] phases;
     private int selectedPhaseIndex;

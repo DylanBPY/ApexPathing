@@ -45,7 +45,7 @@ public class HeadingPhase extends TuningPhase {
             context.getFollower().setHeadingTuning(values.heading);
             return;
         }
-        routine = new PDSRoutine(context, TuningAxis.HEADING);
+        routine = new PDSRoutine(context, PDSRoutine.TuningAxis.HEADING);
         routine.start();
     }
 

@@ -6,22 +6,21 @@ import controllers.PDSController;
 import geometry.Angle;
 import geometry.Pose;
 
-enum LimitStage {
-    TRANSLATION,
-    SETTLING,
-    RUNNING
-}
-
-enum LimitTrial {
-    FORWARD,
-    BACKWARD,
-    LEFT,
-    RIGHT,
-    COUNTERCLOCKWISE,
-    CLOCKWISE
-}
-
 public class LimitsPhase extends TuningPhase {
+    enum LimitStage {
+        TRANSLATION,
+        SETTLING,
+        RUNNING
+    }
+
+    enum LimitTrial {
+        FORWARD,
+        BACKWARD,
+        LEFT,
+        RIGHT,
+        COUNTERCLOCKWISE,
+        CLOCKWISE
+    }
     private static final double RUN_TIME = 2000.0;
     private static final double SETTLE_TIME = 800.0;
 
@@ -79,7 +78,7 @@ public class LimitsPhase extends TuningPhase {
         stage = LimitStage.TRANSLATION;
         headingHold = new PDSController(values.heading);
         headingHold.setAngularController();
-        routine = new PDSRoutine(context, TuningAxis.DRIVE);
+        routine = new PDSRoutine(context, PDSRoutine.TuningAxis.DRIVE);
         routine.start();
     }
 
