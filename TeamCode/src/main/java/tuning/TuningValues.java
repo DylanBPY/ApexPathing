@@ -36,7 +36,7 @@ public class TuningValues {
         translationKA = constants.translationalKA;
         angularKV = constants.angularKV;
         angularKA = constants.angularKA;
-        centripetal = constants.Kcentripetal;
+        centripetal = constants.kCentripetal;
         translationFeedback = constants.velocityFeedbackGain;
         angularFeedback = constants.angularVelocityFeedbackGain;
     }
@@ -80,7 +80,7 @@ public class TuningValues {
     }
 
     void saveCentripetal(TunerContext context) {
-        context.constants.Kcentripetal = centripetal;
+        context.constants.kCentripetal = centripetal;
         context.getFollower().setCentripetalTuning(centripetal);
     }
 

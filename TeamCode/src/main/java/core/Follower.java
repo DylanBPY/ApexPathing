@@ -90,7 +90,7 @@ public class Follower {
         this.translationalKA = this.constants.translationalKA;
         this.angularKV = this.constants.angularKV;
         this.angularKA = this.constants.angularKA;
-        this.centripetalGain = this.constants.Kcentripetal;
+        this.centripetalGain = this.constants.kCentripetal;
         this.velocityFeedbackGain = this.constants.velocityFeedbackGain;
         this.angularVelocityFeedbackGain = this.constants.angularVelocityFeedbackGain;
 

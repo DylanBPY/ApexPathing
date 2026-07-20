@@ -116,7 +116,7 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
                 + signedStatic(v, a, config.translationalCoeffs.kS);
 
         double latPower = Math.abs(
-                (v * v * kappa) * config.Kcentripetal * normalKinematics.accelMultiplier
+                (v * v * kappa) * config.kCentripetal * normalKinematics.accelMultiplier
         );
 
         double omega = fPrime * v;
@@ -159,7 +159,7 @@ public class MecanumProfileGenerator extends BaseProfileGenerator {
                 + signedStatic(v, a_t, config.translationalCoeffs.kS);
 
         // Centripetal correction is a sideways force, so mecanum inefficiency applies here too.
-        double pLateral = (v * v * kappa) * config.Kcentripetal * normalK.accelMultiplier;
+        double pLateral = (v * v * kappa) * config.kCentripetal * normalK.accelMultiplier;
 
         double headingKs = signedStatic(omega, alpha, config.headingCoeffs.kS);
         double pHeading = (omega * config.angularKV) + (alpha * config.angularKA) + headingKs;

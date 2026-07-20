@@ -139,7 +139,7 @@ public class SwerveProfileGenerator extends BaseProfileGenerator {
                 + (accel * constants.translationalKA)
                 + signedStatic(vel, accel, constants.translationalCoeffs.kS);
 
-        double normPow = (vel * vel * kappa) * constants.Kcentripetal;
+        double normPow = (vel * vel * kappa) * constants.kCentripetal;
 
         double omega = fPrime * vel;
         double alpha = (fDoublePrime * (vel * vel)) + (fPrime * accel);
