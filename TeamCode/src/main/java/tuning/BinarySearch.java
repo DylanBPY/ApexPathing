@@ -1,9 +1,15 @@
 package tuning;
 
+/**
+ * A binary search algorithm that finds a value within a specified range. The search continues until
+ * the difference between the last guess and the current guess is less than the specified threshold.
+ *
+ * @author Dylan B. - 18597 RoboClovers - Delta
+ */
 public class BinarySearch {
+    private final double threshold;
     private double maximum;
     private double minimum;
-    private final double threshold;
     private double guess;
 
     BinarySearch(double minimum, double maximum, double threshold) {
@@ -24,7 +30,5 @@ public class BinarySearch {
         return Math.abs(lastGuess - guess) > threshold;
     }
 
-    double getGuess() {
-        return guess;
-    }
+    double getGuess() { return guess; }
 }

@@ -106,7 +106,7 @@ public class PDSController {
     public double calculate(double error) {
         long currentNano = System.nanoTime();
 
-        // Nano seconds to seconds
+        // Nanoseconds to seconds
         double deltaTime = (currentNano - lastTimestamp) / 1_000_000_000.0;
 
         // Detect if loop is too fast (div by zero risk) or too slow (integral/derivative spike)

@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.util.Range;
 import controllers.DriveController;
 import controllers.DriveController.AllocatedCommand;
 import controllers.TurnController;
+import controllers.PDSController.PDSCoefficients;
 import controllers.PDSController;
 import drivetrains.BaseDrivetrain;
 import drivetrains.BaseDrivetrainConstants;
@@ -51,10 +52,10 @@ public class Follower {
     private final PDSController headingController;
     private final TurnController turnController;
     private final DriveController driveController;
-    private double translationalKV;
-    private double translationalKA;
-    private double angularKV;
-    private double angularKA;
+    private final double translationalKV;
+    private final double translationalKA;
+    private final double angularKV;
+    private final double angularKA;
     private double centripetalGain;
     private double velocityFeedbackGain;
     private double angularVelocityFeedbackGain;
@@ -98,19 +99,13 @@ public class Follower {
         this.headingController.setAngularController();
 
         this.turnController = new TurnController(
-                this.constants.headingCoeffs,
-                angularKV,
-                angularKA,
-                angularVelocityFeedbackGain
+                this.constants.headingCoeffs, angularKV, angularKA, angularVelocityFeedbackGain
         );
-
-        boolean requireMecanumLimits = !tuningMode &&
-                (drivetrain instanceof Mecanum || drivetrain instanceof DualActuated);
         this.driveController = new DriveController(
                 Dist.fromIn(this.constants.forwardVelLimitIn),
                 Dist.fromIn(this.constants.strafeVelLimitIn),
                 this.constants.translationalCoeffs,
-                requireMecanumLimits
+                !tuningMode && (drivetrain instanceof Mecanum || drivetrain instanceof DualActuated)
         );
     }
 
@@ -595,58 +590,8 @@ public class Follower {
     public void teleOpDrive(Gamepad gamepad) {
         // Left stick Y is negated because forward is negative on the gamepad
         // Left stick X is negated because left is positive in the coordinate system
-        // Right stick X is negated because CC is positive in in the coordinate system.
+        // Right stick X is negated because CC is positive in the coordinate system.
         teleOpDrive(-gamepad.left_stick_y, -gamepad.left_stick_x, -gamepad.right_stick_x);
-    }
-
-    public void disableHeadingController() { this.headingControllerEnabled = false; }
-    public void disableDriveController() { this.driveControllerEnabled = false; }
-    public void disableControllers() {
-        disableHeadingController();
-        disableDriveController();
-    }
-
-    public void setHeadingTuning(PDSController.PDSCoefficients coefficients) {
-        headingController.setCoefficients(coefficients);
-        headingController.setAngularController();
-        turnController.setHeadingCoefficients(coefficients);
-    }
-
-    public void setMovementTuning(PDSController.PDSCoefficients coefficients,
-                                  double translationalKV, double translationalKA,
-                                  double angularKV, double angularKA,
-                                  double forwardVelocity, double strafeVelocity) {
-        this.translationalKV = translationalKV;
-        this.translationalKA = translationalKA;
-        this.angularKV = angularKV;
-        this.angularKA = angularKA;
-        driveController.setCoefficients(coefficients);
-        driveController.setVelocityLimits(
-                Dist.fromIn(forwardVelocity),
-                Dist.fromIn(strafeVelocity),
-                drivetrain instanceof Mecanum || drivetrain instanceof DualActuated
-        );
-        turnController.setMotionGains(angularKV, angularKA, angularVelocityFeedbackGain);
-    }
-
-    public void setCentripetalTuning(double centripetalGain) {
-        this.centripetalGain = centripetalGain;
-    }
-
-    public void setVelocityFeedbackTuning(double velocityFeedbackGain,
-                                          double angularVelocityFeedbackGain) {
-        this.velocityFeedbackGain = velocityFeedbackGain;
-        this.angularVelocityFeedbackGain = angularVelocityFeedbackGain;
-        turnController.setMotionGains(angularKV, angularKA, angularVelocityFeedbackGain);
-    }
-
-    public void setDriveControllerEnabled(boolean enabled) {
-        driveControllerEnabled = enabled;
-    }
-
-    public void enableControllers() {
-        headingControllerEnabled = true;
-        driveControllerEnabled = true;
     }
 
     /**
@@ -684,18 +629,39 @@ public class Follower {
      */
     public Pose getAcceleration() { return localizer.getAccel(); }
 
-    /**
-     * DO NOT USE THIS METHOD UNLESS YOU KNOW WHAT YOU ARE DOING.
-     * It is intended for internal use only.
-     */
+    public void disableHeadingController() { this.headingControllerEnabled = false; }
+
+    public void disableDriveController() { this.driveControllerEnabled = false; }
+
+    public void disableControllers() { disableHeadingController(); disableDriveController(); }
+
+    public void setHeadingCoefficients(PDSCoefficients coefficients) {
+        headingController.setCoefficients(coefficients);
+        turnController.setCoefficients(coefficients);
+    }
+
+    public void setDriveCoefficients(PDSCoefficients coefficients) {
+        driveController.setCoefficients(coefficients);
+    }
+
+    public void setCentripetalTuning(double centripetalGain) {
+        this.centripetalGain = centripetalGain;
+    }
+
+    public void setVelocityFeedbackTuning(double velocityFeedbackGain,
+                                          double angularVelocityFeedbackGain) {
+        this.velocityFeedbackGain = velocityFeedbackGain;
+        this.angularVelocityFeedbackGain = angularVelocityFeedbackGain;
+        turnController.setMotionGains(angularKV, angularKA, angularVelocityFeedbackGain);
+    }
+
+    /** This method is intended for internal use only. */
     public BaseLocalizer<?> getLocalizer() { return localizer; }
 
-    /**
-     * DO NOT USE THIS METHOD UNLESS YOU KNOW WHAT YOU ARE DOING.
-     * It is intended for internal use only.
-     */
+    /** This method is intended for internal use only. */
     public BaseDrivetrain<?> getDrivetrain() { return drivetrain; }
 
+    /** This method is intended for internal use only. */
     public FollowerConstants getConstants() { return constants; }
 
     // endregion

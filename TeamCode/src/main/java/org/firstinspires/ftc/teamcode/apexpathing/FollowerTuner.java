@@ -9,6 +9,7 @@ import core.Follower;
 import core.FollowerConstants;
 import geometry.Pose;
 import tuning.CentripetalPhase;
+import tuning.DrivePhase;
 import tuning.HeadingPhase;
 import tuning.LimitsPhase;
 import tuning.TunerContext;
@@ -16,15 +17,24 @@ import tuning.TuningPhase;
 import tuning.VelocityFeedbackPhase;
 
 /**
+ * This OpMode is used to tune the Apex Pathing Follower. It allows the user to select a tuning
+ * phase and run it, saving the constants when complete.
+ *
  * @author Sohum Arora - 22985 Paraducks
+ * @author Dylan B. - 18597 RoboClovers - Delta
  */
-@TeleOp(name = "Follower Tuner", group = "Apex Pathing Tuning")
+@TeleOp(name = "Follower Tuner", group = "Apex Pathing")
 public class FollowerTuner extends LinearOpMode {
+    // Completion is determined by whether the last saved value of the phase's constants is non-zero
+    // Tuners are ran in the order of the enum ordinals
     enum Phase {
         HEADING(HeadingPhase.class, (FollowerConstants constants) -> (
                 constants.headingCoeffs.kP != 0.0
         )),
         LIMITS(LimitsPhase.class, (FollowerConstants constants) -> (
+                constants.translationalCoeffs.kP != 0.0
+        )),
+        DRIVE(DrivePhase.class, (FollowerConstants constants) -> (
                 constants.translationalCoeffs.kP != 0.0
         )),
         CENTRIPETAL(CentripetalPhase.class, (FollowerConstants constants) -> (
@@ -38,7 +48,8 @@ public class FollowerTuner extends LinearOpMode {
         final Predicate<FollowerConstants> isTunedPredicate;
         boolean tuned;
 
-        Phase(Class<? extends TuningPhase> phaseClass, Predicate<FollowerConstants> isTunedPredicate) {
+        Phase(Class<? extends TuningPhase> phaseClass,
+              Predicate<FollowerConstants> isTunedPredicate) {
             this.phaseClass = phaseClass;
             this.isTunedPredicate = isTunedPredicate;
         }
@@ -47,16 +58,18 @@ public class FollowerTuner extends LinearOpMode {
             tuned = isTunedPredicate.test(constants);
         }
     }
+
     private static final Phase[] phases = Phase.values();
     private static final int phaseAmount = phases.length;
 
+    private TunerContext context;
     private Phase selectedPhaseOrdinal;
     private TuningPhase phase;
     private boolean isPhaseSelected = false;
 
     @Override
     public void runOpMode() {
-        TunerContext context = new TunerContext(this);
+        context = new TunerContext(this);
         context.setFollower(new Follower(new Constants(), hardwareMap, true));
         context.constants.drivetrainType = context.getFollower().getDrivetrain().getDrivetrainType();
         
@@ -77,8 +90,7 @@ public class FollowerTuner extends LinearOpMode {
         context.getFollower().setPose(Pose.zero());
 
         while (opModeIsActive()) {
-            phase.run(this);
-            if (phase.isComplete()) {
+            if (phase.run(this)) { // Returns true if the phase is complete
                 context.saveConstants();
                 requestOpModeStop();
             }
@@ -99,9 +111,9 @@ public class FollowerTuner extends LinearOpMode {
 
     private String phaseStatus(Phase phase) {
         if (phase.tuned) {
-            return "[✓]";
+            return "[ ✓ ]";
         }
-        return phaseAvailable(phase) ? "[ ]" : "[X]";
+        return phaseAvailable(phase) ? "[   ]" : "[ X ]";
     }
 
     private void selectFirstIncompletePhase() {
@@ -136,8 +148,10 @@ public class FollowerTuner extends LinearOpMode {
             } while (!phaseAvailable(selectedPhaseOrdinal));
         } else if (gamepad1.bWasPressed()) {
             try {
-                phase = selectedPhaseOrdinal.phaseClass.getDeclaredConstructor().newInstance();
-            } catch (Exception e) { // This will never happen because the setup is correct, but Java requires it to be caught.
+                phase = selectedPhaseOrdinal.phaseClass.getDeclaredConstructor(TunerContext.class)
+                        .newInstance(context);
+            } catch (Exception e) {
+                // This won't happen because the setup is correct, but Java requires the catch.
                 throw new RuntimeException(e);
             }
             return true;
