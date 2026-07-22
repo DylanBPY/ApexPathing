@@ -66,11 +66,15 @@ public class Follower {
     private boolean headingControllerEnabled = true;
     private boolean driveControllerEnabled = true;
 
-    PathSegment segment;
-    Angle targetHeading;
-    Vector targetTurnPoseVec;
-    double turnDirection;
-    double turnTotalDisplacement;
+    private PathSegment segment;
+    private Angle targetHeading;
+    private Vector targetTurnPoseVec;
+    private double turnDirection;
+    private double turnTotalDisplacement;
+    private double crossTrackError;
+    private double t;
+    private double currentDesiredVel;
+    private double currentActualVel;
 
     /** Constructs the drivetrain, localizer, and follower from the given {@link ApexConstants}. */
     public Follower(ApexConstants constants, HardwareMap hardwareMap) {
@@ -231,6 +235,7 @@ public class Follower {
             // Require both positional accuracy and low angular velocity to prevent momentum
             // overshoot
             double currentAngularVel = localizer.getVel().getHeading().getRad();
+            this.currentActualVel = currentAngularVel;
             if (Math.abs(headingError) < headingTol && Math.abs(currentAngularVel) < 0.05) {
                 this.stop();
                 return;
@@ -246,6 +251,7 @@ public class Follower {
                         signedTravel, 0.0, turnTotalDisplacement);
                 MotionParameters turnTargets = turn.getFeedforwardLut()
                         .getFeedforwardParams(angularDisplacement);
+                this.currentDesiredVel = turnTargets.getAngularVel();
                 totalTurnPower = turnController.calculateProfiled(
                         headingError,
                         turnDirection,
@@ -279,7 +285,7 @@ public class Follower {
             // region Holonomic Following
         } else if (drivetrain.isHolonomic()) {
             // Retrieve path geometry at closest point
-            double t = segment.getBestT(currentPos);
+            t = segment.getBestT(currentPos);
 
             Vector targetPoseVec = segment.getPosition(t);
             double s = segment.getDistanceToEndIn(targetPoseVec, t);
@@ -302,11 +308,13 @@ public class Follower {
             double distanceTraveled = path.getParametricPath().getLengthIn() - s;
             MotionParameters targets = isProfiled ?
                     path.getFeedforwardLut().getFeedforwardParams(distanceTraveled) : null;
+            this.currentDesiredVel = targets.getTangentialVel();
 
             HolonomicDriveModel driveModel = getActiveHolonomicDriveModel();
 
             double robotTangentialVel = (deltaT_seconds > 1e-6 && lastS >= 0.0) ?
                     (lastS - s) / deltaT_seconds : 0.0;
+            this.currentActualVel = robotTangentialVel;
             lastS = s;
 
             // Calculate heading power allocation
@@ -335,7 +343,7 @@ public class Follower {
 
             // Calculate lateral cross track power allocation
             Vector positionalError = targetPoseVec.minus(currentPos);
-            double crossTrackError = positionalError.dot(normal).getIn();
+            crossTrackError = positionalError.dot(normal).getIn();
             double lateralFeedbackMag = driveControllerEnabled
                     ? driveController.calculateCrossTrack(crossTrackError) : 0.0;
 
@@ -422,7 +430,7 @@ public class Follower {
             // region Tank Following
         } else {
             // Process tank driving via Ramsete controller
-            double t = segment.getBestT(currentPos);
+            t = segment.getBestT(currentPos);
             Vector targetPoseVec = segment.getPosition(t);
             double s = segment.getDistanceToEndIn(targetPoseVec, t);
 
@@ -568,13 +576,13 @@ public class Follower {
      * Drives the robot using the provided inputs. The joystick inputs are adjusted for
      * field-centric or robot-centric control based on the constants. Any active follower movement
      * will be stopped as manual control takes priority over following a path. If you want to use
-     * a standard control scheme, you can pass your gamepad to the other teleOpDrive method.
+     * a standard control scheme, you can pass your gamepad to the other manual method.
      *
      * @param x forward/backward input where positive is forward
      * @param y left/right input where positive is left
      * @param turn rotation input where positive is counter-clockwise
      */
-    public void teleOpDrive(double x, double y, double turn) {
+    public void manual(double x, double y, double turn) {
         if (isBusy()) { stop(); }
         drivetrain.drive(x, y, turn, this.getPose().getHeading(AngleUnit.RAD));
     }
@@ -583,15 +591,15 @@ public class Follower {
      * Drives the robot using standard gamepad inputs. The left stick controls forward/backward and
      * left/right movement, while the right stick controls rotation. Any active follower movement
      * will be stopped as manual control takes priority over following a path. If you want to
-     * use a different control scheme, use the other teleOpDrive method with custom inputs.
+     * use a different control scheme, use the other manual method with custom inputs.
      *
      * @param gamepad the gamepad to read inputs from
      */
-    public void teleOpDrive(Gamepad gamepad) {
+    public void manual(Gamepad gamepad) {
         // Left stick Y is negated because forward is negative on the gamepad
         // Left stick X is negated because left is positive in the coordinate system
         // Right stick X is negated because CC is positive in the coordinate system.
-        teleOpDrive(-gamepad.left_stick_y, -gamepad.left_stick_x, -gamepad.right_stick_x);
+        manual(-gamepad.left_stick_y, -gamepad.left_stick_x, -gamepad.right_stick_x);
     }
 
     /**
@@ -629,6 +637,14 @@ public class Follower {
      */
     public Pose getAcceleration() { return localizer.getAccel(); }
 
+    public double getBestT() { return t; }
+
+    public double getCrossTrackErrorIn() { return crossTrackError; }
+
+    public double getCurrentDesiredVel() { return currentDesiredVel; }
+
+    public double getCurrentActualVel() { return currentActualVel; }
+
     public void disableHeadingController() { this.headingControllerEnabled = false; }
 
     public void disableDriveController() { this.driveControllerEnabled = false; }
@@ -644,12 +660,12 @@ public class Follower {
         driveController.setCoefficients(coefficients);
     }
 
-    public void setCentripetalTuning(double centripetalGain) {
+    public void setCentripetal(double centripetalGain) {
         this.centripetalGain = centripetalGain;
     }
 
-    public void setVelocityFeedbackTuning(double velocityFeedbackGain,
-                                          double angularVelocityFeedbackGain) {
+    public void setVelocityFeedback(double velocityFeedbackGain,
+                                    double angularVelocityFeedbackGain) {
         this.velocityFeedbackGain = velocityFeedbackGain;
         this.angularVelocityFeedbackGain = angularVelocityFeedbackGain;
         turnController.setMotionGains(angularKV, angularKA, angularVelocityFeedbackGain);

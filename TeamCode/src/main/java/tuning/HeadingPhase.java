@@ -103,7 +103,7 @@ public class HeadingPhase extends TuningPhase {
         context.getTelemetry().addData("Increment", increment);
         context.getTelemetry().addLine("Dpad Up/Down: change value");
         context.getTelemetry().addLine("Dpad Left/Right: change increment");
-        context.getTelemetry().addLine("LB/RB: select value");
+        context.getTelemetry().addLine("LB/RB: select value to tune");
         context.getTelemetry().addLine("X: test turn");
         context.getTelemetry().addLine("A: save");
         context.getTelemetry().update();

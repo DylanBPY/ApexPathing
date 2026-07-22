@@ -40,7 +40,7 @@ public class LimitsPhase extends TuningPhase {
 
     private static final double RUN_TIME = 2000.0;
     private static final double SETTLE_TIME = 800.0;
-    private static final double MARGIN_MULTIPLIER = 0.95;
+    public static final double MARGIN_MULTIPLIER = 0.95;
 
     private final ElapsedTime timer = new ElapsedTime();
     private final double[][] maxima = new double[TRIALS.length][2];

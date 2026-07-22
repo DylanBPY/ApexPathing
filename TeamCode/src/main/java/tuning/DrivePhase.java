@@ -29,7 +29,7 @@ public class DrivePhase extends TuningPhase {
 
         routine = new PDSRoutine(context, PDSRoutine.TuningAxis.DRIVE);
 
-        GeometryFactory factory = new GeometryFactory()
+        GeometryFactory factory = new GeometryFactory(context.getFollower())
                 .setDistUnit(DistUnit.IN).setAngleUnit(AngleUnit.DEG);
         testPath = () -> factory.path(
                 context.getFollower().getPose(),

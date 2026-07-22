@@ -21,11 +21,10 @@ public class BinarySearch {
 
     boolean updateGuess(boolean increase) {
         double lastGuess = guess;
-        if (increase) {
-            minimum = guess;
-        } else {
-            maximum = guess;
-        }
+
+        if (increase) { minimum = guess; }
+        else { maximum = guess; }
+
         guess = (maximum + minimum) / 2.0;
         return Math.abs(lastGuess - guess) > threshold;
     }
