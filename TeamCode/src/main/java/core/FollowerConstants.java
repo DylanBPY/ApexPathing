@@ -34,7 +34,7 @@ public class FollowerConstants {
     public double angularVelocityFeedbackGain = 0.0;
     public double translationalKV = 0.0, translationalKA = 0.0;
     public double angularKV = 0.0, angularKA = 0.0;
-    public double Kcentripetal = 0.0;
+    public double kCentripetal = 0.0;
 
     public double forwardVelLimitIn = 0.0;
     public double forwardAccelLimitIn = 0.0;
@@ -97,7 +97,7 @@ public class FollowerConstants {
         angularKA = loadDouble(json, "angularKA");
         velocityFeedbackGain = loadDouble(json, "velocityFeedbackGain");
         angularVelocityFeedbackGain = loadDouble(json, "angularVelocityFeedbackGain");
-        Kcentripetal = loadDouble(json, "Kcentripetal");
+        kCentripetal = loadDouble(json, "kCentripetal");
 
         forwardVelLimitIn = loadDouble(json, "forwardVelLimitIn");
         forwardAccelLimitIn = loadDouble(json, "forwardAccelLimitIn");
@@ -123,7 +123,7 @@ public class FollowerConstants {
             json.put("angularKA", angularKA);
             json.put("velocityFeedbackGain", velocityFeedbackGain);
             json.put("angularVelocityFeedbackGain", angularVelocityFeedbackGain);
-            json.put("Kcentripetal", Kcentripetal);
+            json.put("kCentripetal", kCentripetal);
             json.put("forwardVelLimitIn", forwardVelLimitIn);
             json.put("forwardAccelLimitIn", forwardAccelLimitIn);
             json.put("strafeVelLimitIn", strafeVelLimitIn);

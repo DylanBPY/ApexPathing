@@ -12,7 +12,7 @@ import geometry.Pose;
  * @author Sohum Arora - 22985 Paraducks
  * @author Dylan B. - 18597 RoboClovers - Delta
  */
-@TeleOp(name = "Apex TeleOp Test", group = "Apex Pathing Tests")
+@TeleOp(name = "Apex TeleOp Test", group = "Apex Pathing")
 public class TeleOpTest extends LinearOpMode {
     Constants constants = new Constants();
 
@@ -20,7 +20,8 @@ public class TeleOpTest extends LinearOpMode {
     public void runOpMode() {
         Follower follower = new Follower(constants, hardwareMap);
 
-        telemetry.addData("Status", "Initialized");
+        telemetry.addLine("Use B to stop all robot movement");
+        telemetry.addLine("Press Start to begin");
         telemetry.update();
         waitForStart();
 
@@ -28,11 +29,11 @@ public class TeleOpTest extends LinearOpMode {
             follower.update();
             Pose currentPose = follower.getPose();
 
-            if (gamepad1.left_trigger_pressed) { // Emergency stop
+            if (gamepad1.b) { // Emergency stop
                 follower.stop();
                 telemetry.addLine("Follower stopped");
             } else {
-                follower.teleOpDrive(gamepad1);
+                follower.manual(gamepad1);
             }
 
             telemetry.addData("X", currentPose.getX());

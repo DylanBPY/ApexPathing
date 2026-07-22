@@ -28,14 +28,14 @@ public class TurnController {
                           double angularVelocityFeedbackGain) {
         headingPds = new PDSController(headingCoefficients);
         headingPds.setAngularController();
+
         this.angularKV = angularKV;
         this.angularKA = angularKA;
         this.angularVelocityFeedbackGain = angularVelocityFeedbackGain;
     }
 
-    public void setHeadingCoefficients(PDSController.PDSCoefficients coefficients) {
+    public void setCoefficients(PDSController.PDSCoefficients coefficients) {
         headingPds.setCoefficients(coefficients);
-        headingPds.setAngularController();
         reset();
     }
 
@@ -48,9 +48,7 @@ public class TurnController {
     }
 
     /** Uses the complete heading PDS for an unprofiled turn. */
-    public double calculateQuick(double headingError) {
-        return headingPds.calculate(headingError);
-    }
+    public double calculateQuick(double headingError) { return headingPds.calculate(headingError); }
 
     /**
      * Calculates a profiled turn command and permanently switches to PDS recovery after overshoot.
