@@ -46,9 +46,7 @@ public class VelocityFeedbackPhase extends TuningPhase {
     private double translationScore;
     private double angularScore;
 
-    public VelocityFeedbackPhase(TunerContext context) {
-        super(context);
-    }
+    public VelocityFeedbackPhase(TunerContext context) { super(context); }
 
     @Override
     protected String getPhaseName() { return "Velocity Feedback"; }
